@@ -401,6 +401,7 @@ public class SocialReader implements ICacheWordSubscriber
 		Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
 		
 		if (isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+			settings.setLastOPMLCheckTime(System.currentTimeMillis());
 			OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
 				new OPMLParser.OPMLParserListener() {
 					@Override
