@@ -31,5 +31,5 @@
 	
 	<!-- Default values that should be referenced in Settings.java -->
 	<bool name="require_tor_default">false</bool>
-	
+	<string name="sync_mode_default">BitWise</string>	
 </resources>
