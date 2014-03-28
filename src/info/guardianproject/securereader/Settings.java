@@ -100,16 +100,17 @@ public class Settings
 	 */
 	public int passphraseTimeout()
 	{
-		return mPrefs.getInt(KEY_PASSPHRASE_TIMEOUT, 2);
+		// 1 day by default
+		return mPrefs.getInt(KEY_PASSPHRASE_TIMEOUT, 1440);
 	}
 
 	/**
 	 * @return Sets timeout before lock screen is shown
 	 * 
 	 */
-	public void setPassphraseTimeout(int seconds)
+	public void setPassphraseTimeout(int minutes)
 	{
-		mPrefs.edit().putInt(KEY_PASSPHRASE_TIMEOUT, seconds).commit();
+		mPrefs.edit().putInt(KEY_PASSPHRASE_TIMEOUT, minutes).commit();
 	}
 
 	/**
