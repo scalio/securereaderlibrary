@@ -304,7 +304,8 @@ public class Settings
 	{
 		// return Enum.valueOf(SyncMode.class, mPrefs.getString(KEY_SYNC_MODE,
 		// SyncMode.LetItFlow.name()));
-		return Enum.valueOf(SyncMode.class, mPrefs.getString(KEY_SYNC_MODE, SyncMode.BitWise.name()));
+		String syncModeDefault = context.getResources().getString(R.string.sync_mode_default);
+		return Enum.valueOf(SyncMode.class, mPrefs.getString(KEY_SYNC_MODE, syncModeDefault));
 	}
 
 	/**

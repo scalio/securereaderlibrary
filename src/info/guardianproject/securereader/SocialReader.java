@@ -114,6 +114,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int opmlCheckFrequency;
 	public final String opmlUrl;
 	
+	public static final int TIMER_PERIOD = 60000;  // 1 minute
+	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
 	public static final String SHARE_ITEM_ID = "SHARE_ITEM_ID";
@@ -166,7 +168,7 @@ public class SocialReader implements ICacheWordSubscriber
             	timerHandler.sendEmptyMessage(0);
             }
         };
-        periodicTimer.schedule(periodicTask, feedRefreshAge, feedRefreshAge);
+        periodicTimer.schedule(periodicTask, TIMER_PERIOD);
 	}	
 	
     private static SocialReader socialReader = null;
@@ -184,6 +186,7 @@ public class SocialReader implements ICacheWordSubscriber
         public void dispatchMessage(Message msg) {
         	Log.v(LOGTAG,"Timer Expired");
 
+        	checkOPML();
     		if (settings.syncFrequency() != Settings.SyncFrequency.Manual) {
     			Log.v(LOGTAG, "Sync Frequency not manual");
     			if ((appStatus == SocialReader.APP_IN_BACKGROUND && settings.syncFrequency() == Settings.SyncFrequency.InBackground)
@@ -196,7 +199,6 @@ public class SocialReader implements ICacheWordSubscriber
     		} else {
     			Log.v(LOGTAG, "Sync Frequency manual, not taking action");
     		}
-			checkOPML();
 			expireOldContent();
         }
 	}
