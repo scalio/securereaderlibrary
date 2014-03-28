@@ -195,6 +195,9 @@ public class MediaContent extends FeedEntity implements Serializable
 	 */
 	public String getType()
 	{
+		if (type == null) {
+			setType(android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(android.webkit.MimeTypeMap.getFileExtensionFromUrl(url)));					
+		}
 		return type;
 	}
 
