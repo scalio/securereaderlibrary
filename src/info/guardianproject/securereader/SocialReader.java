@@ -160,15 +160,6 @@ public class SocialReader implements ICacheWordSubscriber
         	            }
         	        },
                 new IntentFilter(Constants.INTENT_NEW_SECRETS));
-        
-        periodicTimer = new Timer();
-        TimerTask periodicTask = new TimerTask() {
-            @Override
-            public void run() {
-            	timerHandler.sendEmptyMessage(0);
-            }
-        };
-        periodicTimer.schedule(periodicTask, TIMER_PERIOD);
 	}	
 	
     private static SocialReader socialReader = null;
@@ -179,8 +170,9 @@ public class SocialReader implements ICacheWordSubscriber
     	return socialReader;
     }
 
-	// This Timer and TimerHandler are used by the SyncService
 	Timer periodicTimer;
+	TimerTask periodicTask;
+	
 	class TimerHandler extends Handler {
         @Override
         public void dispatchMessage(Message msg) {
@@ -286,6 +278,16 @@ public class SocialReader implements ICacheWordSubscriber
             applicationContext.startService(new Intent(applicationContext, SyncService.class));
             applicationContext.bindService(new Intent(applicationContext, SyncService.class), syncServiceConnection, Context.BIND_AUTO_CREATE);
 
+            periodicTask = new TimerTask() {
+                @Override
+                public void run() {
+                	timerHandler.sendEmptyMessage(0);
+                }
+            };
+
+            periodicTimer = new Timer();
+            periodicTimer.schedule(periodicTask, TIMER_PERIOD);            
+            
             initialized = true;
             if (lockListener != null)
             	lockListener.onUnlocked();
@@ -315,6 +317,10 @@ public class SocialReader implements ICacheWordSubscriber
 	        	vfs.unmount();
 	        }
 		}
+		
+		if (periodicTimer != null)
+			periodicTimer.cancel();
+		
 		initialized = false;
         if (lockListener != null)
         	lockListener.onLocked();
@@ -322,6 +328,9 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void loadOPMLFile() {
 		Log.v(LOGTAG,"loadOPMLFile()");
+		
+		logStatus();
+		
 		if (!settings.localOpmlLoaded()) {
 			Log.v(LOGTAG, "OPML Not previously loaded, loading now");
 			Resources res = applicationContext.getResources();
@@ -364,7 +373,7 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public void checkForRSSFeed(String url) {
-		if (isOnline() == ONLINE) {
+		if (databaseAdapter != null && databaseAdapter.databaseReady() && isOnline() == ONLINE) {
 			HTMLRSSFeedFinder htmlParser = new HTMLRSSFeedFinder(SocialReader.this, url,
 				new HTMLRSSFeedFinder.HTMLRSSFeedFinderListener() {
 					@Override
@@ -391,7 +400,8 @@ public class SocialReader implements ICacheWordSubscriber
 
 	private void checkOPML() {
 		Log.v(LOGTAG,"checkOPML");
-		if (!settings.networkOpmlLoaded()) {
+		logStatus();
+		if (!settings.networkOpmlLoaded() && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
 			Log.v(LOGTAG,"Not already loaded from network, attempting to check");
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
@@ -410,7 +420,6 @@ public class SocialReader implements ICacheWordSubscriber
 			} 
 			Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
 			
-			if (isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
 				OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
 					new OPMLParser.OPMLParserListener() {
 						@Override
@@ -432,9 +441,8 @@ public class SocialReader implements ICacheWordSubscriber
 					}
 				);
 			} else {
-				Log.v(LOGTAG,"Either not online or OPML last checked recently");
+				Log.v(LOGTAG,"Not checking OPML at this time");
 			}
-		}
 	}
 
 	// When the foreground app is paused
@@ -466,6 +474,19 @@ public class SocialReader implements ICacheWordSubscriber
 		{
 			return false;
 		}		
+	}
+	
+	private void logStatus() {
+		Log.v(LOGTAG, "Status Check: ");
+		
+		if (databaseAdapter != null) {
+			Log.v(LOGTAG, "databaseAdapter != null");
+			Log.v(LOGTAG, "databaseAdapter.databaseReady() " + databaseAdapter.databaseReady());
+		} else {
+			Log.v(LOGTAG, "databaseAdapter == null");			
+		}
+		Log.v(LOGTAG, "cacheWord.isLocked() " + cacheWord.isLocked());
+		Log.v(LOGTAG, "isOnline() " + isOnline());
 	}
 
 	// This public method will indicate whether or not the application is online
@@ -816,7 +837,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 			
 	}
-
+	
 	private void initializeDatabase()
 	{
 		Log.v(LOGTAG,"initializeDatabase()");
@@ -1207,8 +1228,12 @@ public class SocialReader implements ICacheWordSubscriber
 	 */
 	public void addFeedByURL(String url, FeedFetcher.FeedFetchedCallback callback)
 	{
+		//checkForRSSFeed(url);
+		
+		
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
+			
 			Feed newFeed = new Feed("", url);
 			newFeed.setDatabaseId(databaseAdapter.addFeedIfNotExisting("", url));
 
@@ -1576,7 +1601,7 @@ public class SocialReader implements ICacheWordSubscriber
 				return false;
 			}
 		} else {
-			Log.v(LOGTAG,"Not a media type we support");
+			Log.v(LOGTAG,"Not a media type we support: " + mc.getType());
 			return false;
 		}
 	}
