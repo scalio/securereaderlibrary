@@ -118,8 +118,6 @@ public class SocialReader implements ICacheWordSubscriber
 	// securebluetoothsender as an extra in the intent
 	public static final String SHARE_ITEM_ID = "SHARE_ITEM_ID";
 
-	long lastFeedRefreshTime = 0;
-
 	public Context applicationContext;
 	DatabaseAdapter databaseAdapter;
 	CacheWordHandler cacheWord;
@@ -187,10 +185,16 @@ public class SocialReader implements ICacheWordSubscriber
         	Log.v(LOGTAG,"Timer Expired");
 
     		if (settings.syncFrequency() != Settings.SyncFrequency.Manual) {
+    			Log.v(LOGTAG, "Sync Frequency not manual");
     			if ((appStatus == SocialReader.APP_IN_BACKGROUND && settings.syncFrequency() == Settings.SyncFrequency.InBackground)
     				|| appStatus == SocialReader.APP_IN_FOREGROUND) {
+    				Log.v(LOGTAG, "App in background and sync frequency set to in background OR App in foreground");
     				backgroundSyncSubscribedFeeds();
+    			} else {
+    				Log.v(LOGTAG, "App in background and sync frequency not set to background");
     			}
+    		} else {
+    			Log.v(LOGTAG, "Sync Frequency manual, not taking action");
     		}
 			checkOPML();
 			expireOldContent();
@@ -209,7 +213,7 @@ public class SocialReader implements ICacheWordSubscriber
     		syncService.setSyncServiceListener(syncServiceListener);
     	} else {
     		Log.v(LOGTAG,"Can't set SyncServiceListener, syncService is null");
-    		// No problem, we'll add it later, when we bind
+    		Log.v(LOGTAG, "No problem, we'll add it later, when we bind");
     	}
     }
 
@@ -316,29 +320,32 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void loadOPMLFile() {
 		Log.v(LOGTAG,"loadOPMLFile()");
-
-		Resources res = applicationContext.getResources();
-		InputStream inputStream = res.openRawResource(R.raw.bigbuffalo_opml);
-		
-		OPMLParser oParser = new OPMLParser(inputStream,
-				new OPMLParser.OPMLParserListener() {
-					@Override
-					public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
-						Log.v(LOGTAG,"Finished Parsing OPML Feed");
-						if (outlines != null) {
-							for (int i = 0; i < outlines.size(); i++) {
-								OPMLParser.OPMLOutline outlineElement = outlines.get(i);
-								Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
-								newFeed.setSubscribed(true);
-								databaseAdapter.addOrUpdateFeed(newFeed);
-								Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+		if (!settings.localOpmlLoaded()) {
+			Log.v(LOGTAG, "OPML Not previously loaded, loading now");
+			Resources res = applicationContext.getResources();
+			InputStream inputStream = res.openRawResource(R.raw.bigbuffalo_opml);
+			
+			OPMLParser oParser = new OPMLParser(inputStream,
+					new OPMLParser.OPMLParserListener() {
+						@Override
+						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
+							Log.v(LOGTAG,"Finished Parsing OPML Feed");
+							if (outlines != null) {
+								for (int i = 0; i < outlines.size(); i++) {
+									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
+									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
+									newFeed.setSubscribed(true);
+									databaseAdapter.addOrUpdateFeed(newFeed);
+									Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+								}
+							} else {
+								Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
-						} else {
-							Log.e(LOGTAG,"Received null after OPML Parsed");
+							settings.setLocalOpmlLoaded();
 						}
 					}
-				}
-			);
+				);
+		}
 	}
 	
 	private void expireOldContent() {
@@ -382,46 +389,49 @@ public class SocialReader implements ICacheWordSubscriber
 
 	private void checkOPML() {
 		Log.v(LOGTAG,"checkOPML");
-
-		UiLanguage lang = settings.uiLanguage();
-		String finalOpmlUrl = opmlUrl + "?lang=";
-		if (lang == UiLanguage.Farsi) {
-			finalOpmlUrl = finalOpmlUrl + "fa_IR";
-		} else if (lang == UiLanguage.English) {
-			finalOpmlUrl = finalOpmlUrl + "en_US";
-		} else if (lang == UiLanguage.Tibetan) {
-			finalOpmlUrl = finalOpmlUrl + "bo_CN";
-		} else if (lang == UiLanguage.Chinese) {
-			finalOpmlUrl = finalOpmlUrl + "zh_CN";
-		} else if (lang == UiLanguage.Russian) {
-			finalOpmlUrl = finalOpmlUrl + "ru_RU";
-		} else if (lang == UiLanguage.Ukrainian) {
-			finalOpmlUrl = finalOpmlUrl + "uk_UA";
-		} 
-		Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
-		
-		if (isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
-			OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
-				new OPMLParser.OPMLParserListener() {
-					@Override
-					public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
-						Log.v(LOGTAG,"Finished Parsing OPML Feed");
-						if (outlines != null) {
-							for (int i = 0; i < outlines.size(); i++) {
-								OPMLParser.OPMLOutline outlineElement = outlines.get(i);
-								Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
-								newFeed.setSubscribed(true);
-								databaseAdapter.addOrUpdateFeed(newFeed);
-								Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+		if (!settings.networkOpmlLoaded()) {
+			Log.v(LOGTAG,"Not already loaded from network, attempting to check");
+			UiLanguage lang = settings.uiLanguage();
+			String finalOpmlUrl = opmlUrl + "?lang=";
+			if (lang == UiLanguage.Farsi) {
+				finalOpmlUrl = finalOpmlUrl + "fa_IR";
+			} else if (lang == UiLanguage.English) {
+				finalOpmlUrl = finalOpmlUrl + "en_US";
+			} else if (lang == UiLanguage.Tibetan) {
+				finalOpmlUrl = finalOpmlUrl + "bo_CN";
+			} else if (lang == UiLanguage.Chinese) {
+				finalOpmlUrl = finalOpmlUrl + "zh_CN";
+			} else if (lang == UiLanguage.Russian) {
+				finalOpmlUrl = finalOpmlUrl + "ru_RU";
+			} else if (lang == UiLanguage.Ukrainian) {
+				finalOpmlUrl = finalOpmlUrl + "uk_UA";
+			} 
+			Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
+			
+			if (isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+				OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
+					new OPMLParser.OPMLParserListener() {
+						@Override
+						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
+							Log.v(LOGTAG,"Finished Parsing OPML Feed");
+							if (outlines != null) {
+								for (int i = 0; i < outlines.size(); i++) {
+									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
+									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
+									newFeed.setSubscribed(true);
+									databaseAdapter.addOrUpdateFeed(newFeed);
+									Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+								}
+							} else {
+								Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
-						} else {
-							Log.e(LOGTAG,"Received null after OPML Parsed");
+							settings.setNetworkOpmlLoaded();
 						}
 					}
-				}
-			);
-		} else {
-			Log.v(LOGTAG,"Either not online or OPML last checked recently");
+				);
+			} else {
+				Log.v(LOGTAG,"Either not online or OPML last checked recently");
+			}
 		}
 	}
 
