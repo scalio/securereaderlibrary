@@ -16,6 +16,8 @@ public class Settings
 	// Use these constants when listening to changes, to see what property has
 	// changed!
 	//
+	public static final String KEY_NETWORK_OPML_LOADED = "network_opml_loaded";
+	public static final String KEY_LOCAL_OPML_LOADED = "local_opml_loaded";
 	public static final String KEY_LAST_ITEM_EXPIRATION_CHECK_TIME = "last_item_expiration_check_time";
 	public static final String KEY_LAST_OPML_CHECK_TIME = "last_opml_check_time";
 	public static final String KEY_REQUIRE_TOR = "require_tor";
@@ -569,4 +571,20 @@ public class Settings
 	{
 		mPrefs.edit().putInt(KEY_DOWNLOAD_EPUB_READER_DIALOG_SHOWN, numTimes).commit();
 	}
+	
+	public boolean networkOpmlLoaded() {
+		return mPrefs.getBoolean(KEY_NETWORK_OPML_LOADED, false);
+	}
+	public void setNetworkOpmlLoaded() {
+		mPrefs.edit().putBoolean(KEY_NETWORK_OPML_LOADED, true).commit();
+	}
+	public boolean localOpmlLoaded() {
+		return mPrefs.getBoolean(KEY_LOCAL_OPML_LOADED, false);
+	}
+	public void setLocalOpmlLoaded() {
+		mPrefs.edit().putBoolean(KEY_LOCAL_OPML_LOADED, true).commit();
+	}
+	
+	
+	
 }
