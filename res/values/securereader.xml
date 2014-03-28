@@ -30,6 +30,6 @@
 	<string name="xmlrpc_endpoint">http://securereader.guardianproject.info/xmlrpc.php</string>
 	
 	<!-- Default values that should be referenced in Settings.java -->
-	<bool name="require_tor_default">false</bool>
+	<bool name="require_tor_default">true</bool>
 	<string name="sync_mode_default">BitWise</string>	
 </resources>
