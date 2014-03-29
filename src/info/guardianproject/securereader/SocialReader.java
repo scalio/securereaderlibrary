@@ -114,7 +114,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int opmlCheckFrequency;
 	public final String opmlUrl;
 	
-	public static final int TIMER_PERIOD = 60000;  // 1 minute
+	public static final int TIMER_PERIOD = 60000;  // 1 minute 
 	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
@@ -145,9 +145,14 @@ public class SocialReader implements ICacheWordSubscriber
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
 		
 		this.settings = new Settings(applicationContext);
+		
 		this.cacheWordSettings = new CacheWordSettings(applicationContext);
 		this.cacheWord = new CacheWordHandler(applicationContext, this, cacheWordSettings);
+		cacheWord.connectToService();
+
 		this.oc = new OrbotHelper(applicationContext);
+		
+		
         LocalBroadcastManager.getInstance(_context).registerReceiver(
         		new BroadcastReceiver() {
         	        @Override
@@ -178,12 +183,12 @@ public class SocialReader implements ICacheWordSubscriber
         public void dispatchMessage(Message msg) {
         	Log.v(LOGTAG,"Timer Expired");
 
-        	checkOPML();
     		if (settings.syncFrequency() != Settings.SyncFrequency.Manual) {
     			Log.v(LOGTAG, "Sync Frequency not manual");
     			if ((appStatus == SocialReader.APP_IN_BACKGROUND && settings.syncFrequency() == Settings.SyncFrequency.InBackground)
     				|| appStatus == SocialReader.APP_IN_FOREGROUND) {
     				Log.v(LOGTAG, "App in background and sync frequency set to in background OR App in foreground");
+    	        	checkOPML();
     				backgroundSyncSubscribedFeeds();
     			} else {
     				Log.v(LOGTAG, "App in background and sync frequency not set to background");
@@ -286,7 +291,7 @@ public class SocialReader implements ICacheWordSubscriber
             };
 
             periodicTimer = new Timer();
-            periodicTimer.schedule(periodicTask, TIMER_PERIOD);            
+            periodicTimer.schedule(periodicTask, 0, TIMER_PERIOD);            
             
             initialized = true;
             if (lockListener != null)
@@ -449,13 +454,12 @@ public class SocialReader implements ICacheWordSubscriber
 	public void onPause() {
 		Log.v(LOGTAG, "SocialReader onPause");
 		appStatus = SocialReader.APP_IN_BACKGROUND;
-		cacheWord.disconnect();
+		//cacheWord.disconnect();
 	}
 
 	// When the foreground app is unpaused
 	public void onResume() {
 		Log.v(LOGTAG, "SocialReader onResume");
-		cacheWord.connectToService();
         appStatus = SocialReader.APP_IN_FOREGROUND;
 	}
 	
@@ -1325,7 +1329,7 @@ public class SocialReader implements ICacheWordSubscriber
 		sendIntent.setDataAndType(Uri.fromFile(sharingFile), CONTENT_SHARING_MIME_TYPE);
 		sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-		Log.v(LOGTAG,"Secure Share Intent: " + sendIntent.getDataString());
+		//Log.v(LOGTAG,"Secure Share Intent: " + sendIntent.getDataString());
 		
 		return sendIntent;
 	}
@@ -1507,7 +1511,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public boolean loadMediaContent(MediaContent mc, MediaDownloaderCallback mdc, boolean download, boolean forceBitwiseDownload)
 	{
-		Log.v(LOGTAG, "loadImageMediaContent: " + mc.getUrl() + " " + mc.getType());
+		//Log.v(LOGTAG, "loadImageMediaContent: " + mc.getUrl() + " " + mc.getType());
 		
 		final MediaDownloaderCallback mediaDownloaderCallback = mdc;
 		
@@ -1517,7 +1521,7 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			if (possibleFile.exists())
 			{
-				Log.v(LOGTAG, "Already downloaded: " + possibleFile.getAbsolutePath());
+				//Log.v(LOGTAG, "Already downloaded: " + possibleFile.getAbsolutePath());
 				if (mdc != null)
 				mdc.mediaDownloadedNonVFS(possibleFile);
 				return true;
