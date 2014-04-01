@@ -21,7 +21,6 @@ import info.guardianproject.iocipher.FileInputStream;
 import info.guardianproject.iocipher.FileOutputStream;
 import info.guardianproject.iocipher.VirtualFileSystem;
 import info.guardianproject.onionkit.ui.OrbotHelper;
-
 import info.guardianproject.securereader.HTMLRSSFeedFinder.RSSFeed;
 import info.guardianproject.securereader.MediaDownloader.MediaDownloaderCallback;
 import info.guardianproject.securereader.Settings.UiLanguage;
@@ -64,6 +63,7 @@ import android.util.Log;
 import com.tinymission.rss.Feed;
 import com.tinymission.rss.Item;
 import com.tinymission.rss.MediaContent;
+import com.tinymission.rss.MediaContent.MediaContentType;
 
 public class SocialReader implements ICacheWordSubscriber
 {
@@ -1515,7 +1515,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		final MediaDownloaderCallback mediaDownloaderCallback = mdc;
 		
-		if (mc.getType() != null && (mc.getType().equals("application/vnd.android.package-archive") || mc.getType().equals("application/epub+zip"))) {
+		if (mc.getMediaContentType() == MediaContentType.EPUB) {
 			
 			java.io.File possibleFile = new java.io.File(this.getNonVirtualFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mc.getDatabaseId());
 			
@@ -1549,9 +1549,7 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 			
 		} 
-		else if ((mc.getType() != null && (mc.getType().startsWith("audio") || mc.getType().startsWith("video")))
-				|| "audio".equals(mc.getMedium()) 
-				|| "video".equals(mc.getMedium())) 
+		else if (mc.getMediaContentType() == MediaContentType.AUDIO || mc.getMediaContentType() == MediaContentType.VIDEO) 
 		{
 			File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mc.getDatabaseId());
 			if (possibleFile.exists())
@@ -1578,7 +1576,7 @@ public class SocialReader implements ICacheWordSubscriber
 				return false;
 			}			
 		}
-		else if ((mc.getType() != null && mc.getType().startsWith("image")) || "image".equals(mc.getMedium())) 
+		else if (mc.getMediaContentType() == MediaContentType.IMAGE) 
 		{
 			File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mc.getDatabaseId());
 			if (possibleFile.exists())
