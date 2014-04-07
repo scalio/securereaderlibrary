@@ -1009,6 +1009,14 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	public String getFeedTitle(long feedId) {
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			return databaseAdapter.getFeedTitle(feedId);
+		}
+		return "";
+	}
+	
 	/*
 	 * Returns feed/list of favorite items for a specific feed
 	 */

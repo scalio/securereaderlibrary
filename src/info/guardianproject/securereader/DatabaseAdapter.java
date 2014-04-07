@@ -117,6 +117,29 @@ public class DatabaseAdapter
 		return returnValue;
 	}
 
+	public String getFeedTitle(long feedId) {
+		String title = "";
+		
+		String query = "select " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.FEEDS_TABLE_TITLE + ", "
+				+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID
+				+ " = " + feedId + ";";
+		
+		if (LOGGING) 
+			Log.w(LOGTAG, query);
+
+		if (databaseReady()) {
+			Cursor queryCursor = db.rawQuery(query, new String[] {});
+
+			if (queryCursor.getCount() == 0)
+			{
+				if (queryCursor.moveToFirst()) {
+					title = queryCursor.getString(queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE));
+				}
+			}
+		}
+		return title;
+	}
+	
 	public long addOrUpdateFeed(Feed feed)
 	{
 		long returnValue = -1;
@@ -137,7 +160,8 @@ public class DatabaseAdapter
 						+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL
 						+ " = '" + feed.getFeedURL() + "';";
 
-				Log.w(LOGTAG, query);
+				if (LOGGING) 
+					Log.w(LOGTAG, query);
 
 				if (databaseReady()) {
 					Cursor queryCursor = db.rawQuery(query, new String[] {});
@@ -727,8 +751,18 @@ public class DatabaseAdapter
 			values.put(DatabaseHelper.ITEMS_TABLE_CATEGORY, item.getCategory());
 			values.put(DatabaseHelper.ITEMS_TABLE_DESCRIPTION, item.getDescription());
 			values.put(DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED, item.getContentEncoded());
-			values.put(DatabaseHelper.ITEMS_TABLE_FAVORITE, item.getFavorite());
-			values.put(DatabaseHelper.ITEMS_TABLE_SHARED, item.getShared());
+			if (item.getFavorite()) {
+				values.put(DatabaseHelper.ITEMS_TABLE_FAVORITE, 1);
+			} else {
+				values.put(DatabaseHelper.ITEMS_TABLE_FAVORITE, 0);
+			}
+			
+			if (item.getShared()) {
+				values.put(DatabaseHelper.ITEMS_TABLE_SHARED, 1);	
+			} else {
+				values.put(DatabaseHelper.ITEMS_TABLE_SHARED, 0);
+			}			
+			
 			values.put(DatabaseHelper.ITEMS_TABLE_GUID, item.getGuid());
 			values.put(DatabaseHelper.ITEMS_TABLE_LINK, item.getLink());
 			values.put(DatabaseHelper.ITEMS_TABLE_SOURCE, item.getSource());
@@ -768,7 +802,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + " from " + DatabaseHelper.ITEMS_TABLE + " where "
 					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
-			if (LOGGING)
+			//if (LOGGING)
 				Log.w(LOGTAG, query);
 
 			if (databaseReady()) {
