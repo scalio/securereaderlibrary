@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.xml.sax.Attributes;
 
@@ -16,9 +17,9 @@ public class MediaContent extends FeedEntity implements Serializable
 {
 	public static final long serialVersionUID = 133703L;
 
-	/*
-	 * public enum MediaContentType { IMAGE, VIDEO, AUDIO };
-	 * 
+	 public enum MediaContentType { IMAGE, VIDEO, AUDIO, APPLICATION, EPUB, UNKNOWN };
+	 
+	 /* 
 	 * private MediaContentType mType = MediaContentType.IMAGE; private int
 	 * mResId;
 	 * 
@@ -420,4 +421,41 @@ public class MediaContent extends FeedEntity implements Serializable
 		this.sampligRate = sampligRate;
 	}
 
+	public MediaContentType getMediaContentType() 
+	{
+		if (getType() != null && getType().equals("application/vnd.android.package-archive")) 
+		{
+			return MediaContentType.APPLICATION;
+		}
+		else if (getType() != null && getType().equals("application/epub+zip")) 
+		{
+			return MediaContentType.EPUB;
+		}
+		else if ((getType() != null && getType().startsWith("image")) || 
+				"image".equals(getMedium()) ||
+				matchesFileExtension(".jpg") || 
+				matchesFileExtension(".jpeg"))
+		{
+			return MediaContentType.IMAGE;
+		}
+		else if ((getType() != null && getType().startsWith("audio"))
+				|| "audio".equals(getMedium()))
+		{
+			return MediaContentType.AUDIO;
+		}
+		else if ((getType() != null && getType().startsWith("video"))
+				|| "video".equals(getMedium()))
+		{
+			return MediaContentType.VIDEO;
+		}
+		return MediaContentType.UNKNOWN;
+	}
+		
+	private boolean matchesFileExtension(String extension)
+	{
+		if (extension == null || getUrl() == null)
+			return false;
+		return getUrl().toLowerCase(Locale.getDefault()).endsWith(extension.toLowerCase(Locale.getDefault()));
+	}
+	
 }
