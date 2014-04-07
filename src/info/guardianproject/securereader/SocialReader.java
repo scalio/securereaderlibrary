@@ -1348,7 +1348,7 @@ public class SocialReader implements ICacheWordSubscriber
 
 		if (feed != null)
 		{
-			sendIntent.putExtra(Intent.EXTRA_TEXT, feed.getTitle() + "\n" + feed.getLink() + "\n" + feed.getDescription());
+			sendIntent.putExtra(Intent.EXTRA_TEXT, feed.getTitle() + "\n" + feed.getLink() + "\n" + feed.getFeedURL() + "\n" + feed.getDescription());
 		}
 		else
 		{
