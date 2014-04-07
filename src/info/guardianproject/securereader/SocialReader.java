@@ -1025,23 +1025,15 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
-	public ArrayList<Feed> getAllShared() {
+	public Feed getAllShared() 
+	{
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
-			//ArrayList<Feed> allFeeds = getFeedsList();
-			ArrayList<Feed> shared = new ArrayList<Feed>();
-			/*for (int i = 0; i < allFeeds.size(); i++)
-			{
-				Feed feedShared = databaseAdapter.getSharedFeedItems(allFeeds.get(i));
-				shared.add(feedShared);
-			}*/
-			Feed feedShared = databaseAdapter.getAllSharedItems();
-			shared.add(feedShared);
-			return shared;
+			return databaseAdapter.getAllSharedItems();
 		}
 		else
 		{
-			return new ArrayList<Feed>();
+			return new Feed();
 		}
 	}
 
@@ -1052,39 +1044,21 @@ public class SocialReader implements ICacheWordSubscriber
 	 */
 	public int getAllSharedCount()
 	{
-		int count = 0;
-
-		ArrayList<Feed> shareItemsPerFeed = getAllShared();
-		if (shareItemsPerFeed != null)
-		{
-			Iterator<Feed> itFeed = shareItemsPerFeed.iterator();
-			while (itFeed.hasNext())
-			{
-				Feed feed = itFeed.next();
-				count += feed.getItemCount();
-			}
-		}
-		return count;
+		return getAllShared().getItemCount();
 	}
 	
 	/*
 	 * Returns ArrayList of Feeds containing only the favorites
 	 */
-	public ArrayList<Feed> getAllFavorites()
-	{
+	public Feed getAllFavorites()
+	{		
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
-			ArrayList<Feed> allFeeds = getFeedsList();
-			ArrayList<Feed> favorites = new ArrayList<Feed>();
-			for (int i = 0; i < allFeeds.size(); i++)
-			{
-				favorites.add(getFeedFavorites(allFeeds.get(i)));
-			}
-			return favorites;
+			return databaseAdapter.getAllFavoriteItems(); 
 		}
 		else
 		{
-			return new ArrayList<Feed>();
+			return new Feed();
 		}
 	}
 
@@ -1095,19 +1069,7 @@ public class SocialReader implements ICacheWordSubscriber
 	 */
 	public int getAllFavoritesCount()
 	{
-		int count = 0;
-
-		ArrayList<Feed> favItemsPerFeed = getAllFavorites();
-		if (favItemsPerFeed != null)
-		{
-			Iterator<Feed> itFeed = favItemsPerFeed.iterator();
-			while (itFeed.hasNext())
-			{
-				Feed feed = itFeed.next();
-				count += feed.getItemCount();
-			}
-		}
-		return count;
+		return getAllFavorites().getItemCount();
 	}
 
 	public void markItemAsFavorite(Item item, boolean favorite)
