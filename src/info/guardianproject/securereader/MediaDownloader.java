@@ -32,7 +32,7 @@ import com.tinymission.rss.MediaContent;
 
 public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 {
-
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "MediaDownloader";
 	
 	SocialReader socialReader;
@@ -74,7 +74,8 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 	@Override
 	protected File doInBackground(MediaContent... params)
 	{
-		Log.v(LOGTAG, "MediaDownloader: doInBackground");
+		if (LOGGING)
+			Log.v(LOGTAG, "MediaDownloader: doInBackground");
 
 		File savedFile = null;
 		java.io.File nonVFSSavedFile = null;
@@ -91,15 +92,14 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 		{
 			httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
 
-			//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(SocialReader.PROXY_HOST, SocialReader.PROXY_HTTP_PORT));
-			Log.v(LOGTAG, "MediaDownloader: USE_TOR");
+			if (LOGGING) 
+				Log.v(LOGTAG, "MediaDownloader: USE_TOR");
 		}
 
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
 		{
 			try
 			{
-				Log.v(LOGTAG,"URL is: " + mediaContent.getUrl());
 				Uri uriMedia = Uri.parse(mediaContent.getUrl());
 				if (uriMedia != null && ContentResolver.SCHEME_CONTENT.equals(uriMedia.getScheme()))
 				{
@@ -125,19 +125,26 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 
 				if (mediaContent.getUrl().startsWith("file:///"))
 				{
-					Log.v(LOGTAG, "Have a file:/// url, we probably don't need to do anything but let's check");
+					if (LOGGING)
+						Log.v(LOGTAG, "Have a file:/// url, we probably don't need to do anything but let's check");
 
 					savedFile = new File(socialReader.getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
-					Log.v(LOGTAG, "Does " + socialReader.getFileSystemDir() + SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId() + " exist?");
+					
+					if (LOGGING) 
+						Log.v(LOGTAG, "Does " + socialReader.getFileSystemDir() + SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId() + " exist?");
 					
 					if (!savedFile.exists()) {
-						Log.v(LOGTAG, "Saved File Doesn't Exist");
+						if (LOGGING) 
+							Log.v(LOGTAG, "Saved File Doesn't Exist");
 						
 						URI existingFileUri = new URI(mediaContent.getUrl());
 						java.io.File existingFile = new java.io.File(existingFileUri);
 						copyFileFromFStoAppFS(existingFile, savedFile);
 					}
-					Log.v(LOGTAG, "Copy should have worked: " + savedFile.getAbsolutePath());
+					
+					if (LOGGING) 
+						Log.v(LOGTAG, "Copy should have worked: " + savedFile.getAbsolutePath());
+					
 					socialReader.getStoreBitmapDimensions(mediaContent);
 					return savedFile;
 				}
@@ -148,19 +155,22 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 				int statusCode = response.getStatusLine().getStatusCode();
 				if (statusCode != HttpStatus.SC_OK)
 				{
-					Log.w(LOGTAG, "Error " + statusCode + " while retrieving file from " + mediaContent.getUrl());
+					if (LOGGING) 
+						Log.w(LOGTAG, "Error " + statusCode + " while retrieving file from " + mediaContent.getUrl());
 					return null;
 				}
 
 				HttpEntity entity = response.getEntity();
 				if (entity == null)
 				{
-					Log.v(LOGTAG, "MediaDownloader: no response");
+					if (LOGGING) 
+						Log.v(LOGTAG, "MediaDownloader: no response");
 
 					return null;
 				}
 
-				Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
+				if (LOGGING) 
+					Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
 
 				savedFile = new File(socialReader.getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
 
@@ -186,18 +196,18 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 			}
 			catch (ClientProtocolException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			catch (IOException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			catch (URISyntaxException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 		}
 
@@ -207,7 +217,8 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 	@Override
 	protected void onProgressUpdate(Integer... progress)
 	{
-		// Log.v(LOGTAG, progress[0].toString());
+		//if (LOGGING)
+			//Log.v(LOGTAG, progress[0].toString());
 	}
 
 	@Override

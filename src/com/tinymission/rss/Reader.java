@@ -22,11 +22,8 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import android.util.Log;
 
-import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.conn.params.ConnRoutePNames;
 
 /**
  * Reads an RSS feed and creates and RssFeed object.
@@ -35,7 +32,7 @@ public class Reader
 {
 
 	public final static String LOGTAG = "TinyRSS Reader";
-	public final static boolean LOGGING_ON = false;
+	public final static boolean LOGGING = false;
 
 	private Feed feed;
 
@@ -111,18 +108,24 @@ public class Reader
 			
 			xr.setErrorHandler(new ErrorHandler() { 
 				public void error(SAXParseException exception) throws SAXException {
-					Log.v(LOGTAG, "ErrorHandler: SAXParseException error: " + exception.getMessage()); 
-					exception.printStackTrace(); 
+					if (LOGGING) { 
+						Log.v(LOGTAG, "ErrorHandler: SAXParseException error: " + exception.getMessage()); 
+						exception.printStackTrace();
+					}
 				}
 			  
 				public void fatalError(SAXParseException exception) throws SAXException { 
-					Log.v(LOGTAG, "ErrorHandler: SAXParseException fatalError: " + exception.getMessage()); 
-					exception.printStackTrace(); 
+					if (LOGGING) {
+						Log.v(LOGTAG, "ErrorHandler: SAXParseException fatalError: " + exception.getMessage()); 
+						exception.printStackTrace();
+					}
 				}
 			  
-				public void warning(SAXParseException exception) throws SAXException { 
-					Log.v(LOGTAG, "ErrorHandler: SAXParseException warning: " + exception.getMessage());
-					exception.printStackTrace(); 
+				public void warning(SAXParseException exception) throws SAXException {
+					if (LOGGING) {
+						Log.v(LOGTAG, "ErrorHandler: SAXParseException warning: " + exception.getMessage());
+						exception.printStackTrace(); 
+					}
 				} 
 			});
 			
@@ -130,18 +133,10 @@ public class Reader
 			Handler handler = new Handler();
 			xr.setContentHandler(handler);
 
-			if (LOGGING_ON)	
-				Log.v(LOGTAG, "Feed Link: " + feed.getFeedURL());
-
-			// URLConnection ucon = new URL(feed.getLink()).openConnection();
-			// InputStream is = ucon.getInputStream();
-
 			StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
 			if (socialReader.useTor())
 			{
 				httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-
-				//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(SocialReader.PROXY_HOST, SocialReader.PROXY_HTTP_PORT));
 			}
 
 			if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))
@@ -149,11 +144,6 @@ public class Reader
 				HttpGet httpGet = new HttpGet(feed.getFeedURL());
 
 				HttpResponse response = httpClient.execute(httpGet);
-
-				/*
-				 * StringBuffer sb = new StringBuffer();
-				 * sb.append(response.getStatusLine()).append("\n\n");
-				 */
 
 				if (response.getStatusLine().getStatusCode() == 200) {
 					Log.v(LOGTAG,"Response Code is good");
@@ -164,11 +154,7 @@ public class Reader
 					is.close();
 
 					Date currentDate = new Date();
-					if (LOGGING_ON)	
-						Log.v(LOGTAG, "Setting Feed Network Pull Date: " + currentDate.toString());
 					feed.setNetworkPullDate(currentDate);
-					if (LOGGING_ON)	
-						Log.v(LOGTAG, "Feed has Pull date: " + feed.getNetworkPullDate().toString());
 					feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);
 					
 				} else {
@@ -185,25 +171,29 @@ public class Reader
 		}
 		catch (ParserConfigurationException pce)
 		{
-			Log.e("SAX XML", "sax parse error", pce);
+			if (LOGGING) 
+				Log.e("SAX XML", "sax parse error", pce);
 			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 
 		}
 		catch (SAXException se)
 		{
-			Log.e("SAX XML", "sax error", se);
+			if (LOGGING)
+				Log.e("SAX XML", "sax error", se);
 			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 
 		}
 		catch (IOException ioe)
 		{
-			Log.e("SAX XML", "sax parse io error", ioe);
+			if (LOGGING) 
+				Log.e("SAX XML", "sax parse io error", ioe);
 			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 
 		}
 		catch (IllegalStateException ise)
 		{
-			ise.printStackTrace();
+			if (LOGGING)
+				ise.printStackTrace();
 			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 		}
 		return feed;
@@ -246,10 +236,6 @@ public class Reader
 			{
 				_contentBuilder = new StringBuilder();
 			}
-			// else if (isMainContentTag(localName))
-			// {
-			// _contentBuilder = new StringBuilder();
-			// }
 			else if (isEntityTag(qName))
 			{
 				if (qName.equals("item"))
@@ -318,8 +304,6 @@ public class Reader
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException
 		{
-			if (LOGGING_ON)	
-				Log.v(LOGTAG, "Ending " + localName + " " + qName);
 			// get the latest parsed content, if there is any
 			String content = "";
 			if (isContentTag(qName))
@@ -327,12 +311,8 @@ public class Reader
 				content = _contentBuilder.toString().trim();
 				if (qName.equalsIgnoreCase("content:encoded"))
 				{
-					if (LOGGING_ON)	
-						Log.v(LOGTAG, "We Have content:encoded!");
 					qName = "contentEncoded";
 				}
-				if (LOGGING_ON)	
-					Log.v(LOGTAG, "Content " + content);
 				_entityStack.lastElement().setProperty(qName, content);
 			}
 			else if (isEntityTag(qName))

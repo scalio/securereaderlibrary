@@ -9,6 +9,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLCipherOpenHelper
 {
 	public static String LOGTAG = "DatabaseHelper";
+	public static boolean LOGGING = false;
 
 	public static final String DATABASE_NAME = "bigbuffalo.db";
 	public static final int DATABASE_VERSION = 1;
@@ -121,26 +122,33 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	@Override
 	public void onCreate(SQLiteDatabase _sqliteDatabase)
 	{
-		Log.v(LOGTAG, "SQL: " + ITEMS_TABLE_CREATE_SQL);
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + ITEMS_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(ITEMS_TABLE_CREATE_SQL);
 		
-		Log.v(LOGTAG, "SQL: " + ITEMS_TABLE_CREATE_INDEX);
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + ITEMS_TABLE_CREATE_INDEX);
 		_sqliteDatabase.execSQL(ITEMS_TABLE_CREATE_INDEX);
 
-		Log.v(LOGTAG, "SQL: " + FEEDS_TABLE_CREATE_SQL);
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + FEEDS_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(FEEDS_TABLE_CREATE_SQL);
 
-		Log.v(LOGTAG, "SQL: " + ITEMS_MEDIA_TABLE_CREATE_SQL);
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + ITEMS_MEDIA_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(ITEMS_MEDIA_TABLE_CREATE_SQL);
 		
-		Log.v(LOGTAG, "SQL: " + SETTINGS_TABLE_CREATE_SQL);
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + SETTINGS_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(SETTINGS_TABLE_CREATE_SQL);
 		
 		/*
-		Log.v(LOGTAG, "SQL: " + TAGS_TABLE_CREATE_SQL);
+		 * if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + TAGS_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(TAGS_TABLE_CREATE_SQL);
 		*/
-		Log.v(LOGTAG, "SQL: " + ITEM_TAGS_TABLE_CREATE_SQL);
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + ITEM_TAGS_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(ITEM_TAGS_TABLE_CREATE_SQL);		
 	}
 

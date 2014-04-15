@@ -59,6 +59,7 @@ import android.util.Log;
 public abstract class NanoHTTPD {
 	
 	public static final String LOGTAG = "NanoHTTPD";
+	public static final boolean LOGGING = false;
 	
     /**
      * Common mime type for dynamic content: plain text
@@ -110,7 +111,8 @@ public abstract class NanoHTTPD {
             @Override
             public void run() {
                 do {
-                	Log.v(LOGTAG,"NanoHTTPD is listening for connections");
+                	if (LOGGING)
+                		Log.v(LOGTAG,"NanoHTTPD is listening for connections");
                     try {
                         final Socket finalAccept = myServerSocket.accept();
                         InputStream inputStream = finalAccept.getInputStream();
@@ -488,20 +490,24 @@ public abstract class NanoHTTPD {
                     throw new Error("sendResponse(): Status can't be null.");
                 }
                 
-                Log.v(LOGTAG,"Sending response");
+                if (LOGGING)
+                	Log.v(LOGTAG,"Sending response");
                 
                 PrintWriter pw = new PrintWriter(outputStream);
                 pw.print("HTTP/1.0 " + status.getDescription() + " \r\n");
-                Log.v(LOGTAG,"HTTP/1.0 " + status.getDescription() + " \r\n");
+                if (LOGGING)
+                	Log.v(LOGTAG,"HTTP/1.0 " + status.getDescription() + " \r\n");
 
                 if (mime != null) {
                     pw.print("Content-Type: " + mime + "\r\n");
-                    Log.v(LOGTAG,"Content-Type: " + mime + "\r\n");
+                    if (LOGGING)
+                    	Log.v(LOGTAG,"Content-Type: " + mime + "\r\n");
                 }
 
                 if (header == null || header.get("Date") == null) {
                     pw.print("Date: " + gmtFrmt.format(new Date()) + "\r\n");
-                    Log.v(LOGTAG,"Date: " + gmtFrmt.format(new Date()) + "\r\n");
+                    if (LOGGING)
+                    	Log.v(LOGTAG,"Date: " + gmtFrmt.format(new Date()) + "\r\n");
 
                 }
 
@@ -509,12 +515,14 @@ public abstract class NanoHTTPD {
                     for (String key : header.keySet()) {
                         String value = header.get(key);
                         pw.print(key + ": " + value + "\r\n");
-                        Log.v(LOGTAG,key + ": " + value + "\r\n");
+                        if (LOGGING)
+                        	Log.v(LOGTAG,key + ": " + value + "\r\n");
                         
                     }
                 }
 
-                Log.v(LOGTAG,"\r\n");
+                if (LOGGING)
+                	Log.v(LOGTAG,"\r\n");
 
                 pw.print("\r\n");
                 pw.flush();
@@ -529,7 +537,8 @@ public abstract class NanoHTTPD {
                             break;
                         }
                         outputStream.write(buff, 0, read);
-                        Log.v(LOGTAG,"Sending " + read + " bytes");
+                        if (LOGGING)
+                        	Log.v(LOGTAG,"Sending " + read + " bytes");
 
                         pending -= read;
                     }
@@ -619,7 +628,8 @@ public abstract class NanoHTTPD {
 
         @Override
         public void run() {
-        	Log.v(LOGTAG,"Got a connection");
+        	if (LOGGING)
+        		Log.v(LOGTAG,"Got a connection");
             try {
                 if (inputStream == null) {
                     return;

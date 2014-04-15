@@ -28,6 +28,7 @@ import com.tinymission.rss.MediaContent;
  */
 public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 {
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "XMLRPC PUBLISHER";
 
 	SocialReporter socialReporter;
@@ -56,7 +57,8 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 		Item item = new Item();
 		if (params.length == 0)
 		{
-			Log.v(LOGTAG, "doInBackground params length is 0");
+			if (LOGGING)
+				Log.v(LOGTAG, "doInBackground params length is 0");
 		}
 		else
 		{
@@ -90,13 +92,12 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 					arguments.add(nickname);
 					XmlRpcClient xpc = new XmlRpcClient(new URL(socialReporter.xmlrpcEndpoint));
 					String result = (String) xpc.invoke("acxu.createUser", arguments);
-					Log.v(LOGTAG,"From wordpress: " + result);
+					if (LOGGING) 
+						Log.v(LOGTAG,"From wordpress: " + result);
 					String[] sresult = result.split(" ");
 					if (sresult.length == 2) {
 						xmlRPCUsername = sresult[0];
 						xmlRPCPassword = sresult[1];
-						//Log.v(LOGTAG,"username: " + xmlRPCUsername);
-						//Log.v(LOGTAG,"username: " + xmlRPCPassword);
 						
 						socialReporter.socialReader.ssettings.setXMLRPCUsername(xmlRPCUsername);
 						socialReporter.socialReader.ssettings.setXMLRPCPassword(xmlRPCPassword);
@@ -105,10 +106,9 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 				
 				if (xmlRPCUsername != null && xmlRPCPassword != null) 
 				{
-					//Log.v(LOGTAG, "Logging into Wordpress: " + SocialReporter.XMLRPC_USERNAME + '@' + SocialReporter.XMLRPC_ENDPOINT);
-					//Wordpress wordpress = new Wordpress(SocialReporter.XMLRPC_USERNAME, SocialReporter.XMLRPC_PASSWORD, SocialReporter.XMLRPC_ENDPOINT);
 	
-					Log.v(LOGTAG, "Logging into XMLRPC Interface: " + xmlRPCUsername + '@' + socialReporter.xmlrpcEndpoint);
+					if (LOGGING) 
+						Log.v(LOGTAG, "Logging into XMLRPC Interface: " + xmlRPCUsername + '@' + socialReporter.xmlrpcEndpoint);
 					Wordpress wordpress = new Wordpress(xmlRPCUsername, xmlRPCPassword, socialReporter.xmlrpcEndpoint);
 	
 					Page page = new Page();
@@ -123,7 +123,8 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 						//String filePath = mc.getFilePathFromLocalUri(socialReporter.applicationContext);
 						//String filePath = mc.getUrl();
 						URI fileUri = new URI(mc.getUrl());
-						Log.v(LOGTAG,"filePath: "+fileUri.getPath());
+						if (LOGGING)
+							Log.v(LOGTAG,"filePath: "+fileUri.getPath());
 						if (fileUri != null)
 						{
 							File f = new File(fileUri.getPath());
@@ -149,9 +150,11 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 					boolean publish = true;
 	
 					String postId = wordpress.newPost(page, publish);
-					Log.v(LOGTAG, "Posted: " + postId);
+					if (LOGGING)
+						Log.v(LOGTAG, "Posted: " + postId);
 				} else {
-					Log.e(LOGTAG,"Can't publish, no username/password");
+					if (LOGGING)
+						Log.e(LOGTAG,"Can't publish, no username/password");
 				}
 
 				// return postId;

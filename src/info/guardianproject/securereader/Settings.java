@@ -1,6 +1,5 @@
 package info.guardianproject.securereader;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 import android.content.Context;
@@ -9,6 +8,9 @@ import android.preference.PreferenceManager;
 
 public class Settings
 {
+	public static final String LOGTAG = "Settings";
+	public static final boolean LOGGING = false;
+	
 	private final SharedPreferences mPrefs;
 	private final boolean mIsFirstRun;
 	private final Context context;

@@ -31,7 +31,8 @@ import com.tinymission.rss.MediaContent;
 public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File>
 {
 	public final static String LOGTAG = "NonVFSMediaDownloader";
-		
+	public final static boolean LOGGING = false;
+	
 	SocialReader socialReader;
 	MediaDownloaderCallback callback;
 	File savedFile;		
@@ -56,7 +57,8 @@ public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File
 	@Override
 	protected File doInBackground(MediaContent... params)
 	{
-		Log.v(LOGTAG, "doInBackground");
+		if (LOGGING) 
+			Log.v(LOGTAG, "doInBackground");
 
 		InputStream inputStream = null;
 
@@ -69,16 +71,15 @@ public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File
 		if (socialReader.useTor())
 		{
 			httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-
-			//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(SocialReader.PROXY_HOST, SocialReader.PROXY_HTTP_PORT));
-			Log.v(LOGTAG, "USE_TOR");
+			
+			if (LOGGING)
+				Log.v(LOGTAG, "USE_TOR");
 		}
 
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
 		{
 			try
 			{
-				Log.v(LOGTAG,"URL is: " + mediaContent.getUrl());
 				Uri uriMedia = Uri.parse(mediaContent.getUrl());
 
 				HttpGet httpGet = new HttpGet(mediaContent.getUrl());
@@ -87,19 +88,22 @@ public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File
 				int statusCode = response.getStatusLine().getStatusCode();
 				if (statusCode != HttpStatus.SC_OK)
 				{
-					Log.w(LOGTAG, "Error " + statusCode + " while retrieving file from " + mediaContent.getUrl());
+					if (LOGGING)
+						Log.w(LOGTAG, "Error " + statusCode + " while retrieving file");
 					return null;
 				}
 
 				HttpEntity entity = response.getEntity();
 				if (entity == null)
 				{
-					Log.v(LOGTAG, "MediaDownloader: no response");
+					if (LOGGING)
+						Log.v(LOGTAG, "MediaDownloader: no response");
 
 					return null;
 				}
 
-				Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
+				if (LOGGING)
+					Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
 
 				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(savedFile));
 				inputStream = entity.getContent();
@@ -122,13 +126,13 @@ public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File
 			}
 			catch (ClientProtocolException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			catch (IOException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 		}
 
@@ -138,6 +142,7 @@ public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File
 	@Override
 	protected void onProgressUpdate(Integer... progress)
 	{
+		//if (LOGGING)
 		// Log.v(LOGTAG, progress[0].toString());
 	}
 

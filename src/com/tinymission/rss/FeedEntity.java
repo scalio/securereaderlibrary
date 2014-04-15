@@ -14,7 +14,9 @@ import android.util.Log;
 public class FeedEntity implements Serializable
 {
 	public static final long serialVersionUID = 133701L;
-
+	public static final String LOGTAG = "rss.FeedEntity";
+	public static final boolean LOGGING = false;
+	
 	public FeedEntity(Attributes attributes)
 	{
 		if (attributes != null)
@@ -39,7 +41,7 @@ public class FeedEntity implements Serializable
 	public void setProperty(String name, String value)
 	{
 		String methodName = "set" + name;
-		String logTag = "FeedEntity: " + getClass().getName();
+		String logTag = LOGTAG + ": " + getClass().getName();
 
 		// This doesn't work
 		/*
@@ -51,7 +53,8 @@ public class FeedEntity implements Serializable
 
 		try
 		{
-			// Log.v(logTag, "Attempting to call " + methodName);
+			if (LOGGING)
+				Log.v(logTag, "Attempting to call " + methodName);
 
 			// This looping through all of the methods seems a bit cumbersome,
 			// wouldn't the above work better?
@@ -62,25 +65,28 @@ public class FeedEntity implements Serializable
 					if (m.getParameterTypes()[0] == String.class)
 					{ // it's just a string argument, pass the string
 						m.invoke(this, value);
-						// Log.v(logTag, "Assigned property " + name +
-						// " string value: " + value);
+						if (LOGGING)
+							Log.v(logTag, "Assigned property " + name + " string value: " + value);
 					}
 					else if (m.getParameterTypes()[0] == Integer.class)
 					{ // it's an int argument, we can handle that
 						int intVal = Integer.parseInt(value);
 						m.invoke(this, intVal);
-						// Log.v(logTag, "Assigned property " + name +
-						// " int value: " + Integer.toString(intVal));
+						if (LOGGING)
+							Log.v(logTag, "Assigned property " + name + " int value: " + Integer.toString(intVal));
 					}
 					return;
 				}
 			}
-			// Log.w(logTag, "Couldn't find property setter " + methodName);
+			if (LOGGING)
+				Log.w(logTag, "Couldn't find property setter " + methodName);
 		}
 		catch (Exception ex)
 		{
-			Log.w(logTag, "Error setting property: " + name);
-			Log.w(logTag, ex.getMessage());
+			if (LOGGING) {
+				Log.w(logTag, "Error setting property: " + name);
+				Log.w(logTag, ex.getMessage());
+			}
 		}
 	}
 

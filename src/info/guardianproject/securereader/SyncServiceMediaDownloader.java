@@ -33,6 +33,7 @@ import com.tinymission.rss.MediaContent;
 
 public class SyncServiceMediaDownloader implements Runnable
 {
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "SyncServiceMediaDownloader";
 
 	SyncService syncService;
@@ -77,7 +78,8 @@ public class SyncServiceMediaDownloader implements Runnable
 	@Override
 	public void run() 
 	{		
-		Log.v(LOGTAG, "SyncServiceMediaDownloader: run");
+		if (LOGGING)
+			Log.v(LOGTAG, "SyncServiceMediaDownloader: run");
 
 		File savedFile = null;
 		InputStream inputStream = null;
@@ -89,8 +91,8 @@ public class SyncServiceMediaDownloader implements Runnable
 		{
 			httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
 
-			//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(SocialReader.PROXY_HOST, SocialReader.PROXY_HTTP_PORT));
-			Log.v(LOGTAG, "MediaDownloader: USE_TOR");
+			if (LOGGING)
+				Log.v(LOGTAG, "MediaDownloader: USE_TOR");
 		}
 
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
@@ -100,11 +102,13 @@ public class SyncServiceMediaDownloader implements Runnable
 				File possibleFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
 				if (possibleFile.exists())
 				{
-					Log.v(LOGTAG, "Image already downloaded: " + possibleFile.getAbsolutePath());
+					if (LOGGING)
+						Log.v(LOGTAG, "Image already downloaded: " + possibleFile.getAbsolutePath());
 				}
 				else if (mediaContent.getUrl().startsWith("file:///"))
 				{
-					Log.v(LOGTAG, "Have a file:/// url");
+					if (LOGGING)
+						Log.v(LOGTAG, "Have a file:/// url");
 					URI existingFileUri = new URI(mediaContent.getUrl());
 
 					File existingFile = new File(existingFileUri);
@@ -112,7 +116,8 @@ public class SyncServiceMediaDownloader implements Runnable
 					//savedFile = new File(((App)syncService.getApplication()).socialReader.getFileSystemCache(), mediaContent.getDatabaseId() + ".jpg");
 					savedFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
 					copyFile(existingFile, savedFile);
-					Log.v(LOGTAG, "Copy should have worked: " + savedFile.getAbsolutePath());
+					if (LOGGING)
+						Log.v(LOGTAG, "Copy should have worked: " + savedFile.getAbsolutePath());
 				}
 				else 
 				{
@@ -122,19 +127,22 @@ public class SyncServiceMediaDownloader implements Runnable
 					int statusCode = response.getStatusLine().getStatusCode();
 					if (statusCode != HttpStatus.SC_OK)
 					{
-						Log.w(LOGTAG, "Error " + statusCode + " while retrieving bitmap from " + mediaContent.getUrl());
+						if (LOGGING)
+							Log.w(LOGTAG, "Error " + statusCode + " while retrieving bitmap");
 					} 
 					else 
 					{	
 						HttpEntity entity = response.getEntity();
 						if (entity == null)
 						{
-							Log.v(LOGTAG, "MediaDownloader: no response");
+							if (LOGGING)
+								Log.v(LOGTAG, "MediaDownloader: no response");
 						}
 						else 
 						{
 							if (mediaContent.getType() != null) { 
-								Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
+								if (LOGGING)
+									Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
 							}
 							
 							savedFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
@@ -164,17 +172,20 @@ public class SyncServiceMediaDownloader implements Runnable
 			catch (ClientProtocolException e)
 			{
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			catch (IOException e)
 			{
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			catch (URISyntaxException e)
 			{
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 		}
 
@@ -187,7 +198,8 @@ public class SyncServiceMediaDownloader implements Runnable
         try {
 			messenger.send(m);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 	}
 }

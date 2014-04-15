@@ -16,6 +16,7 @@ import com.tinymission.rss.Reader;
  */
 public class SyncServiceFeedFetcher implements Runnable
 {
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "SyncServiceFeedFetcher";
 
 	SyncService syncService;
@@ -53,7 +54,8 @@ public class SyncServiceFeedFetcher implements Runnable
 
 		SocialReader.getInstance(syncService.getApplicationContext()).setFeedAndItemData(syncTask.feed);
 		
-		Log.v(LOGTAG,"syncTask.feed should be complete: " + syncTask.feed.getTitle());
+		if (LOGGING)
+			Log.v(LOGTAG,"syncTask.feed should be complete");
 		
 		// Go back to the main thread
 		Message m = Message.obtain();            

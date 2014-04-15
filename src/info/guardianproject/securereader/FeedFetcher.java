@@ -13,6 +13,7 @@ import com.tinymission.rss.Reader;
 public class FeedFetcher extends AsyncTask<Feed, Integer, Feed>
 {
 	public final static String LOGTAG = "FeedFetcher";
+	public final static boolean LOGGING = false;
 
 	SocialReader socialReader;
 
@@ -40,13 +41,8 @@ public class FeedFetcher extends AsyncTask<Feed, Integer, Feed>
 	protected Feed doInBackground(Feed... params)
 	{
 		Feed feed = new Feed();
-		if (params.length == 0)
+		if (params.length > 0)
 		{
-			Log.v(LOGTAG, "doInBackground params length is 0");
-		}
-		else
-		{
-			Log.v(LOGTAG, "doInBackground: " + params[0].getFeedURL());
 			feed = params[0];
 			originalFeed = feed;
 

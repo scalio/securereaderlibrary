@@ -15,7 +15,6 @@ import info.guardianproject.cacheword.CacheWordSettings;
 import info.guardianproject.cacheword.Constants;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 import info.guardianproject.cacheword.IOCipherMountHelper;
-import info.guardianproject.cacheword.PassphraseSecrets;
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileInputStream;
 import info.guardianproject.iocipher.FileOutputStream;
@@ -34,7 +33,6 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.ZipEntry;
@@ -52,7 +50,6 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -74,6 +71,7 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public static final String LOGTAG = "SocialReader";
+	public static final boolean LOGGING = false;
 
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -181,20 +179,30 @@ public class SocialReader implements ICacheWordSubscriber
 	class TimerHandler extends Handler {
         @Override
         public void dispatchMessage(Message msg) {
-        	Log.v(LOGTAG,"Timer Expired");
+        	
+        	if (LOGGING)
+        		Log.v(LOGTAG,"Timer Expired");
 
     		if (settings.syncFrequency() != Settings.SyncFrequency.Manual) {
-    			Log.v(LOGTAG, "Sync Frequency not manual");
+    			
+    			if (LOGGING)
+    				Log.v(LOGTAG, "Sync Frequency not manual");
+    			
     			if ((appStatus == SocialReader.APP_IN_BACKGROUND && settings.syncFrequency() == Settings.SyncFrequency.InBackground)
     				|| appStatus == SocialReader.APP_IN_FOREGROUND) {
-    				Log.v(LOGTAG, "App in background and sync frequency set to in background OR App in foreground");
+    				
+    				if (LOGGING)
+    					Log.v(LOGTAG, "App in background and sync frequency set to in background OR App in foreground");
+    				
     	        	checkOPML();
     				backgroundSyncSubscribedFeeds();
     			} else {
-    				Log.v(LOGTAG, "App in background and sync frequency not set to background");
+    				if (LOGGING)
+    					Log.v(LOGTAG, "App in background and sync frequency not set to background");
     			}
     		} else {
-    			Log.v(LOGTAG, "Sync Frequency manual, not taking action");
+    			if (LOGGING)
+    				Log.v(LOGTAG, "Sync Frequency manual, not taking action");
     		}
 			expireOldContent();
         }
@@ -208,11 +216,14 @@ public class SocialReader implements ICacheWordSubscriber
     	syncServiceListener = listener;
 
     	if (syncService != null) {
-    		Log.v(LOGTAG,"Setting SyncServiceListener");
+    		if (LOGGING)
+    			Log.v(LOGTAG,"Setting SyncServiceListener");
     		syncService.setSyncServiceListener(syncServiceListener);
     	} else {
-    		Log.v(LOGTAG,"Can't set SyncServiceListener, syncService is null");
-    		Log.v(LOGTAG, "No problem, we'll add it later, when we bind");
+    		if (LOGGING) {
+    			Log.v(LOGTAG,"Can't set SyncServiceListener, syncService is null");
+    			Log.v(LOGTAG, "No problem, we'll add it later, when we bind");
+    		}
     	}
     }
 
@@ -234,12 +245,14 @@ public class SocialReader implements ICacheWordSubscriber
             // cast its IBinder to a concrete class and directly access it.
         	syncService = ((SyncService.LocalBinder)service).getService();
 
-        	Log.v(LOGTAG,"Connected to SyncService");
+        	if (LOGGING)
+        		Log.v(LOGTAG,"Connected to SyncService");
 
         	// Add Listener?
         	if (syncServiceListener != null) {
         		syncService.setSyncServiceListener(syncServiceListener);
-        		Log.v(LOGTAG,"added syncServiceListener");
+        		if (LOGGING)
+        			Log.v(LOGTAG,"added syncServiceListener");
         	}
 
     		// Back to the front, check the syncing
@@ -259,7 +272,8 @@ public class SocialReader implements ICacheWordSubscriber
 
         	syncService = null;
 
-        	Log.v(LOGTAG,"Disconnected from SyncService");
+        	if (LOGGING)
+        		Log.v(LOGTAG,"Disconnected from SyncService");
 
         	isConnected = false;
         }
@@ -267,7 +281,8 @@ public class SocialReader implements ICacheWordSubscriber
 
 	private boolean initialized = false;
 	public void initialize() {
-		Log.v(LOGTAG,"initialize");
+		if (LOGGING)
+			Log.v(LOGTAG,"initialize");
 
 	    if (!initialized) {
 
@@ -275,7 +290,8 @@ public class SocialReader implements ICacheWordSubscriber
             initializeDatabase();
             
             ssettings = new SecureSettings(databaseAdapter);
-            Log.v(LOGTAG,"SecureSettings initialized");
+            if (LOGGING)
+            	Log.v(LOGTAG,"SecureSettings initialized");
 
             syncServiceConnection = new SyncServiceConnection();
 
@@ -298,7 +314,8 @@ public class SocialReader implements ICacheWordSubscriber
             	lockListener.onUnlocked();
 
 	    } else {
-	    	Log.v(LOGTAG,"Already initialized!");
+	    	if (LOGGING)
+	    		Log.v(LOGTAG,"Already initialized!");
 	    }
 	}
 
@@ -311,7 +328,8 @@ public class SocialReader implements ICacheWordSubscriber
 		// If we aren't going to do any background syncing, stop the service
 		if (settings.syncFrequency() != Settings.SyncFrequency.InBackground)
 		{
-			Log.v(LOGTAG,"settings.syncFrequency() != Settings.SyncFrequency.InBackground so we are stopping the service");
+			if (LOGGING)
+				Log.v(LOGTAG,"settings.syncFrequency() != Settings.SyncFrequency.InBackground so we are stopping the service");
 			applicationContext.stopService(new Intent(applicationContext, SyncService.class));
 
 			if (databaseAdapter != null && databaseAdapter.databaseReady()) {
@@ -332,12 +350,14 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public void loadOPMLFile() {
-		Log.v(LOGTAG,"loadOPMLFile()");
+		if (LOGGING)
+			Log.v(LOGTAG,"loadOPMLFile()");
 		
 		logStatus();
 		
 		if (!settings.localOpmlLoaded()) {
-			Log.v(LOGTAG, "OPML Not previously loaded, loading now");
+			if (LOGGING)
+				Log.v(LOGTAG, "OPML Not previously loaded, loading now");
 			Resources res = applicationContext.getResources();
 			InputStream inputStream = res.openRawResource(R.raw.bigbuffalo_opml);
 			
@@ -345,17 +365,20 @@ public class SocialReader implements ICacheWordSubscriber
 					new OPMLParser.OPMLParserListener() {
 						@Override
 						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
-							Log.v(LOGTAG,"Finished Parsing OPML Feed");
+							if (LOGGING)
+								Log.v(LOGTAG,"Finished Parsing OPML Feed");
 							if (outlines != null) {
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
 									newFeed.setSubscribed(true);
 									databaseAdapter.addOrUpdateFeed(newFeed);
-									Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+									if (LOGGING)
+										Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
 								}
 							} else {
-								Log.e(LOGTAG,"Received null after OPML Parsed");
+								if (LOGGING)
+									Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
 							settings.setLocalOpmlLoaded();
 						}
@@ -365,15 +388,18 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	private void expireOldContent() {
-		Log.v(LOGTAG,"expireOldContent");
+		if (LOGGING)
+			Log.v(LOGTAG,"expireOldContent");
 		if (settings.articleExpiration() != Settings.ArticleExpiration.Never) {
 			if (settings.lastItemExpirationCheckTime() < System.currentTimeMillis() - expirationCheckFrequency) {
-				Log.v(LOGTAG,"Checking Article Expirations");
+				if (LOGGING)
+					Log.v(LOGTAG,"Checking Article Expirations");
 				Date expirationDate = new Date(System.currentTimeMillis() - settings.articleExpirationMillis());
 				databaseAdapter.deleteExpiredItems(expirationDate);
 			}
 		} else {
-			Log.v(LOGTAG,"Settings set to never expire");
+			if (LOGGING)
+				Log.v(LOGTAG,"Settings set to never expire");
 		}
 	}
 	
@@ -383,31 +409,37 @@ public class SocialReader implements ICacheWordSubscriber
 				new HTMLRSSFeedFinder.HTMLRSSFeedFinderListener() {
 					@Override
 					public void feedFinderComplete(ArrayList<RSSFeed> rssFeeds) {
-						Log.v(LOGTAG,"Finished Parsing HTML File");
+						if (LOGGING)
+							Log.v(LOGTAG,"Finished Parsing HTML File");
 						if (rssFeeds != null) {
 							for (int i = 0; i < rssFeeds.size(); i++) {
 								Feed newFeed = new Feed(rssFeeds.get(i).title, rssFeeds.get(i).href);
 								newFeed.setSubscribed(true);
 								databaseAdapter.addOrUpdateFeed(newFeed);
-								Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+								if (LOGGING)
+									Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
 							}
 						} else {
-							Log.e(LOGTAG,"Received null after HTML Parsed");
+							if (LOGGING)
+								Log.e(LOGTAG,"Received null after HTML Parsed");
 						}	
 					}
 				}
 			);
 		} else {
 			// Not online
-			Log.v(LOGTAG, "Can't check feed, not online");
+			if (LOGGING)
+				Log.v(LOGTAG, "Can't check feed, not online");
 		}
 	}
 
 	private void checkOPML() {
-		Log.v(LOGTAG,"checkOPML");
+		if (LOGGING)
+			Log.v(LOGTAG,"checkOPML");
 		logStatus();
 		if (!settings.networkOpmlLoaded() && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
-			Log.v(LOGTAG,"Not already loaded from network, attempting to check");
+			if (LOGGING)
+				Log.v(LOGTAG,"Not already loaded from network, attempting to check");
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
 			if (lang == UiLanguage.Farsi) {
@@ -423,43 +455,50 @@ public class SocialReader implements ICacheWordSubscriber
 			} else if (lang == UiLanguage.Ukrainian) {
 				finalOpmlUrl = finalOpmlUrl + "uk_UA";
 			} 
-			Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
+			if (LOGGING)
+				Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
 			
 				OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
 					new OPMLParser.OPMLParserListener() {
 						@Override
 						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
-							Log.v(LOGTAG,"Finished Parsing OPML Feed");
+							if (LOGGING)
+								Log.v(LOGTAG,"Finished Parsing OPML Feed");
 							if (outlines != null) {
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
 									newFeed.setSubscribed(true);
 									databaseAdapter.addOrUpdateFeed(newFeed);
-									Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+									if (LOGGING)
+										Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
 								}
 							} else {
-								Log.e(LOGTAG,"Received null after OPML Parsed");
+								if (LOGGING)
+									Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
 							settings.setNetworkOpmlLoaded();
 						}
 					}
 				);
 			} else {
-				Log.v(LOGTAG,"Not checking OPML at this time");
+				if (LOGGING)
+					Log.v(LOGTAG,"Not checking OPML at this time");
 			}
 	}
 
 	// When the foreground app is paused
 	public void onPause() {
-		Log.v(LOGTAG, "SocialReader onPause");
+		if (LOGGING)
+			Log.v(LOGTAG, "SocialReader onPause");
 		appStatus = SocialReader.APP_IN_BACKGROUND;
 		//cacheWord.disconnect();
 	}
 
 	// When the foreground app is unpaused
 	public void onResume() {
-		Log.v(LOGTAG, "SocialReader onResume");
+		if (LOGGING)
+			Log.v(LOGTAG, "SocialReader onResume");
         appStatus = SocialReader.APP_IN_FOREGROUND;
 	}
 	
@@ -481,16 +520,22 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	private void logStatus() {
-		Log.v(LOGTAG, "Status Check: ");
+		if (LOGGING)
+			Log.v(LOGTAG, "Status Check: ");
 		
 		if (databaseAdapter != null) {
-			Log.v(LOGTAG, "databaseAdapter != null");
-			Log.v(LOGTAG, "databaseAdapter.databaseReady() " + databaseAdapter.databaseReady());
+			if (LOGGING) {
+				Log.v(LOGTAG, "databaseAdapter != null");
+				Log.v(LOGTAG, "databaseAdapter.databaseReady() " + databaseAdapter.databaseReady());
+			}
 		} else {
-			Log.v(LOGTAG, "databaseAdapter == null");			
+			if (LOGGING)
+				Log.v(LOGTAG, "databaseAdapter == null");			
 		}
-		Log.v(LOGTAG, "cacheWord.isLocked() " + cacheWord.isLocked());
-		Log.v(LOGTAG, "isOnline() " + isOnline());
+		if (LOGGING) {
+			Log.v(LOGTAG, "cacheWord.isLocked() " + cacheWord.isLocked());
+			Log.v(LOGTAG, "isOnline() " + isOnline());
+		}
 	}
 
 	// This public method will indicate whether or not the application is online
@@ -536,22 +581,26 @@ public class SocialReader implements ICacheWordSubscriber
 	public boolean useTor() {
 		//if (settings.requireTor() || oc.isOrbotRunning()) {
 		if (settings.requireTor()) {
-			Log.v(LOGTAG, "USE TOR");
+			if (LOGGING)
+				Log.v(LOGTAG, "USE TOR");
 			return true;
 		} else {
-			Log.v(LOGTAG, "DON'T USE TOR");
+			if (LOGGING)
+				Log.v(LOGTAG, "DON'T USE TOR");
 			return false;
 		}
 	}
 
 	public boolean connectTor(Activity _activity)
 	{
-		Log.v(LOGTAG, "Checking Tor");
-		Log.v(LOGTAG, "isOrbotInstalled: " + oc.isOrbotInstalled());
+		if (LOGGING) {
+			Log.v(LOGTAG, "Checking Tor");
+			Log.v(LOGTAG, "isOrbotInstalled: " + oc.isOrbotInstalled());
 
-		// This is returning the wrong value oc.isOrbotRunning, even if Orbot isn't installed
-		Log.v(LOGTAG, "isOrbotRunning: " + oc.isOrbotRunning());
-
+			// This is returning the wrong value oc.isOrbotRunning, even if Orbot isn't installed
+			Log.v(LOGTAG, "isOrbotRunning: " + oc.isOrbotRunning());
+		}
+		
 		if (!oc.isOrbotInstalled())
 		{
 			// This is getting intercepted by the lock screen at the moment
@@ -623,13 +672,16 @@ public class SocialReader implements ICacheWordSubscriber
 	 */
 	private void backgroundRequestFeedNetwork(Feed feed, SyncServiceFeedFetchedCallback callback)
 	{
-		Log.v(LOGTAG,"requestFeedNetwork");
+		if (LOGGING)
+			Log.v(LOGTAG,"requestFeedNetwork");
 
 		if (syncService != null) {
-			Log.v(LOGTAG,"syncService != null");
+			if (LOGGING)
+				Log.v(LOGTAG,"syncService != null");
 			syncService.addFeedSyncTask(feed);
 		} else {
-			Log.v(LOGTAG,"syncService is null!");
+			if (LOGGING)
+				Log.v(LOGTAG,"syncService is null!");
 		}
 	}
 
@@ -644,7 +696,8 @@ public class SocialReader implements ICacheWordSubscriber
 
 		if (isOnline() == ONLINE)
 		{
-			Log.v(LOGTAG, "Calling feedFetcher.execute: " + feed.getFeedURL());
+			if (LOGGING)
+				Log.v(LOGTAG, "Calling feedFetcher.execute: " + feed.getFeedURL());
 			feedFetcher.execute(feed);
 			return true;
 		}
@@ -657,29 +710,30 @@ public class SocialReader implements ICacheWordSubscriber
 	// Do network feed refreshing in the background
 	private void backgroundSyncSubscribedFeeds()
 	{
-		Log.v(LOGTAG,"backgroundSyncSubscribedFeeds()");
+		if (LOGGING)
+			Log.v(LOGTAG,"backgroundSyncSubscribedFeeds()");
 
 		if (!cacheWord.isLocked()) {
 			final ArrayList<Feed> feeds = getSubscribedFeedsList();
 			for (Feed feed : feeds)
 			{
-				Log.v(LOGTAG,"Checking " + feed.getTitle());
 				if (shouldRefresh(feed) && isOnline() == ONLINE) {
-					Log.v(LOGTAG,"Going to request " + feed.getTitle());
 					backgroundRequestFeedNetwork(feed, new SyncServiceFeedFetchedCallback() {
 						@Override
 						public void feedFetched(Feed _feed) {
-							Log.v(LOGTAG,"Finished fecthing: " + _feed.getTitle());
 						}
 					});
 				} else if (isOnline() != ONLINE) {
-					Log.v(LOGTAG,feed.getTitle() + " not refreshing, not online: " + isOnline());
+					if (LOGGING)
+						Log.v(LOGTAG,"not refreshing, not online: " + isOnline());
 				} else {
-					Log.v(LOGTAG,feed.getTitle() + " doesn't need refreshing");
+					if (LOGGING)
+						Log.v(LOGTAG,"doesn't need refreshing");
 				}
 			}
 		} else {
-			Log.v(LOGTAG, "Can't sync feeds, cacheword locked");
+			if (LOGGING)
+				Log.v(LOGTAG, "Can't sync feeds, cacheword locked");
 		}
 	}
 
@@ -707,7 +761,8 @@ public class SocialReader implements ICacheWordSubscriber
 			requestAllFeedsCurrentFeedIndex = 0;
 			compositeFeed.clearItems();
 
-			Log.v(LOGTAG, "requestAllFeedsCurrentFeedIndex:" + requestAllFeedsCurrentFeedIndex);
+			if (LOGGING)
+				Log.v(LOGTAG, "requestAllFeedsCurrentFeedIndex:" + requestAllFeedsCurrentFeedIndex);
 
 			if (feeds.size() > 0)
 			{
@@ -716,19 +771,22 @@ public class SocialReader implements ICacheWordSubscriber
 					@Override
 					public void feedFetched(Feed _feed)
 					{
-						Log.v(LOGTAG, "Done Fetching: " + _feed.getFeedURL());
+						if (LOGGING)
+							Log.v(LOGTAG, "Done Fetching: " + _feed.getFeedURL());
 
 						compositeFeed.addItems(_feed.getItems());
 
 						if (requestAllFeedsCurrentFeedIndex < feeds.size() - 1)
 						{
 							requestAllFeedsCurrentFeedIndex++;
-							Log.v(LOGTAG, "requestAllFeedsCurrentFeedIndex:" + requestAllFeedsCurrentFeedIndex);
+							if (LOGGING)
+								Log.v(LOGTAG, "requestAllFeedsCurrentFeedIndex:" + requestAllFeedsCurrentFeedIndex);
 							foregroundRequestFeedNetwork(feeds.get(requestAllFeedsCurrentFeedIndex), this);
 						}
 						else
 						{
-							Log.v(LOGTAG, "Feed Fetcher Done!");
+							if (LOGGING)
+								Log.v(LOGTAG, "Feed Fetcher Done!");
 							requestPending = false;
 							if (appStatus == SocialReader.APP_IN_FOREGROUND) {
 								finalCallback.feedFetched(compositeFeed);
@@ -737,10 +795,12 @@ public class SocialReader implements ICacheWordSubscriber
 					}
 				};
 
-				Log.v(LOGTAG, "requestAllFeedsCurrentFeedIndex:" + requestAllFeedsCurrentFeedIndex);
+				if (LOGGING)
+					Log.v(LOGTAG, "requestAllFeedsCurrentFeedIndex:" + requestAllFeedsCurrentFeedIndex);
 				foregroundRequestFeedNetwork(feeds.get(requestAllFeedsCurrentFeedIndex), ffcallback);
 			}
-			Log.v(LOGTAG, "feeds.size is " + feeds.size());
+			if (LOGGING)
+				Log.v(LOGTAG, "feeds.size is " + feeds.size());
 		}
 	}
 
@@ -778,7 +838,8 @@ public class SocialReader implements ICacheWordSubscriber
 				};
 			}
 
-			Log.v(LOGTAG, "Refreshing Feed from Network");
+			if (LOGGING)
+				Log.v(LOGTAG, "Refreshing Feed from Network");
 			foregroundRequestFeedNetwork(feed, intermediateCallback);
 		}
 	}
@@ -790,7 +851,8 @@ public class SocialReader implements ICacheWordSubscriber
 	{
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
-			Log.v(LOGTAG, "Feed from Database **" + feed.getTitle());
+			if (LOGGING)
+				Log.v(LOGTAG, "Feed from Database **" + feed.getTitle());
 			feed = databaseAdapter.getFeedItems(feed, DEFAULT_NUM_FEED_ITEMS);
 		}
 		return feed;
@@ -835,11 +897,8 @@ public class SocialReader implements ICacheWordSubscriber
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
 			returnFeed.addItems(databaseAdapter.getFeedItemsWithTag(feed, tag));
-			Log.v(LOGTAG, "Feed from Database with tag**" + feed.getTitle() + " " + tag);
 		}
 		return feed;
-		
-			
 	}
 	
 	private void initializeDatabase()
@@ -869,10 +928,12 @@ public class SocialReader implements ICacheWordSubscriber
 						
 			loadOPMLFile();
 		} else {
-			Log.v(LOGTAG,"Database not empty, not inserting default feeds");
+			if (LOGGING)
+				Log.v(LOGTAG,"Database not empty, not inserting default feeds");
 		}
 
-		Log.v(LOGTAG,"databaseAdapter initialized");
+		if (LOGGING)
+			Log.v(LOGTAG,"databaseAdapter initialized");
 	}
 
 	private java.io.File getNonVirtualFileSystemDir()
@@ -907,7 +968,8 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	private void initializeFileSystemCache()
 	{
-		Log.v(LOGTAG,"initializeFileSystemCache");
+		if (LOGGING)
+			Log.v(LOGTAG,"initializeFileSystemCache");
 
 		// Check external storage, determine where to write..
 		// Use IOCipher
@@ -921,7 +983,8 @@ public class SocialReader implements ICacheWordSubscriber
 		    vfs = ioHelper.mount(ioCipherFilePath);
 		} catch ( IOException e ) {
 		    // TODO: handle IOCipher open failure
-		    Log.e(LOGTAG,"IOCipher open failure");
+			if (LOGGING)
+				Log.e(LOGTAG,"IOCipher open failure");
 		    e.printStackTrace();
 		}
 
@@ -936,7 +999,8 @@ public class SocialReader implements ICacheWordSubscriber
 			Log.e(LOGTAG,"FAILED TEST");			
 		}
 		*/
-		Log.v(LOGTAG,"***Filesystem Initialized***");
+		if (LOGGING)
+			Log.v(LOGTAG,"***Filesystem Initialized***");
 	}
 
 	private void deleteFileSystem()
@@ -984,27 +1048,33 @@ public class SocialReader implements ICacheWordSubscriber
 	{
 		long refreshDate = new Date().getTime() - feedRefreshAge;
 
-		Log.v(LOGTAG, "Feed Databae Id " + feed.getDatabaseId());
+		if (LOGGING)
+			Log.v(LOGTAG, "Feed Databae Id " + feed.getDatabaseId());
 		feed = databaseAdapter.fillFeedObject(feed);
 
 		if (feed.getNetworkPullDate() != null)
 		{
-			Log.v(LOGTAG, "Feed pull date: " + feed.getNetworkPullDate().getTime());
+			if (LOGGING)
+				Log.v(LOGTAG, "Feed pull date: " + feed.getNetworkPullDate().getTime());
 		}
 		else
 		{
-			Log.v(LOGTAG, "Feed pull date: NULL");
+			if (LOGGING)
+				Log.v(LOGTAG, "Feed pull date: NULL");
 		}
-		Log.v(LOGTAG, "Feed refresh date: " + refreshDate);
+		if (LOGGING)
+			Log.v(LOGTAG, "Feed refresh date: " + refreshDate);
 
 		if (feed.getNetworkPullDate() == null || feed.getNetworkPullDate().getTime() < refreshDate)
 		{
-			Log.v(LOGTAG, "Should refresh feed");
+			if (LOGGING)
+				Log.v(LOGTAG, "Should refresh feed");
 			return true;
 		}
 		else
 		{
-			Log.v(LOGTAG, "Get feeed from database");
+			if (LOGGING)
+				Log.v(LOGTAG, "Get feeed from database");
 			return false;
 		}
 	}
@@ -1091,7 +1161,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: markItemAsFavorite");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: markItemAsFavorite");
 		}
 	}
 
@@ -1104,7 +1175,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: setItemData");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: setItemData");
 		}
 		return -1;
 	}
@@ -1129,7 +1201,8 @@ public class SocialReader implements ICacheWordSubscriber
 			// Now update the record in the database, this fills more of the
 			// data out
 			int result = databaseAdapter.updateFeed(feed);
-			Log.v(LOGTAG, feed.getTitle() + " setFeedData: " + result);
+			if (LOGGING)
+				Log.v(LOGTAG, feed.getTitle() + " setFeedData: " + result);
 
 			if (result == 1)
 			{
@@ -1143,7 +1216,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: setFeedData");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: setFeedData");
 			return null;
 		}
 	}
@@ -1168,7 +1242,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: setFeedAndItemData");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: setFeedAndItemData");
 		}
 	}
 
@@ -1187,10 +1262,12 @@ public class SocialReader implements ICacheWordSubscriber
 			for (MediaContent contentItem : item.getMediaContent())
 			{
 				if (syncService != null) {
-					Log.v(LOGTAG,"syncService != null");
+					if (LOGGING)
+						Log.v(LOGTAG,"syncService != null");
 					syncService.addMediaContentSyncTask(contentItem);
 				} else {
-					Log.v(LOGTAG,"syncService is null!");
+					if (LOGGING)
+						Log.v(LOGTAG,"syncService is null!");
 				}
 			}
 		}
@@ -1218,7 +1295,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: addFeedByURL");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: addFeedByURL");
 		}
 	}
 
@@ -1231,7 +1309,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: subscribeFeed");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: subscribeFeed");
 		}
 	}
 
@@ -1248,7 +1327,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: unsubscribeFeed");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: unsubscribeFeed");
 		}
 	}
 
@@ -1261,7 +1341,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG,"Database not ready: removeFeed");
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: removeFeed");
 		}
 	}
 
@@ -1309,7 +1390,8 @@ public class SocialReader implements ICacheWordSubscriber
 	{
 	    if (databaseAdapter == null || !databaseAdapter.databaseReady())
 	    {
-			Log.e(LOGTAG,"Database not ready: getShareIntent");
+	    	if (LOGGING)
+	    		Log.e(LOGTAG,"Database not ready: getShareIntent");
 	    	return new Intent();
 	    }
 
@@ -1340,7 +1422,8 @@ public class SocialReader implements ICacheWordSubscriber
 
 	public void doWipe(int wipeMethod)
 	{
-		Log.v(LOGTAG, "doing doWipe()");
+		if (LOGGING)
+			Log.v(LOGTAG, "doing doWipe()");
 
 		if (wipeMethod == DATA_WIPE)
 		{
@@ -1353,7 +1436,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.v(LOGTAG, "This shouldn't happen");
+			if (LOGGING)
+				Log.v(LOGTAG, "This shouldn't happen");
 		}
 	}
 
@@ -1367,7 +1451,8 @@ public class SocialReader implements ICacheWordSubscriber
 
 	private void dataWipe()
 	{
-		Log.v(LOGTAG, "deleteDatabase");
+		if (LOGGING)
+			Log.v(LOGTAG, "deleteDatabase");
 		//http://code.google.com/p/android/issues/detail?id=13727
 
 		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
@@ -1381,7 +1466,8 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		applicationContext.deleteDatabase(DatabaseHelper.DATABASE_NAME);
 
-		Log.v(LOGTAG, "Delete data");
+		if (LOGGING)
+			Log.v(LOGTAG, "Delete data");
 		deleteFileSystem();
 	}
 
@@ -1500,7 +1586,8 @@ public class SocialReader implements ICacheWordSubscriber
 			//else if ((settings.syncMode() != Settings.SyncMode.BitWise || forceBitwiseDownload) && isOnline() == ONLINE)
 			// only want to download this content type if they click it so...
 			{
-				Log.v(LOGTAG, "File doesn't exist, downloading");
+				if (LOGGING)
+					Log.v(LOGTAG, "File doesn't exist, downloading");
 	
 				NonVFSMediaDownloader mediaDownloader = new NonVFSMediaDownloader(this,possibleFile);
 				mediaDownloader.setMediaDownloaderCallback(new NonVFSMediaDownloader.MediaDownloaderCallback() {
@@ -1524,14 +1611,16 @@ public class SocialReader implements ICacheWordSubscriber
 			File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mc.getDatabaseId());
 			if (possibleFile.exists())
 			{
-				Log.v(LOGTAG, "Already downloaded: " + possibleFile.getAbsolutePath());
+				if (LOGGING)
+					Log.v(LOGTAG, "Already downloaded: " + possibleFile.getAbsolutePath());
 				if (mdc != null)
 				mdc.mediaDownloaded(possibleFile);
 				return true;
 			}
 			else if (download && forceBitwiseDownload && isOnline() == ONLINE)
 			{
-				Log.v(LOGTAG, "File doesn't exist, downloading");
+				if (LOGGING)
+					Log.v(LOGTAG, "File doesn't exist, downloading");
 	
 				MediaDownloader mediaDownloader = new MediaDownloader(this);
 				mediaDownloader.setMediaDownloaderCallback(mdc);
@@ -1542,6 +1631,7 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 			else
 			{
+				//if (LOGGING)
 				//Log.v(LOGTAG, "Can't download, not online or in bitwise mode");
 				return false;
 			}			
@@ -1551,14 +1641,16 @@ public class SocialReader implements ICacheWordSubscriber
 			File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mc.getDatabaseId());
 			if (possibleFile.exists())
 			{
-				Log.v(LOGTAG, "Already downloaded: " + possibleFile.getAbsolutePath());
+				if (LOGGING)
+					Log.v(LOGTAG, "Already downloaded: " + possibleFile.getAbsolutePath());
 				if (mdc != null)
 				mdc.mediaDownloaded(possibleFile);
 				return true;
 			}
 			else if (download && (settings.syncMode() != Settings.SyncMode.BitWise || forceBitwiseDownload) && isOnline() == ONLINE)
 			{
-				Log.v(LOGTAG, "File doesn't exist, downloading");
+				if (LOGGING)
+					Log.v(LOGTAG, "File doesn't exist, downloading");
 	
 				MediaDownloader mediaDownloader = new MediaDownloader(this);
 				mediaDownloader.setMediaDownloaderCallback(mdc);
@@ -1569,11 +1661,13 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 			else
 			{
+				//if (LOGGING)
 				//Log.v(LOGTAG, "Can't download, not online or in bitwise mode");
 				return false;
 			}
 		} else {
-			Log.v(LOGTAG,"Not a media type we support: " + mc.getType());
+			if (LOGGING)
+				Log.v(LOGTAG,"Not a media type we support: " + mc.getType());
 			return false;
 		}
 	}
@@ -1605,15 +1699,18 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		java.io.File possibleFile = new java.io.File(getNonVFSSharingDir(), CONTENT_BUNDLE_FILE_PREFIX + itemId + "." + SocialReader.CONTENT_SHARING_EXTENSION);
 		
-		Log.v(LOGTAG,"Going to package as: " + possibleFile.toString());
+		if (LOGGING)
+			Log.v(LOGTAG,"Going to package as: " + possibleFile.toString());
 		
 		if (possibleFile.exists())
 		{
-			Log.v(LOGTAG, "item already packaged " + possibleFile.getAbsolutePath());
+			if (LOGGING)
+				Log.v(LOGTAG, "item already packaged " + possibleFile.getAbsolutePath());
 		}
 		else
 		{
-			Log.v(LOGTAG, "item not already packaged, going to do so now " + possibleFile.getAbsolutePath());
+			if (LOGGING)
+				Log.v(LOGTAG, "item not already packaged, going to do so now " + possibleFile.getAbsolutePath());
 			
 			try {
 				
@@ -1624,7 +1721,8 @@ public class SocialReader implements ICacheWordSubscriber
 					
 					Item itemToShare = databaseAdapter.getItemById(itemId);
 					
-					Log.v(LOGTAG,"Going to package " + itemToShare.toString());
+					if (LOGGING)
+						Log.v(LOGTAG,"Going to package " + itemToShare.toString());
 					
 					ZipOutputStream zipOutputStream = new ZipOutputStream(new java.io.FileOutputStream(possibleFile)); 
 			        
@@ -1649,10 +1747,13 @@ public class SocialReader implements ICacheWordSubscriber
 					ArrayList<MediaContent> mc = itemToShare.getMediaContent();
 					for (MediaContent mediaContent : mc) {
 						File mediaFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
-						Log.v(LOGTAG,"Checking for " + mediaFile.getAbsolutePath());
+						if (LOGGING)
+							Log.v(LOGTAG,"Checking for " + mediaFile.getAbsolutePath());
+						
 						if (mediaFile.exists())
 						{
-							Log.v(LOGTAG, "Media exists, adding it: " + mediaFile.getAbsolutePath());
+							if (LOGGING)
+								Log.v(LOGTAG, "Media exists, adding it: " + mediaFile.getAbsolutePath());
 							zipOutputStream.putNextEntry(new ZipEntry(mediaFile.getName()));
 							FileInputStream mIn = new FileInputStream(mediaFile);
 					        while ((len = mIn.read(buf)) > 0) { 
@@ -1661,7 +1762,8 @@ public class SocialReader implements ICacheWordSubscriber
 					        zipOutputStream.closeEntry(); 
 					        mIn.close(); 
 						} else {
-							Log.v(LOGTAG, "Media doesn't exist, not adding it");
+							if (LOGGING)
+								Log.v(LOGTAG, "Media doesn't exist, not adding it");
 						}
 					}
 					
@@ -1669,13 +1771,16 @@ public class SocialReader implements ICacheWordSubscriber
 				}
 				else
 				{
-					Log.e(LOGTAG,"Database not ready: packageItem");
+					if (LOGGING)
+						Log.e(LOGTAG,"Database not ready: packageItem");
 				}
 			} catch (FileNotFoundException fnfe) {
-				Log.e(LOGTAG,"Can't write package file, not found");
+				if (LOGGING)
+					Log.e(LOGTAG,"Can't write package file, not found");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 
 			}
 
@@ -1693,7 +1798,8 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		else
 		{
-			Log.e(LOGTAG, "Database not ready: getItemFromId");
+			if (LOGGING)
+				Log.e(LOGTAG, "Database not ready: getItemFromId");
 		}
 		return null;
 	}
@@ -1702,11 +1808,13 @@ public class SocialReader implements ICacheWordSubscriber
 	{
 		// IOCipher File
 		File possibleFile = new File(getVFSSharingDir(), CONTENT_BUNDLE_FILE_PREFIX + itemId + "." + SocialReader.CONTENT_SHARING_EXTENSION);
-		Log.v(LOGTAG,"possibleFile: " + possibleFile.getAbsolutePath());
+		if (LOGGING)
+			Log.v(LOGTAG,"possibleFile: " + possibleFile.getAbsolutePath());
 		
 		if (possibleFile.exists())
 		{
-			Log.v(LOGTAG, "item already packaged " + possibleFile.getAbsolutePath());
+			if (LOGGING)
+				Log.v(LOGTAG, "item already packaged " + possibleFile.getAbsolutePath());
 		}
 		else
 		{
@@ -1721,7 +1829,8 @@ public class SocialReader implements ICacheWordSubscriber
 					
 					Item itemToShare = databaseAdapter.getItemById(itemId);
 					
-					Log.v(LOGTAG,"Going to package " + itemToShare.toString());
+					if (LOGGING)
+						Log.v(LOGTAG,"Going to package " + itemToShare.toString());
 					
 					ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(possibleFile)); 
 			        
@@ -1746,10 +1855,12 @@ public class SocialReader implements ICacheWordSubscriber
 					ArrayList<MediaContent> mc = itemToShare.getMediaContent();
 					for (MediaContent mediaContent : mc) {
 						File mediaFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
-						Log.v(LOGTAG,"Checking for " + mediaFile.getAbsolutePath());
+						if (LOGGING)
+							Log.v(LOGTAG,"Checking for " + mediaFile.getAbsolutePath());
 						if (mediaFile.exists())
 						{
-							Log.v(LOGTAG, "Media exists, adding it: " + mediaFile.getAbsolutePath());
+							if (LOGGING)
+								Log.v(LOGTAG, "Media exists, adding it: " + mediaFile.getAbsolutePath());
 							zipOutputStream.putNextEntry(new ZipEntry(mediaFile.getName()));
 							FileInputStream mIn = new FileInputStream(mediaFile);
 					        while ((len = mIn.read(buf)) > 0) { 
@@ -1758,7 +1869,8 @@ public class SocialReader implements ICacheWordSubscriber
 					        zipOutputStream.closeEntry(); 
 					        mIn.close(); 
 						} else {
-							Log.v(LOGTAG, "Media doesn't exist, not adding it");
+							if (LOGGING)
+								Log.v(LOGTAG, "Media doesn't exist, not adding it");
 						}
 					}
 					
@@ -1766,11 +1878,13 @@ public class SocialReader implements ICacheWordSubscriber
 				}
 				else
 				{
-					Log.e(LOGTAG,"Database not ready: packageItem");
+					if (LOGGING)
+						Log.e(LOGTAG,"Database not ready: packageItem");
 				}
 			} catch (FileNotFoundException fnfe) {
 				fnfe.printStackTrace();
-				Log.e(LOGTAG,"Can't write package file, not found");
+				if (LOGGING)
+					Log.e(LOGTAG,"Can't write package file, not found");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -1781,21 +1895,24 @@ public class SocialReader implements ICacheWordSubscriber
 
     @Override
     public void onCacheWordUninitialized() {
-    	Log.v(LOGTAG,"onCacheWordUninitialized");
+    	if (LOGGING)
+    		Log.v(LOGTAG,"onCacheWordUninitialized");
 
     	uninitialize();
     }
 
     @Override
     public void onCacheWordLocked() {
-    	Log.v(LOGTAG, "onCacheWordLocked");
+    	if (LOGGING)
+    		Log.v(LOGTAG, "onCacheWordLocked");
 
     	uninitialize();
     }
 
     @Override
     public void onCacheWordOpened() {
-    	Log.v(LOGTAG,"onCacheWordOpened");
+    	if (LOGGING)
+    		Log.v(LOGTAG,"onCacheWordOpened");
         initialize();
     }
     

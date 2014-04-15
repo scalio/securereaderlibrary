@@ -17,7 +17,8 @@ import android.os.ParcelFileDescriptor;
 public class SecureShareContentProvider extends ContentProvider {
 
 	public static final String LOGTAG = "SecureShareContentProvider";
-
+	public static final boolean LOGGING = false;
+	
 	public static final int ITEM_ID = 0;
 	
 	@Override

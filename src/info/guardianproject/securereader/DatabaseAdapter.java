@@ -125,7 +125,7 @@ public class DatabaseAdapter
 				+ " = " + feedId + ";";
 		
 		if (LOGGING) 
-			Log.w(LOGTAG, query);
+			Log.v(LOGTAG, query);
 
 		if (databaseReady()) {
 			Cursor queryCursor = db.rawQuery(query, new String[] {});
@@ -566,7 +566,8 @@ public class DatabaseAdapter
 	
 						feed.addItem(item);
 						
-						Log.v(LOGTAG, "Added " + item.getFeedId() + " " + item.getDatabaseId() + " " + item.getTitle() + " " + item.getPubDate());
+						if (LOGGING)
+							Log.v(LOGTAG, "Added " + item.getFeedId() + " " + item.getDatabaseId() + " " + item.getTitle() + " " + item.getPubDate());
 					}
 					while (queryCursor.moveToNext());
 				}
@@ -802,7 +803,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + " from " + DatabaseHelper.ITEMS_TABLE + " where "
 					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
-			//if (LOGGING)
+			if (LOGGING)
 				Log.w(LOGTAG, query);
 
 			if (databaseReady()) {
@@ -1490,7 +1491,7 @@ public class DatabaseAdapter
 						+ item.getGuid() + "' and " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + item.getFeedId() + ";";
 
 				if (LOGGING)
-					Log.w(LOGTAG, query);
+					Log.v(LOGTAG, query);
 
 				if (databaseReady()) {
 					queryCursor = db.rawQuery(query, new String[] {});
@@ -1693,7 +1694,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEM_MEDIA_ITEM_ID + " =?;";
 
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				Cursor queryCursor = db.rawQuery(query, new String[] {itemMedia.getUrl(), "" + item.getDatabaseId()});

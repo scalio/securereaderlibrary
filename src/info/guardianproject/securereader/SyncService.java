@@ -13,7 +13,8 @@ import android.util.Log;
 
 public class SyncService extends Service {
 
-	public static String LOGTAG = "SyncService";
+	public static final String LOGTAG = "SyncService";
+	public static final boolean LOGGING = false;
 	
 	// ArrayList of SyncTask objects, basically a queue of work to be done
 	ArrayList<SyncTask> syncList = new ArrayList<SyncTask>();
@@ -25,7 +26,8 @@ public class SyncService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
     		
-    	Log.v(LOGTAG,"onStartCommand");
+    	if (LOGGING)
+    		Log.v(LOGTAG,"onStartCommand");
     	
     	// We want this service to continue running until it is explicitly
         // stopped, so return sticky.
@@ -35,13 +37,15 @@ public class SyncService extends Service {
     // Service ending
     @Override
     public void onDestroy() {
-    	Log.v(LOGTAG,"onDestroy");
+    	if (LOGGING)
+    		Log.v(LOGTAG,"onDestroy");
     }
 
     // Bind with Activities
     @Override
     public IBinder onBind(Intent intent) {
-    	Log.v(LOGTAG,"onBind");
+    	if (LOGGING)
+    		Log.v(LOGTAG,"onBind");
         return mBinder;
     }
 
@@ -131,7 +135,8 @@ public class SyncService extends Service {
     	private void startMediaDownloader() {
     		SyncServiceMediaDownloader ssMediaDownloader = new SyncServiceMediaDownloader(SyncService.this,this);
     		
-    		Log.v(LOGTAG,"Create and start ssMediaDownloader ");
+    		if (LOGGING)
+    			Log.v(LOGTAG,"Create and start ssMediaDownloader ");
     		syncThread = new Thread(ssMediaDownloader);
     		syncThread.start();
     		updateStatus(SyncTask.STARTED);
@@ -141,10 +146,12 @@ public class SyncService extends Service {
     		//SyncServiceFeedFetcher feedFetcher = new SyncServiceFeedFetcher(SyncService.this,feed);
     		//feedFetcher.setFeedUpdatedCallback(callback);
     		
-    		Log.v(LOGTAG,"Create SyncServiceFeedFetcher");
+    		if (LOGGING)
+    			Log.v(LOGTAG,"Create SyncServiceFeedFetcher");
     		SyncServiceFeedFetcher feedFetcher = new SyncServiceFeedFetcher(SyncService.this,this);
     		
-    		Log.v(LOGTAG,"Create and start fetcherThread ");
+    		if (LOGGING)
+    			Log.v(LOGTAG,"Create and start fetcherThread ");
     		syncThread = new Thread(feedFetcher);
     		syncThread.start();    	
     		updateStatus(SyncTask.STARTED);

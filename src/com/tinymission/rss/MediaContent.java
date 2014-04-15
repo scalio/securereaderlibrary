@@ -1,16 +1,10 @@
 package com.tinymission.rss;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Locale;
 
 import org.xml.sax.Attributes;
 
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
 import android.util.Log;
 
 public class MediaContent extends FeedEntity implements Serializable
@@ -112,7 +106,6 @@ public class MediaContent extends FeedEntity implements Serializable
 
 		if (localUri != null && localUri.getScheme().equals("content"))
 		{
-			Log.v("MEDIACONTENT","It's a content path");
 			Cursor cursor = context.getContentResolver().query(localUri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null,
 					null);
 			cursor.moveToFirst();
@@ -121,7 +114,6 @@ public class MediaContent extends FeedEntity implements Serializable
 		}
 		else if (localUri != null)
 		{
-			Log.v("MEDIACONTENT","It's a file path");
 			returnFile = new java.io.File(localUri.getPath());
 		}
 		

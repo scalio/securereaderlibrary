@@ -22,6 +22,7 @@ public class Item extends FeedEntity implements Serializable
 	public static final long serialVersionUID = 133702L;
 
 	public static final String LOGTAG = "rss.item";
+	public static final boolean LOGGGING = false;
 
 	public static final int DEFAULT_DATABASE_ID = -1;
 
@@ -63,14 +64,10 @@ public class Item extends FeedEntity implements Serializable
 			try
 			{
 				returnDate = format.parse(dateString);
-				//Log.v(LOGTAG, "Date Parsing Worked with " + format.toString()
-				// + " on " + dateString);
 				break;
 			}
 			catch (ParseException e)
 			{
-				//Log.v(LOGTAG, "Date Parsing Failed with " + format.toString()
-				// + " on " + dateString);
 			}
 		}
 
@@ -153,9 +150,6 @@ public class Item extends FeedEntity implements Serializable
 
 	private String getMainContent()
 	{
-		Log.v(LOGTAG, "Content Encoded: " + _contentEncoded);
-		Log.v(LOGTAG, "Description: " + _description);
-
 		if (_contentEncoded != null && !_contentEncoded.isEmpty())
 		{
 			return getContentEncoded();

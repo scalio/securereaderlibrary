@@ -18,14 +18,15 @@ public class Feed extends FeedEntity
 {
 	public static final int DEFAULT_DATABASE_ID = -1;
 
+	public static final boolean LOGGING = false;
 	public static final String LOGTAG = "rss.Feed";
 
 	static SimpleDateFormat[] dateFormats = { new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
 			new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH), 
 			new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH), 
-			new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ssz", Locale.ENGLISH) // <dc:date>2013-10-03T23:34:30Z</dc:date>
+			new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ssz", Locale.ENGLISH) 
 	};
-
+	// <dc:date>2013-10-03T23:34:30Z</dc:date>
     //<pubDate>Thu, 03 Oct 2013 23:34:30 GMT</pubDate>
     
 	
@@ -38,14 +39,10 @@ public class Feed extends FeedEntity
 			try
 			{
 				returnDate = format.parse(dateString);
-				//Log.v(LOGTAG, "Date Parsing Worked with " + format.toString()
-				// + " on " + dateString);
 				break;
 			}
 			catch (ParseException e)
 			{
-				//Log.v(LOGTAG, "Date Parsing Failed with " + format.toString()
-				// + " on " + dateString);
 			}
 		}
 
@@ -137,11 +134,11 @@ public class Feed extends FeedEntity
 
 	public void addMediaContent(MediaContent mediaToAdd)
 	{
-		if (mediaToAdd == null) {
-			Log.v(LOGTAG,"mediaToAdd is null");
-		} else if (_mediaContent == null) {
-			Log.v(LOGTAG,"_mediaContent is null");
-		} else {
+		if (_mediaContent == null) {
+			_mediaContent = new ArrayList<MediaContent>();
+		}
+		
+		if (mediaToAdd != null) {
 			_mediaContent.add(mediaToAdd);	
 		}
 	}
@@ -174,7 +171,6 @@ public class Feed extends FeedEntity
 
 	public void setNetworkPullDate(String _networkPullDate)
 	{
-		// Log.v(LOGTAG, "setNetworkPullDate: " + _networkPullDate);
 		this._networkPullDate = dateParser(_networkPullDate);
 	}
 
@@ -361,7 +357,6 @@ public class Feed extends FeedEntity
 	 */
 	public void addItems(ArrayList<Item> items)
 	{
-		Log.v(LOGTAG, "Adding " + items.size() + " to feed");
 		for (int i = 0; i < items.size(); i++)
 		{
 			_items.add(items.get(i));

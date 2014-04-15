@@ -18,15 +18,11 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.conn.params.ConnRoutePNames;
 
 public class HTMLRSSFeedFinder {
 	
@@ -54,8 +50,9 @@ public class HTMLRSSFeedFinder {
 	public static final String TYPE_ATTRIBUTE = "type";
 	public static final String TITLE_ATTRIBUTE = "title";
 	
-	private static final String LOGTAG = "HTMLRSSFeedFinder";
-	
+	public static final String LOGTAG = "HTMLRSSFeedFinder";
+	public final static boolean LOGGING = false;
+
 	public class RSSFeed {
 		public String href = "";
 		public String rel = "";
@@ -91,12 +88,10 @@ public class HTMLRSSFeedFinder {
 				StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
 				if (socialReader.useTor())
 				{
-					Log.v(LOGTAG,"Using Tor for HTML Retrieval");
+					if (LOGGING)
+						Log.v(LOGTAG,"Using Tor for HTML Retrieval");
+					
 					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-
-					//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(SocialReader.PROXY_HOST, SocialReader.PROXY_PORT));
-				} else {
-					Log.v(LOGTAG,"NOT Using Tor for HTML Retrieval");
 				}
 		
 				HttpGet httpGet = new HttpGet(urlToParse);
@@ -105,18 +100,19 @@ public class HTMLRSSFeedFinder {
 					response = httpClient.execute(httpGet);
 				
 					if (response.getStatusLine().getStatusCode() == 200) {
-						Log.v(LOGTAG,"Response Code is good for HTML");
+						if (LOGGING)
+							Log.v(LOGTAG,"Response Code is good for HTML");
 						
 						InputStream	is = response.getEntity().getContent();
 						parse(is);
 						is.close();
 					}
 				} catch (IllegalStateException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if (LOGGING)
+						e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if (LOGGING)
+						e.printStackTrace();
 				}
 				
 				return null;
@@ -125,9 +121,7 @@ public class HTMLRSSFeedFinder {
 			@Override
 			protected void onPostExecute(Void nothing)
 			{
-				Log.v(LOGTAG, "Should be calling feedFinderComplete on HTMLRSSFeedFinderListener");
 				if (feedFinderListener != null) {
-					Log.v(LOGTAG, "Actually calling feedFinderComplete on HTMLRSSFeedFinderListener");
 					feedFinderListener.feedFinderComplete(rssfeeds);
 				}
 			}
@@ -155,11 +149,11 @@ public class HTMLRSSFeedFinder {
 				feedFinderListener.feedFinderComplete(rssfeeds);
 	    	}			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 	}
 	
@@ -171,14 +165,14 @@ public class HTMLRSSFeedFinder {
 			
 			saxParser.parse(streamToParse, handler);			
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 	}
 	
@@ -186,11 +180,13 @@ public class HTMLRSSFeedFinder {
 		
 	    public void startDocument() throws SAXException {
 	    	rssfeeds = new ArrayList<RSSFeed>();
-	    	Log.v(LOGTAG,"startDocument");
+			if (LOGGING)
+				Log.v(LOGTAG,"startDocument");
 	    }
 	
 	    public void endDocument() throws SAXException {	    	
-        	Log.v(LOGTAG,"endDocument");
+			if (LOGGING)
+				Log.v(LOGTAG,"endDocument");
 	    }
 	
 	    public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
@@ -202,7 +198,8 @@ public class HTMLRSSFeedFinder {
 	        	currentRSSFeed.type = atts.getValue(TYPE_ATTRIBUTE);
 	        	currentRSSFeed.title = atts.getValue(TITLE_ATTRIBUTE);
 	        	
-	        	Log.v(LOGTAG,"startElement LINK_ELEMENT");
+				if (LOGGING)
+					Log.v(LOGTAG,"startElement LINK_ELEMENT");
 	        }
 	        else if (qName.equalsIgnoreCase(RSS_ELEMENT)) 
 	        {
@@ -226,10 +223,12 @@ public class HTMLRSSFeedFinder {
 	    public void endElement(String uri, String localName, String qName) throws SAXException {
 	        if (qName.equalsIgnoreCase(LINK_ELEMENT)) {
 	        	rssfeeds.add(currentRSSFeed);
-	        	Log.v(LOGTAG,"endElement LINK_ELEMENT");
+				if (LOGGING)
+					Log.v(LOGTAG,"endElement LINK_ELEMENT");
 	        } else if (qName.equalsIgnoreCase(RSS_ELEMENT)) {
 	        	rssfeeds.add(currentRSSFeed);	        	
-	        	Log.v(LOGTAG,"endElement RSS_ELEMENT");	        	
+				if (LOGGING)
+					Log.v(LOGTAG,"endElement RSS_ELEMENT");	        	
 	        }
 	    }
 	}

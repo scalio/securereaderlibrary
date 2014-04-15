@@ -6,6 +6,7 @@ import android.util.Log;
 public class SecureSettings {
 	
 	public static final String LOGTAG = "SecureSettings";
+	public static final boolean LOGGING = false;
 	
 	public static final String KEY_XMLRPC_USERNAME = "xmlrpc_username";
 	public static final String KEY_XMLRPC_PASSWORD = "xmlrpc_password";	
@@ -55,7 +56,8 @@ public class SecureSettings {
 	 */
 	public String nickname()
 	{
-		Log.v(LOGTAG,"Nickname: " + mPrefs.getValue(KEY_NICKNAME, "none set"));
+		if (LOGGING)
+			Log.v(LOGTAG,"Nickname: " + mPrefs.getValue(KEY_NICKNAME, "none set"));
 		return mPrefs.getValue(KEY_NICKNAME, null);
 	}
 

@@ -36,7 +36,8 @@ public class OPMLParser {
 	public static final String XMLURL_ATTRIBUTE = "xmlUrl";
 	
 	private static final String LOGTAG = "OPMLPARSER";
-	
+	public static final boolean LOGGING = false;
+			
 	public class OPMLOutline {
 		public String text = "";
 		public String htmlUrl = "";
@@ -69,12 +70,10 @@ public class OPMLParser {
 				StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
 				if (socialReader.useTor())
 				{
-					Log.v(LOGTAG,"Using Tor for OPML Retrieval");
-					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+					if (LOGGING)
+						Log.v(LOGTAG,"Using Tor for OPML Retrieval");
 
-					//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(SocialReader.PROXY_HOST, SocialReader.PROXY_HTTP_PORT));
-				} else {
-					Log.v(LOGTAG,"NOT Using Tor for OPML Retrieval");
+					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
 				}
 		
 				HttpGet httpGet = new HttpGet(urlToParse);
@@ -83,18 +82,19 @@ public class OPMLParser {
 					response = httpClient.execute(httpGet);
 				
 					if (response.getStatusLine().getStatusCode() == 200) {
-						Log.v(LOGTAG,"Response Code is good for OPML feed");
+						if (LOGGING) 
+							Log.v(LOGTAG,"Response Code is good for OPML feed");
 						
 						InputStream	is = response.getEntity().getContent();
 						parse(is);
 						is.close();
 					}
 				} catch (IllegalStateException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if (LOGGING)
+						e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if (LOGGING)
+						e.printStackTrace();
 				}
 				
 				return null;
@@ -103,9 +103,11 @@ public class OPMLParser {
 			@Override
 			protected void onPostExecute(Void nothing)
 			{
-				Log.v(LOGTAG, "Should be calling opmlParsed on opmlParserListener");
+				if (LOGGING)
+					Log.v(LOGTAG, "Should be calling opmlParsed on opmlParserListener");
 				if (opmlParserListener != null) {
-					Log.v(LOGTAG, "Actually calling opmlParsed on opmlParserListener");
+					if (LOGGING) 
+						Log.v(LOGTAG, "Actually calling opmlParsed on opmlParserListener");
 					opmlParserListener.opmlParsed(outlines);
 				}
 			}
@@ -133,11 +135,11 @@ public class OPMLParser {
 	    		opmlParserListener.opmlParsed(outlines);
 	    	}			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 	}
 	
@@ -149,14 +151,14 @@ public class OPMLParser {
 			
 			saxParser.parse(streamToParse, handler);			
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 	}
 	
@@ -164,7 +166,8 @@ public class OPMLParser {
 		
 	    public void startDocument() throws SAXException {
 	    	outlines = new ArrayList<OPMLOutline>();
-	    	Log.v(LOGTAG,"startDocument");
+	    	if (LOGGING)
+	    		Log.v(LOGTAG,"startDocument");
 	    }
 	
 	    public void endDocument() throws SAXException {
@@ -172,7 +175,8 @@ public class OPMLParser {
 	    		opmlParserListener.opmlParsed(outlines);
 	    	}*/
 	    	
-        	Log.v(LOGTAG,"endDocument");
+	    	if (LOGGING)
+	    		Log.v(LOGTAG,"endDocument");
 
 	    }
 	
@@ -183,7 +187,8 @@ public class OPMLParser {
 	        	currentOutline.htmlUrl = atts.getValue(HTMLURL_ATTRIBUTE);
 	        	currentOutline.xmlUrl = atts.getValue(XMLURL_ATTRIBUTE);
 	        	
-	        	Log.v(LOGTAG,"startElement OUTLINE_ELEMENT");
+	        	if (LOGGING)
+	        		Log.v(LOGTAG,"startElement OUTLINE_ELEMENT");
 	        }
 	    }
 	
@@ -191,7 +196,8 @@ public class OPMLParser {
 	        if (qName.equalsIgnoreCase(OUTLINE_ELEMENT)) {
 	        	outlines.add(currentOutline);
 	        	
-	        	Log.v(LOGTAG,"endElement OUTLINE_ELEMENT");
+	        	if (LOGGING)
+	        		Log.v(LOGTAG,"endElement OUTLINE_ELEMENT");
 	        }
 	        
 	    }
