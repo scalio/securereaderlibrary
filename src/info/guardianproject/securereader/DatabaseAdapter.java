@@ -130,7 +130,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			Cursor queryCursor = db.rawQuery(query, new String[] {});
 
-			if (queryCursor.getCount() == 0)
+			if (queryCursor.getCount() > 0)
 			{
 				if (queryCursor.moveToFirst()) {
 					title = queryCursor.getString(queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE));
@@ -841,7 +841,7 @@ public class DatabaseAdapter
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
 	
-						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
+						Item item = new Item(guid, title, publishDate, getFeedTitle(feedId), description, feedId);
 						item.setDatabaseId(id);
 						item.setAuthor(author);
 						item.setCategory(category);
