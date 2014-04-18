@@ -122,13 +122,13 @@ public class DatabaseAdapter
 		
 		String query = "select " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.FEEDS_TABLE_TITLE + ", "
 				+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID
-				+ " = " + feedId + ";";
+				+ " = ?;";
 		
 		if (LOGGING) 
 			Log.v(LOGTAG, query);
 
 		if (databaseReady()) {
-			Cursor queryCursor = db.rawQuery(query, new String[] {});
+			Cursor queryCursor = db.rawQuery(query, new String[] {String.valueOf(feedId)});
 
 			if (queryCursor.getCount() > 0)
 			{
@@ -158,13 +158,13 @@ public class DatabaseAdapter
 			{
 				String query = "select " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.FEEDS_TABLE_TITLE + ", "
 						+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL
-						+ " = '" + feed.getFeedURL() + "';";
+						+ " = '?';";
 
 				if (LOGGING) 
 					Log.w(LOGTAG, query);
 
 				if (databaseReady()) {
-					Cursor queryCursor = db.rawQuery(query, new String[] {});
+					Cursor queryCursor = db.rawQuery(query, new String[] {feed.getFeedURL()});
 
 					if (queryCursor.getCount() == 0)
 					{
@@ -227,13 +227,13 @@ public class DatabaseAdapter
 		try
 		{
 			String query = "select " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.FEEDS_TABLE_TITLE + ", "
-					+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL + " = '"
-					+ feedUrl + "';";
+					+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL + " = '?';";
 
-			Log.w(LOGTAG, query);
+			if (LOGGING) 
+				Log.w(LOGTAG, query);
 
 			if (databaseReady()) {
-				Cursor queryCursor = db.rawQuery(query, new String[] {});
+				Cursor queryCursor = db.rawQuery(query, new String[] {feedUrl});
 	
 				if (queryCursor.getCount() == 0)
 				{
@@ -265,7 +265,7 @@ public class DatabaseAdapter
 			deleteFeedItems(feedDatabaseId);
 
 			if (databaseReady())
-				returnValue = db.delete(DatabaseHelper.FEEDS_TABLE, DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=" + feedDatabaseId, null) > 0;
+				returnValue = db.delete(DatabaseHelper.FEEDS_TABLE, DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=?", new String[]{String.valueOf(feedDatabaseId)}) > 0;
 		}
 		catch (SQLException e)
 		{
@@ -311,7 +311,7 @@ public class DatabaseAdapter
 		int returnValue = -1;
 		if (databaseReady())
 			returnValue = db
-				.update(DatabaseHelper.FEEDS_TABLE, values, DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=?", new String[] { "" + feed.getDatabaseId() });
+				.update(DatabaseHelper.FEEDS_TABLE, values, DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=?", new String[] { String.valueOf(feed.getDatabaseId()) });
 
 		return returnValue;
 	}
@@ -348,7 +348,7 @@ public class DatabaseAdapter
 						String publishDate = queryCursor.getString(publishDateColumn);
 						
 						if (LOGGING)
-							Log.v(LOGTAG,"Going to delete " + id + " " + title + " " + publishDate);
+							Log.v(LOGTAG,"Going to delete " + id + " " + publishDate);
 						this.deleteItem(id);
 					}
 					while (queryCursor.moveToNext());
@@ -383,13 +383,13 @@ public class DatabaseAdapter
 					+ DatabaseHelper.FEEDS_TABLE_FEED_URL + ", " + DatabaseHelper.FEEDS_TABLE_DESCRIPTION + ", " + DatabaseHelper.FEEDS_TABLE_LANGUAGE + ", "
 					+ DatabaseHelper.FEEDS_TABLE_LAST_BUILD_DATE + ", " + DatabaseHelper.FEEDS_TABLE_LINK + ", " + DatabaseHelper.FEEDS_TABLE_NETWORK_PULL_DATE
 					+ ", " + DatabaseHelper.FEEDS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + ", " + DatabaseHelper.FEEDS_TABLE_STATUS + " from " + DatabaseHelper.FEEDS_TABLE
-					+ " where " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=" + feed.getDatabaseId() + ";";
+					+ " where " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=?;";
 
 			if (LOGGING)
 				Log.w(LOGTAG, query);
 
 			if (databaseReady()) {
-				Cursor queryCursor = db.rawQuery(query, new String[] {});
+				Cursor queryCursor = db.rawQuery(query, new String[] {String.valueOf(feed.getDatabaseId())});
 
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_COLUMN_ID);
 				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE);
@@ -723,7 +723,7 @@ public class DatabaseAdapter
 		try
 		{
 			if (databaseReady())
-				returnValue = db.delete(DatabaseHelper.ITEMS_TABLE, DatabaseHelper.ITEMS_TABLE_COLUMN_ID + "=" + itemDatabaseId, null) > 0;
+				returnValue = db.delete(DatabaseHelper.ITEMS_TABLE, DatabaseHelper.ITEMS_TABLE_COLUMN_ID + "=?", new String[]{String.valueOf(itemDatabaseId)}) > 0;
 		}
 		catch (SQLException e)
 		{
@@ -777,7 +777,7 @@ public class DatabaseAdapter
 
 			if (databaseReady())
 				returnValue = db
-					.update(DatabaseHelper.ITEMS_TABLE, values, DatabaseHelper.ITEMS_TABLE_COLUMN_ID + "=?", new String[] { "" + item.getDatabaseId() });
+					.update(DatabaseHelper.ITEMS_TABLE, values, DatabaseHelper.ITEMS_TABLE_COLUMN_ID + "=?", new String[] { String.valueOf(item.getDatabaseId()) });
 						
 			addOrUpdateItemMedia(item, item.getMediaContent());
 			addOrUpdateItemTags(item);
@@ -1225,13 +1225,13 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " 
 					+ DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE 
 					+ " from " + DatabaseHelper.ITEMS_TABLE
-					+ " where " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " = " + itemId + ";";
+					+ " where " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " = ?;";
 			
 			if (LOGGING)	
 				Log.v(LOGTAG,query);
 			
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(itemId)});
 	
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -1327,7 +1327,7 @@ public class DatabaseAdapter
 						+ DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_GUID
 						+ ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", "
 						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE
-						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + feed.getDatabaseId() + " order by "
+						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ? order by "
 						+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC LIMIT " + numItems + ";";
 			}
 			else
@@ -1338,7 +1338,7 @@ public class DatabaseAdapter
 						+ DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_GUID
 						+ ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", "
 						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE
-						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + feed.getDatabaseId() + " order by "
+						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ? order by "
 						+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
 			}
 			
@@ -1346,7 +1346,7 @@ public class DatabaseAdapter
 				Log.w(LOGTAG, query);
 
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] { String.valueOf(feed.getDatabaseId())});
 
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -1488,13 +1488,13 @@ public class DatabaseAdapter
 			{
 				String query = "select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", "
 						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_GUID + " = '"
-						+ item.getGuid() + "' and " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + item.getFeedId() + ";";
+						+ item.getGuid() + "' and " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?;";
 
 				if (LOGGING)
 					Log.v(LOGTAG, query);
 
 				if (databaseReady()) {
-					queryCursor = db.rawQuery(query, new String[] {});
+					queryCursor = db.rawQuery(query, new String[] { String.valueOf(item.getFeedId()) });
 	
 					if (LOGGING)
 						Log.v(LOGTAG, "Got " + queryCursor.getCount() + " results");
@@ -1582,7 +1582,7 @@ public class DatabaseAdapter
 			
 			try
 			{
-				queryCursor = db.rawQuery(query, new String[] {""+item.getDatabaseId()});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(item.getDatabaseId())});
 	
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID);
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_ITEM_ID);
@@ -1697,7 +1697,7 @@ public class DatabaseAdapter
 				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
-				Cursor queryCursor = db.rawQuery(query, new String[] {itemMedia.getUrl(), "" + item.getDatabaseId()});
+				Cursor queryCursor = db.rawQuery(query, new String[] {itemMedia.getUrl(), String.valueOf(item.getDatabaseId())});
 	
 				if (queryCursor.getCount() == 0)
 				{
@@ -1729,6 +1729,7 @@ public class DatabaseAdapter
 						if (LOGGING)
 							Log.v(LOGTAG,"Created itemMedia: " + itemMedia.getDatabaseId());
 			
+						//if (LOGGING) 
 						//Log.v(LOGTAG, "Added Item Media Content: " + returnValue + " item id: " + item.getDatabaseId());
 					}
 					catch (SQLException e)
@@ -1747,7 +1748,8 @@ public class DatabaseAdapter
 						returnValue = databaseId;
 						
 					} else {
-						Log.e(LOGTAG,"Couldn't move to first row");
+						if (LOGGING) 
+							Log.e(LOGTAG,"Couldn't move to first row");
 					}
 	
 					queryCursor.close();
@@ -1812,6 +1814,7 @@ public class DatabaseAdapter
 			
 			if (LOGGING)
 				Log.v(LOGTAG,query);
+			
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] {key});
 			
@@ -1878,7 +1881,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				returnValue = db.update(DatabaseHelper.ITEM_MEDIA_TABLE, values, DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + "=?", new String[] { "" + itemMedia.getDatabaseId() });
+				returnValue = db.update(DatabaseHelper.ITEM_MEDIA_TABLE, values, DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + "=?", new String[] { String.valueOf(itemMedia.getDatabaseId()) });
 			}
 			catch (SQLException e)
 			{
@@ -1906,7 +1909,7 @@ public class DatabaseAdapter
 				Log.v(LOGTAG,query);
 			
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {tag, "" + feed.getDatabaseId()});
+				queryCursor = db.rawQuery(query, new String[] {tag, String.valueOf(feed.getDatabaseId())});
 				
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
 		
@@ -2006,7 +2009,7 @@ public class DatabaseAdapter
 				Log.v(LOGTAG,query);
 			
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {"" + item.getDatabaseId()});
+				queryCursor = db.rawQuery(query, new String[] { String.valueOf(item.getDatabaseId())});
 				
 				int tagColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAG);
 		
@@ -2069,7 +2072,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				long returnValue = db.delete(DatabaseHelper.ITEM_TAGS_TABLE, DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=?", new String[] { ""+itemDatabaseId });
+				long returnValue = db.delete(DatabaseHelper.ITEM_TAGS_TABLE, DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=?", new String[] { String.valueOf(itemDatabaseId) });
 			}
 			catch (SQLException e)
 			{
@@ -2093,7 +2096,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				long returnValue = db.delete(DatabaseHelper.ITEM_MEDIA_TABLE, DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=?", new String[] { "" + itemId });
+				long returnValue = db.delete(DatabaseHelper.ITEM_MEDIA_TABLE, DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=?", new String[] { String.valueOf(itemId) });
 			}
 			catch (SQLException e)
 			{
@@ -2115,7 +2118,7 @@ public class DatabaseAdapter
 				}
 			}));
 			if (databaseReady()) {
-				numDeleted = db.delete(DatabaseHelper.ITEM_MEDIA_TABLE, DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=? AND " + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + " NOT IN (" + databaseIds + ")", new String[] { "" + item.getDatabaseId() });
+				numDeleted = db.delete(DatabaseHelper.ITEM_MEDIA_TABLE, DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=? AND " + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + " NOT IN (" + databaseIds + ")", new String[] { String.valueOf(item.getDatabaseId()) });
 			}
 		}
 		catch (SQLException e)
