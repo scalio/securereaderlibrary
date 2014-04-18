@@ -146,7 +146,8 @@ public class Reader
 				HttpResponse response = httpClient.execute(httpGet);
 
 				if (response.getStatusLine().getStatusCode() == 200) {
-					Log.v(LOGTAG,"Response Code is good");
+					if (LOGGING)
+						Log.v(LOGTAG,"Response Code is good");
 					
 					InputStream is = response.getEntity().getContent();
 					xr.parse(new InputSource(is));
