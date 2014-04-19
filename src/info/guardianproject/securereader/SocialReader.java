@@ -374,7 +374,7 @@ public class SocialReader implements ICacheWordSubscriber
 									newFeed.setSubscribed(true);
 									databaseAdapter.addOrUpdateFeed(newFeed);
 									if (LOGGING)
-										Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+										Log.v(LOGTAG,"May have added feed");
 								}
 							} else {
 								if (LOGGING)
@@ -417,7 +417,7 @@ public class SocialReader implements ICacheWordSubscriber
 								newFeed.setSubscribed(true);
 								databaseAdapter.addOrUpdateFeed(newFeed);
 								if (LOGGING)
-									Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
+									Log.v(LOGTAG,"May have added");
 							}
 						} else {
 							if (LOGGING)
@@ -852,7 +852,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
 			if (LOGGING)
-				Log.v(LOGTAG, "Feed from Database **" + feed.getTitle());
+				Log.v(LOGTAG, "Feed from Database");
 			feed = databaseAdapter.getFeedItems(feed, DEFAULT_NUM_FEED_ITEMS);
 		}
 		return feed;
