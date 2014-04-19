@@ -158,11 +158,11 @@ public class DatabaseAdapter
 			{
 				String query = "select " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.FEEDS_TABLE_TITLE + ", "
 						+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL
-						+ " = '?';";
+						+ " = ?;";
 
 				if (LOGGING) 
-					Log.w(LOGTAG, query);
-
+					Log.v(LOGTAG, query);
+				
 				if (databaseReady()) {
 					Cursor queryCursor = db.rawQuery(query, new String[] {feed.getFeedURL()});
 
@@ -227,10 +227,10 @@ public class DatabaseAdapter
 		try
 		{
 			String query = "select " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.FEEDS_TABLE_TITLE + ", "
-					+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL + " = '?';";
+					+ DatabaseHelper.FEEDS_TABLE_FEED_URL + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL + " = ?;";
 
 			if (LOGGING) 
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				Cursor queryCursor = db.rawQuery(query, new String[] {feedUrl});
@@ -325,7 +325,7 @@ public class DatabaseAdapter
 				+ dateFormat.format(expirationDate) + "' and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " != 1 and " + DatabaseHelper.ITEMS_TABLE_SHARED + " != 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 		if (LOGGING)
-			Log.w(LOGTAG, query);
+			Log.v(LOGTAG, query);
 			
 		if (databaseReady()) {
 			try
@@ -386,7 +386,7 @@ public class DatabaseAdapter
 					+ " where " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + "=?;";
 
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				Cursor queryCursor = db.rawQuery(query, new String[] {String.valueOf(feed.getDatabaseId())});
@@ -497,7 +497,7 @@ public class DatabaseAdapter
 					+ " limit " + numItems + ";";
 	
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] {});
@@ -620,7 +620,7 @@ public class DatabaseAdapter
 			query.append(";");
 
 			if (LOGGING)
-				Log.w(LOGTAG, query.toString());
+				Log.v(LOGTAG, query.toString());
 
 			if (databaseReady()) {
 				Cursor queryCursor = db.rawQuery(query.toString(), new String[] {});
@@ -804,7 +804,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] {});
@@ -909,7 +909,7 @@ public class DatabaseAdapter
 					+ feed.getDatabaseId() + " and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] {});
@@ -1005,7 +1005,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_SHARED + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] {});
@@ -1110,7 +1110,7 @@ public class DatabaseAdapter
 					+ feed.getDatabaseId() + " and " + DatabaseHelper.ITEMS_TABLE_SHARED + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] {});
@@ -1343,7 +1343,7 @@ public class DatabaseAdapter
 			}
 			
 			if (LOGGING)
-				Log.w(LOGTAG, query);
+				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
 				queryCursor = db.rawQuery(query, new String[] { String.valueOf(feed.getDatabaseId())});
@@ -1574,7 +1574,7 @@ public class DatabaseAdapter
 				+ "?;";
 
 		if (LOGGING)
-			Log.w(LOGTAG, query);
+			Log.v(LOGTAG, query);
 
 		Cursor queryCursor = null;
 		
@@ -1624,7 +1624,7 @@ public class DatabaseAdapter
 						String samplerate = queryCursor.getString(samplerateColumn);
 		
 						if (LOGGING)
-							Log.v(LOGTAG,"new MediaContent " + url);
+							Log.v(LOGTAG,"new MediaContent");
 						
 						MediaContent mc = new MediaContent(itemId, url, type);
 						mc.setDatabaseId(id);
