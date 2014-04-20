@@ -321,8 +321,8 @@ public class DatabaseAdapter
 		
 		String query = "select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", "
 				+ DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " 
-				+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " < '"
-				+ dateFormat.format(expirationDate) + "' and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " != 1 and " + DatabaseHelper.ITEMS_TABLE_SHARED + " != 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
+				+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " < ?"
+				+ " and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " != ? and " + DatabaseHelper.ITEMS_TABLE_SHARED + " != ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 		if (LOGGING)
 			Log.v(LOGTAG, query);
@@ -330,7 +330,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {dateFormat.format(expirationDate), String.valueOf(1), String.valueOf(1)});
 			
 				if (LOGGING)
 					Log.v(LOGTAG,"Count " + queryCursor.getCount());
@@ -469,12 +469,12 @@ public class DatabaseAdapter
 
 	public ArrayList<Feed> getSubscribedFeeds()
 	{
-		return getAllFeeds(DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = 1");
+		return getAllFeeds(true,true);
 	}
 
 	public ArrayList<Feed> getUnSubscribedFeeds()
 	{
-		return getAllFeeds(DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = 0");
+		return getAllFeeds(true,false);
 	}
 
 	public Feed getSubscribedFeedItems(int numItems)
@@ -491,8 +491,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", "
 					+ DatabaseHelper.FEEDS_TABLE_TITLE + ", " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED
 					+ " from " + DatabaseHelper.ITEMS_TABLE + ", " + DatabaseHelper.FEEDS_TABLE
-					+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID 
-					+ " and " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = 1"
+					+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID
+					+ " and " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = ?"
 					+ " order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC"
 					+ " limit " + numItems + ";";
 	
@@ -500,7 +500,7 @@ public class DatabaseAdapter
 				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1)});
 	
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -598,10 +598,10 @@ public class DatabaseAdapter
 	
 	public ArrayList<Feed> getAllFeeds()
 	{
-		return getAllFeeds("");
+		return getAllFeeds(false,false);
 	}
 
-	public ArrayList<Feed> getAllFeeds(String whereClause)
+	public ArrayList<Feed> getAllFeeds(boolean checkSubscribed, boolean subscribed)
 	{
 		ArrayList<Feed> feeds = new ArrayList<Feed>();
 
@@ -612,9 +612,9 @@ public class DatabaseAdapter
 					+ DatabaseHelper.FEEDS_TABLE_LAST_BUILD_DATE + ", " + DatabaseHelper.FEEDS_TABLE_LINK + ", " + DatabaseHelper.FEEDS_TABLE_NETWORK_PULL_DATE
 					+ ", " + DatabaseHelper.FEEDS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + ", " + DatabaseHelper.FEEDS_TABLE_STATUS + " from " + DatabaseHelper.FEEDS_TABLE);
 
-			if (!whereClause.isEmpty())
+			if (checkSubscribed)
 			{
-				query.append(" where " + whereClause);
+				query.append(" where " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = ?");
 			}
 
 			query.append(";");
@@ -623,8 +623,15 @@ public class DatabaseAdapter
 				Log.v(LOGTAG, query.toString());
 
 			if (databaseReady()) {
-				Cursor queryCursor = db.rawQuery(query.toString(), new String[] {});
-	
+				Cursor queryCursor = null;
+				if (checkSubscribed && subscribed) {
+					queryCursor = db.rawQuery(query.toString(), new String[] {String.valueOf(1)});
+				} else if (checkSubscribed && !subscribed) {
+					queryCursor = db.rawQuery(query.toString(), new String[] {String.valueOf(0)}); 
+				} else {
+					queryCursor = db.rawQuery(query.toString(), new String[] {});
+				}
+					
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_COLUMN_ID);
 				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE);
 				int feedURLColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_FEED_URL);
@@ -801,13 +808,13 @@ public class DatabaseAdapter
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
 					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + " from " + DatabaseHelper.ITEMS_TABLE + " where "
-					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
+					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
 				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1)});
 
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -905,14 +912,14 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = "
-					+ feed.getDatabaseId() + " and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
+					+ " and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
 				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(feed.getDatabaseId()), String.valueOf(1)});
 
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -1002,13 +1009,13 @@ public class DatabaseAdapter
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
 					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + " from " + DatabaseHelper.ITEMS_TABLE + " where "
-					+ DatabaseHelper.ITEMS_TABLE_SHARED + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
+					+ DatabaseHelper.ITEMS_TABLE_SHARED + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
 				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1)});
 
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -1106,14 +1113,14 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = "
-					+ feed.getDatabaseId() + " and " + DatabaseHelper.ITEMS_TABLE_SHARED + " = 1 order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
+					+ " and " + DatabaseHelper.ITEMS_TABLE_SHARED + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
 				Log.v(LOGTAG, query);
 
 			if (databaseReady()) {
-				queryCursor = db.rawQuery(query, new String[] {});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(feed.getDatabaseId()), String.valueOf(1)});
 
 				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_AUTHOR);
@@ -1487,14 +1494,14 @@ public class DatabaseAdapter
 			if (item.getDatabaseId() == Item.DEFAULT_DATABASE_ID)
 			{
 				String query = "select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", "
-						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_GUID + " = '"
-						+ item.getGuid() + "' and " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?;";
+						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_GUID + " = ?"
+					    + " and " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?;";
 
 				if (LOGGING)
 					Log.v(LOGTAG, query);
 
 				if (databaseReady()) {
-					queryCursor = db.rawQuery(query, new String[] { String.valueOf(item.getFeedId()) });
+					queryCursor = db.rawQuery(query, new String[] { item.getGuid(), String.valueOf(item.getFeedId()) });
 	
 					if (LOGGING)
 						Log.v(LOGTAG, "Got " + queryCursor.getCount() + " results");
