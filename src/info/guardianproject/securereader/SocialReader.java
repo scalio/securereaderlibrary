@@ -71,7 +71,7 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -326,20 +326,26 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 
 		// If we aren't going to do any background syncing, stop the service
-		if (settings.syncFrequency() != Settings.SyncFrequency.InBackground)
-		{
-			if (LOGGING)
-				Log.v(LOGTAG,"settings.syncFrequency() != Settings.SyncFrequency.InBackground so we are stopping the service");
+		// Cacheword's locked, we can't do any background work
+		//if (settings.syncFrequency() != Settings.SyncFrequency.InBackground)
+		//{
+		//	if (LOGGING)
+		//		Log.v(LOGTAG,"settings.syncFrequency() != Settings.SyncFrequency.InBackground so we are stopping the service");
 			applicationContext.stopService(new Intent(applicationContext, SyncService.class));
 
 			if (databaseAdapter != null && databaseAdapter.databaseReady()) {
+				if (LOGGING) 
+					Log.v(LOGTAG,"database needs closing, doing that now");
 	        	databaseAdapter.close();
+	        } else {
+	        	if (LOGGING) 
+					Log.v(LOGTAG,"database doesn't needs closing, strange...");
 	        }
 
 	        if (vfs != null && vfs.isMounted()) {
 	        	vfs.unmount();
 	        }
-		}
+		//}
 		
 		if (periodicTimer != null)
 			periodicTimer.cancel();
@@ -492,7 +498,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG, "SocialReader onPause");
 		appStatus = SocialReader.APP_IN_BACKGROUND;
-		//cacheWord.disconnect();
+		cacheWord.detach();
 	}
 
 	// When the foreground app is unpaused
@@ -500,6 +506,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG, "SocialReader onResume");
         appStatus = SocialReader.APP_IN_FOREGROUND;
+        cacheWord.reattach();
 	}
 	
 	public void setCacheWordTimeout(int minutes)
@@ -903,7 +910,8 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	private void initializeDatabase()
 	{
-		Log.v(LOGTAG,"initializeDatabase()");
+		if (LOGGING)
+			Log.v(LOGTAG,"initializeDatabase()");
 
 		if (RESET_DATABASE) {
 			applicationContext.deleteDatabase(DatabaseHelper.DATABASE_NAME);
