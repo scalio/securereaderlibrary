@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Timer;
@@ -1477,6 +1478,26 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG, "Delete data");
 		deleteFileSystem();
+		
+		// Reset Prefs to initial state
+		settings.resetSettings();
+		
+		// Change Password
+		/*
+		String defaultPassword = "password";
+		char[] p = defaultPassword.toCharArray();
+		try {
+			cacheWord.setPassphrase(p);
+		} catch (GeneralSecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+		
+		cacheWord.manuallyLock();
+		cacheWord.deinitialize();
+		
+		
 	}
 
 	/*
