@@ -57,6 +57,24 @@ public class Settings
 			mPrefs.edit().putBoolean("firstrunkey", false).commit();
 	}
 	
+	public void resetSettings() {		
+		// Reset all settings?
+
+		/*
+		boolean torRequiredDefault = context.getResources().getBoolean(R.bool.require_tor_default);
+		mPrefs.edit().putBoolean(KEY_REQUIRE_TOR, torRequiredDefault).commit();
+
+		mPrefs.edit().putInt(KEY_PASSPHRASE_TIMEOUT, 1440).commit();
+		*/
+
+
+		this.setHasShownHelp(false);
+		this.setHasShownMenuHint(false);
+		this.setHasShownSwipeUpHint(false);
+		
+		mPrefs.edit().putBoolean("firstrunkey", true).commit();
+	}
+	
 	public void registerChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener)
 	{
 		mPrefs.registerOnSharedPreferenceChangeListener(listener);
@@ -77,6 +95,10 @@ public class Settings
 		return mIsFirstRun;
 	}
 
+	public void setFirstRun(boolean value) {
+		mPrefs.edit().putBoolean("firstrunkey", value).commit();
+	}
+	
 	/**
 	 * @return Gets whether or not a TOR connection is required
 	 * 
@@ -179,7 +201,7 @@ public class Settings
 	{
 		return mPrefs.getBoolean("hasshownhelpitems", false);
 	}
-
+	
 	/**
 	 * Set (or reset) whether we have shown the help items
 	 * 
