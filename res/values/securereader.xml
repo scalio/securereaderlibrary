@@ -2,8 +2,13 @@
 <resources>
 
     <string name="app_name">Secure Reader Library</string>
+    
+    <!-- Network OPML service -->
     <string name="opml_url">http://securereader.guardianproject.info/opml/opml.php</string>
 	
+	<!--  Use fulltext feeds with opml service -->
+	<bool name="fulltextfeeds">true</bool>
+    
     <string-array name="built_in_feed_names">
         <item>Big Buffalo</item>
         <item>Applications</item>
@@ -32,4 +37,5 @@
 	<!-- Default values that should be referenced in Settings.java -->
 	<bool name="require_tor_default">true</bool>
 	<string name="sync_mode_default">BitWise</string>	
+	
 </resources>

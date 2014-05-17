@@ -462,6 +462,12 @@ public class SocialReader implements ICacheWordSubscriber
 			} else if (lang == UiLanguage.Ukrainian) {
 				finalOpmlUrl = finalOpmlUrl + "uk_UA";
 			} 
+			
+			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) 
+			{
+				finalOpmlUrl += "&fulltext=true";
+			}
+			
 			if (LOGGING)
 				Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
 			
