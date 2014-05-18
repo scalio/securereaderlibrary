@@ -423,8 +423,6 @@ public class SocialReader implements ICacheWordSubscriber
 								Feed newFeed = new Feed(rssFeeds.get(i).title, rssFeeds.get(i).href);
 								newFeed.setSubscribed(true);
 								databaseAdapter.addOrUpdateFeed(newFeed);
-								if (LOGGING)
-									Log.v(LOGTAG,"May have added");
 							}
 						} else {
 							if (LOGGING)
@@ -463,8 +461,7 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl = finalOpmlUrl + "uk_UA";
 			} 
 			
-			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) 
-			{
+			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
 			}
 			
@@ -483,8 +480,6 @@ public class SocialReader implements ICacheWordSubscriber
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
 									newFeed.setSubscribed(true);
 									databaseAdapter.addOrUpdateFeed(newFeed);
-									if (LOGGING)
-										Log.v(LOGTAG,"May have added: " + newFeed.getTitle() + " " + newFeed.getFeedURL());
 								}
 							} else {
 								if (LOGGING)
@@ -1217,7 +1212,7 @@ public class SocialReader implements ICacheWordSubscriber
 			// data out
 			int result = databaseAdapter.updateFeed(feed);
 			if (LOGGING)
-				Log.v(LOGTAG, feed.getTitle() + " setFeedData: " + result);
+				Log.v(LOGTAG, "setFeedData: " + result);
 
 			if (result == 1)
 			{
