@@ -11,7 +11,7 @@ public class Settings
 	public static final String LOGTAG = "Settings";
 	public static final boolean LOGGING = false;
 	
-	private final SharedPreferences mPrefs;
+	protected final SharedPreferences mPrefs;
 	private final boolean mIsFirstRun;
 	private final Context context;
 
