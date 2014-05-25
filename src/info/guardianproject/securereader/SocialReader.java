@@ -927,6 +927,15 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		return returnFeed;
 	}
+
+	public Feed getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags) {
+		Feed returnFeed = new Feed();
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			returnFeed.addItems(databaseAdapter.getFeedItemsWithMediaTags(feed, tags));
+		}
+		return returnFeed;
+	}	
 	
 	private void initializeDatabase()
 	{

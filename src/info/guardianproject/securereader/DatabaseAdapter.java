@@ -1899,6 +1899,70 @@ public class DatabaseAdapter
 		return returnValue;
 	}
 	
+	public ArrayList<Item> getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags) {
+		ArrayList<Item> items = new ArrayList<Item>();
+		
+		Cursor queryCursor = null;
+		
+		try {
+			
+			String query = "select " + DatabaseHelper.ITEM_TAGS_TABLE_ID + ", " + DatabaseHelper.ITEM_TAG + ", t."
+					+ DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " from " + DatabaseHelper.ITEM_TAGS_TABLE + " t, " 
+					+ DatabaseHelper.ITEMS_TABLE + " i, " + DatabaseHelper.ITEM_MEDIA_TABLE + " m " 
+					+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " =?" 
+					+ " and m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?" + " and m." + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + " = i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;
+					
+			for (int a = 0; a < tags.size(); a++) {
+				query = query + " and " + DatabaseHelper.ITEM_TAG + " LIKE ?" + "and t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "= i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;  
+			}
+					 
+			query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
+			
+			if (LOGGING)
+				Log.v(LOGTAG,query);
+			
+			if (databaseReady()) {
+				ArrayList<String> queryParams = new ArrayList<String>();
+				queryParams.add(String.valueOf(feed.getDatabaseId()));
+				queryParams.add("%audio%");
+				queryParams.addAll(tags);
+				queryCursor = db.rawQuery(query, (String[])queryParams.toArray());
+				
+				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
+		
+				if (queryCursor.moveToFirst())
+				{
+					do {
+						int itemId = queryCursor.getInt(itemIdColumn);
+						Item item = this.getItemById(itemId);
+						items.add(item);
+					} while (queryCursor.moveToNext());
+						
+				} else {
+					if (LOGGING)
+						Log.v(LOGTAG,"Couldn't move to first");
+				}
+			
+				queryCursor.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 		
+		finally
+		{
+			if (queryCursor != null)
+			{
+				try
+				{
+					queryCursor.close();					
+				}
+				catch(Exception e) {}
+			}
+		}
+		return items;		
+	}
+
+	
 	public ArrayList<Item> getFeedItemsWithTag(Feed feed, String tag) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
