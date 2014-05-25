@@ -343,9 +343,27 @@ public class SocialReader implements ICacheWordSubscriber
 					Log.v(LOGTAG,"database doesn't needs closing, strange...");
 	        }
 
+			/* unmount is a noop in iocipher 
 	        if (vfs != null && vfs.isMounted()) {
+	        	if (LOGGING)
+	        		Log.v(LOGTAG,"file system mounted, unmounting now");
 	        	vfs.unmount();
+	        	
+	        	for (int i = 0; i < 100; i++) {
+	        		if (vfs.isMounted()) {
+	        			if (LOGGING)
+	        				Log.v(LOGTAG,"file system is still mounted, what's up?!");
+	        		} else {
+	        			if (LOGGING)
+	        				Log.v(LOGTAG,"All is well!");
+	        		}
+	        	}
 	        }
+	        else {
+	        	if (LOGGING)
+	        		Log.v(LOGTAG,"file system not mounted, no need to unmount");
+	        }
+	        */
 		//}
 		
 		if (periodicTimer != null)
@@ -962,6 +980,8 @@ public class SocialReader implements ICacheWordSubscriber
 		{
 			filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
 		}
+		
+		filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
 		return filesDir;
 	}
 	
@@ -981,21 +1001,41 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG,"initializeFileSystemCache");
 
-		// Check external storage, determine where to write..
-		// Use IOCipher
-
 		java.io.File filesDir = getNonVirtualFileSystemDir();
 
 		ioCipherFilePath = filesDir + IOCIPHER_FILE_NAME;
 
 		IOCipherMountHelper ioHelper = new IOCipherMountHelper(cacheWord);
 		try {
-		    vfs = ioHelper.mount(ioCipherFilePath);
+			if (vfs == null) {
+				vfs = ioHelper.mount(ioCipherFilePath);
+			}
 		} catch ( IOException e ) {
 		    // TODO: handle IOCipher open failure
-			if (LOGGING)
+			if (LOGGING) {
 				Log.e(LOGTAG,"IOCipher open failure");
-		    e.printStackTrace();
+				e.printStackTrace();
+			}
+			
+			if (LOGGING) {
+				Log.v(LOGTAG,"Going to recreate IOCipher as it is corrupt");
+			}
+			
+			java.io.File existingVFS = new File(ioCipherFilePath);
+			if (existingVFS.exists()) {
+				existingVFS.delete();
+				if (LOGGING) {
+					Log.v(LOGTAG,"Deleted existing VFS");
+				}
+				try {
+					vfs = ioHelper.mount(ioCipherFilePath);
+				} catch (IOException e1) {
+					if (LOGGING)
+						e1.printStackTrace();
+				}
+			}
+			
+			
 		}
 
 		// Test it
@@ -1017,6 +1057,7 @@ public class SocialReader implements ICacheWordSubscriber
 	{
 		if (vfs != null && vfs.isMounted()) {
 			vfs.unmount();
+			vfs = null;
 		}
 
 		// Delete all possible locations
@@ -1472,6 +1513,7 @@ public class SocialReader implements ICacheWordSubscriber
 
 		if (vfs != null && vfs.isMounted()) {
 			vfs.unmount();
+			vfs = null;
 		}
 		
 		applicationContext.deleteDatabase(DatabaseHelper.DATABASE_NAME);
