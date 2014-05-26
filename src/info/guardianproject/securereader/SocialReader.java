@@ -928,11 +928,27 @@ public class SocialReader implements ICacheWordSubscriber
 		return returnFeed;
 	}
 
-	public Feed getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags) {
+	public Feed getPlaylist(Feed feed) {		
+		
+		ArrayList<String> tags = new ArrayList<String>();
+		// Tempo
+		tags.add("slow"); // -1
+		tags.add("medium"); // 0
+		tags.add("fast"); // +1
+		
+		// Whatever
+		tags.add("nothing");
+		tags.add("thing");
+		tags.add("something");
+		
+		return getFeedItemsWithMediaTags(feed, tags, "audio", true, 20);
+	}
+	
+	public Feed getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags, String mediaMimeType, boolean randomize, int limit) {
 		Feed returnFeed = new Feed();
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
-			returnFeed.addItems(databaseAdapter.getFeedItemsWithMediaTags(feed, tags));
+			returnFeed.addItems(databaseAdapter.getFeedItemsWithMediaTags(feed, tags, mediaMimeType, randomize, limit));
 		}
 		return returnFeed;
 	}	

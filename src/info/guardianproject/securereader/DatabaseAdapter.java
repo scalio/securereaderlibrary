@@ -1899,7 +1899,7 @@ public class DatabaseAdapter
 		return returnValue;
 	}
 	
-	public ArrayList<Item> getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags) {
+	public ArrayList<Item> getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags, String mediaMimeType, boolean randomize, int limit) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
 		Cursor queryCursor = null;
@@ -1915,8 +1915,14 @@ public class DatabaseAdapter
 			for (int a = 0; a < tags.size(); a++) {
 				query = query + " and " + DatabaseHelper.ITEM_TAG + " LIKE ?" + "and t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "= i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;  
 			}
-					 
-			query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
+			
+			query = query + " limit " + limit;
+			if (randomize) {
+				 query = query + " order by RANDOM();";
+			}
+			else {
+				query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
+			}
 			
 			if (LOGGING)
 				Log.v(LOGTAG,query);
@@ -1924,7 +1930,7 @@ public class DatabaseAdapter
 			if (databaseReady()) {
 				ArrayList<String> queryParams = new ArrayList<String>();
 				queryParams.add(String.valueOf(feed.getDatabaseId()));
-				queryParams.add("%audio%");
+				queryParams.add("%"+mediaMimeType+"%");
 				queryParams.addAll(tags);
 				queryCursor = db.rawQuery(query, (String[])queryParams.toArray());
 				
@@ -1946,7 +1952,8 @@ public class DatabaseAdapter
 				queryCursor.close();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			if (LOGGING) 
+				e.printStackTrace();
 		} 		
 		finally
 		{
