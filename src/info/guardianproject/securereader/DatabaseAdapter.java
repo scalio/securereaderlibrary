@@ -1910,19 +1910,19 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " from " + DatabaseHelper.ITEM_TAGS_TABLE + " t, " 
 					+ DatabaseHelper.ITEMS_TABLE + " i, " + DatabaseHelper.ITEM_MEDIA_TABLE + " m " 
 					+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " =?" 
-					+ " and m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?" + " and m." + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + " = i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;
+					+ " and m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?" + " and m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;
 					
 			for (int a = 0; a < tags.size(); a++) {
-				query = query + " and " + DatabaseHelper.ITEM_TAG + " LIKE ?" + "and t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "= i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;  
+				query = query + " and " + DatabaseHelper.ITEM_TAG + " LIKE ?" + " and t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "= i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;  
 			}
 			
-			query = query + " limit " + limit;
 			if (randomize) {
-				 query = query + " order by RANDOM();";
+				 query = query + " order by RANDOM()";
 			}
 			else {
-				query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
+				query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC";
 			}
+			query = query + " limit " + limit + ";";
 			
 			if (LOGGING)
 				Log.v(LOGTAG,query);
@@ -1932,7 +1932,7 @@ public class DatabaseAdapter
 				queryParams.add(String.valueOf(feed.getDatabaseId()));
 				queryParams.add("%"+mediaMimeType+"%");
 				queryParams.addAll(tags);
-				queryCursor = db.rawQuery(query, (String[])queryParams.toArray());
+				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
 				
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
 		
