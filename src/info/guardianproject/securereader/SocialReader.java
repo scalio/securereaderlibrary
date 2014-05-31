@@ -1029,38 +1029,48 @@ public class SocialReader implements ICacheWordSubscriber
 		java.io.File filesDir = getNonVirtualFileSystemDir();
 
 		ioCipherFilePath = filesDir + IOCIPHER_FILE_NAME;
-
+		
 		IOCipherMountHelper ioHelper = new IOCipherMountHelper(cacheWord);
 		try {
 			if (vfs == null) {
 				vfs = ioHelper.mount(ioCipherFilePath);
 			}
 		} catch ( IOException e ) {
-		    // TODO: handle IOCipher open failure
 			if (LOGGING) {
 				Log.e(LOGTAG,"IOCipher open failure");
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			
+			Log.v(LOGTAG,"Are you alive?");
+			java.io.File existingVFS = new java.io.File(ioCipherFilePath);
 			if (LOGGING) {
-				Log.v(LOGTAG,"Going to recreate IOCipher as it is corrupt");
+				Log.v(LOGTAG,"Does exist? " + existingVFS.exists());
 			}
 			
-			java.io.File existingVFS = new File(ioCipherFilePath);
 			if (existingVFS.exists()) {
-				existingVFS.delete();
 				if (LOGGING) {
-					Log.v(LOGTAG,"Deleted existing VFS");
+					Log.v(LOGTAG,"Let's delete it");
 				}
-				try {
-					vfs = ioHelper.mount(ioCipherFilePath);
-				} catch (IOException e1) {
-					if (LOGGING)
-						e1.printStackTrace();
+				existingVFS.delete();
+
+				if (LOGGING) {
+					Log.v(LOGTAG,"Deleted existing VFS " + ioCipherFilePath);
+				}
+			} else {
+				if (LOGGING) {
+					Log.v(LOGTAG,"Strange, it doesn't exist");
 				}
 			}
-			
-			
+		
+			try {
+				ioHelper = new IOCipherMountHelper(cacheWord);
+				vfs = ioHelper.mount(ioCipherFilePath);
+			} catch (IOException e1) {
+				if (LOGGING) {
+					Log.e(LOGTAG, "Still didn't work, IOCipher open failure");
+					//e1.printStackTrace();
+				}
+			}			
 		}
 
 		// Test it
