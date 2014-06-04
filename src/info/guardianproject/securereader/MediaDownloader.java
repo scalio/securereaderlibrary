@@ -229,4 +229,10 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 			callback.mediaDownloaded(cachedFile);
 		}
 	}
+	
+	@Override
+	protected void onCancelled () {
+		if (LOGGING) 
+			Log.v(LOGTAG, "****onCancelled****");
+	}
 }
