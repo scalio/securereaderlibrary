@@ -71,8 +71,11 @@ public class SocialReader implements ICacheWordSubscriber
 		void onUnlocked();
 	}
 	
+	// Change this when building for release
+	public static final boolean TESTING = false;
+	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -482,6 +485,9 @@ public class SocialReader implements ICacheWordSubscriber
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
 			}
+			
+			if (TESTING) 
+				finalOpmlUrl += "&testing=1";
 			
 			if (LOGGING)
 				Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
@@ -1038,27 +1044,16 @@ public class SocialReader implements ICacheWordSubscriber
 		} catch ( IOException e ) {
 			if (LOGGING) {
 				Log.e(LOGTAG,"IOCipher open failure");
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			
-			Log.v(LOGTAG,"Are you alive?");
 			java.io.File existingVFS = new java.io.File(ioCipherFilePath);
-			if (LOGGING) {
-				Log.v(LOGTAG,"Does exist? " + existingVFS.exists());
-			}
 			
 			if (existingVFS.exists()) {
-				if (LOGGING) {
-					Log.v(LOGTAG,"Let's delete it");
-				}
 				existingVFS.delete();
 
 				if (LOGGING) {
 					Log.v(LOGTAG,"Deleted existing VFS " + ioCipherFilePath);
-				}
-			} else {
-				if (LOGGING) {
-					Log.v(LOGTAG,"Strange, it doesn't exist");
 				}
 			}
 		
@@ -1067,7 +1062,7 @@ public class SocialReader implements ICacheWordSubscriber
 				vfs = ioHelper.mount(ioCipherFilePath);
 			} catch (IOException e1) {
 				if (LOGGING) {
-					Log.e(LOGTAG, "Still didn't work, IOCipher open failure");
+					Log.e(LOGTAG, "Still didn't work, IOCipher open failure, giving up");
 					//e1.printStackTrace();
 				}
 			}			
