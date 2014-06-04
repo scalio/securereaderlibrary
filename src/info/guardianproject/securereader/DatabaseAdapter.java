@@ -136,6 +136,7 @@ public class DatabaseAdapter
 					title = queryCursor.getString(queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE));
 				}
 			}
+			queryCursor.close();
 		}
 		return title;
 	}
