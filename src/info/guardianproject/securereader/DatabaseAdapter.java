@@ -136,6 +136,8 @@ public class DatabaseAdapter
 					title = queryCursor.getString(queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE));
 				}
 			}
+			
+			queryCursor.close();
 		}
 		return title;
 	}
@@ -1906,16 +1908,27 @@ public class DatabaseAdapter
 		
 		try {
 			
-			String query = "select " + DatabaseHelper.ITEM_TAGS_TABLE_ID + ", " + DatabaseHelper.ITEM_TAG + ", t."
-					+ DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " from " + DatabaseHelper.ITEM_TAGS_TABLE + " t, " 
-					+ DatabaseHelper.ITEMS_TABLE + " i, " + DatabaseHelper.ITEM_MEDIA_TABLE + " m " 
-					+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " =?" 
-					+ " and m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?" + " and m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;
-					
-			for (int a = 0; a < tags.size(); a++) {
-				query = query + " and " + DatabaseHelper.ITEM_TAG + " LIKE ?" + " and t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "= i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID;  
+			StringBuilder tagsArray = new StringBuilder();
+			for (int a = 0; a < tags.size(); a++) 
+			{
+				if (tagsArray.length() != 0)
+					tagsArray.append(",");
+				tagsArray.append("'" + tags.get(a) + "'");
 			}
 			
+			String query = "SELECT t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " FROM "
+					+ DatabaseHelper.ITEM_TAGS_TABLE + " t,"
+					+ DatabaseHelper.ITEMS_TABLE + " i,"
+					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
+					+ " WHERE "
+					+ " i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + "=?"
+					+ " AND t.tag IN (" + tagsArray.toString() + ")"
+					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
+					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
+					+ " AND m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?"
+					+ " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
+					+ " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ")=" + tags.size();
+				
 			if (randomize) {
 				 query = query + " order by RANDOM()";
 			}
@@ -1931,7 +1944,6 @@ public class DatabaseAdapter
 				ArrayList<String> queryParams = new ArrayList<String>();
 				queryParams.add(String.valueOf(feed.getDatabaseId()));
 				queryParams.add("%"+mediaMimeType+"%");
-				queryParams.addAll(tags);
 				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
 				
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
