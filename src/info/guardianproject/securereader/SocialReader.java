@@ -1492,7 +1492,7 @@ public class SocialReader implements ICacheWordSubscriber
 			{
 				if (builder.length() > 0)
 					builder.append("\n\n");
-				builder.append(subscribedFeed.getTitle() + "\n" + subscribedFeed.getLink() + "\n" + subscribedFeed.getDescription());
+				builder.append(subscribedFeed.getTitle() + "\n" + subscribedFeed.getLink() + "\n" + subscribedFeed.getFeedURL() + "\n" + subscribedFeed.getDescription());
 			}
 			sendIntent.putExtra(Intent.EXTRA_TEXT, builder.toString());
 		}
