@@ -118,6 +118,7 @@ public class SocialReporter
 		
 		if (socialReader.databaseAdapter != null && socialReader.databaseAdapter.databaseReady())
 		{
+			story.setPubDate(new Date());
 			socialReader.databaseAdapter.addOrUpdateItem(story);
 		}
 		else 
