@@ -103,7 +103,7 @@ public class SocialReporter
 					item.addTag(tag);
 			}
 	
-			socialReader.databaseAdapter.addOrUpdateItem(item);
+			socialReader.databaseAdapter.addOrUpdateItem(item, -1);
 		} else {
 			if (LOGGING)
 				Log.e(LOGTAG,"Database not ready");
@@ -118,7 +118,7 @@ public class SocialReporter
 		
 		if (socialReader.databaseAdapter != null && socialReader.databaseAdapter.databaseReady())
 		{
-			socialReader.databaseAdapter.addOrUpdateItem(story);
+			socialReader.databaseAdapter.addOrUpdateItem(story, -1);
 		}
 		else 
 		{
@@ -155,7 +155,7 @@ public class SocialReporter
 			publisher.execute(story);
 	
 			story.setFeedId(DatabaseHelper.POSTS_FEED_ID);
-			socialReader.databaseAdapter.addOrUpdateItem(story);
+			socialReader.databaseAdapter.addOrUpdateItem(story, -1);
 		} else {
 			if (LOGGING)
 				Log.e(LOGTAG,"Database not ready");

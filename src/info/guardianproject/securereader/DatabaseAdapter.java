@@ -375,6 +375,68 @@ public class DatabaseAdapter
 		}
 	}
 
+	public void deleteOverLimitItems(int limit) {
+		Cursor queryCursor = null;
+		
+		//DELETE FROM table where _id NOT IN (SELECT _id from table ORDER BY insertion_date DESC LIMIT 50)
+		
+		String query = "select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", "
+				+ DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " 
+				+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where "
+				+ DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " NOT IN (select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " from " + DatabaseHelper.ITEMS_TABLE + " order by " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " DESC LIMIT " + limit + ") and "
+				+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " != ? and " + DatabaseHelper.ITEMS_TABLE_SHARED + " != ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
+		
+		if (LOGGING)
+			Log.v(LOGTAG, query);
+			
+		if (databaseReady()) {
+			try
+			{
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1), String.valueOf(1)});
+			
+				if (LOGGING)
+					Log.v(LOGTAG,"Count " + queryCursor.getCount());
+	
+				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
+				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_TITLE);
+				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
+	
+				if (queryCursor.moveToFirst())
+				{
+					do
+					{
+						int id = queryCursor.getInt(idColumn);
+						String title = queryCursor.getString(titleColumn);
+						String publishDate = queryCursor.getString(publishDateColumn);
+						
+						if (LOGGING)
+							Log.v(LOGTAG,"Going to delete " + id + " " + publishDate);
+						this.deleteItem(id);
+					}
+					while (queryCursor.moveToNext());
+				}
+	
+				queryCursor.close();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+			{
+				if (queryCursor != null)
+				{
+					try
+					{
+						queryCursor.close();					
+					}
+					catch(Exception e) {}
+				}
+			}
+		}
+	}
+	
+	
 	public Feed fillFeedObject(Feed feed)
 	{
 		try
@@ -1445,6 +1507,14 @@ public class DatabaseAdapter
 		return feed;
 	}
 
+	public long addItemWithLimit(Item item, int limit) {
+		long returnValue = addItem(item);
+
+		deleteOverLimitItems(limit);
+			
+		return returnValue;
+	}
+	
 	public long addItem(Item item)
 	{
 		long returnValue = -1;
@@ -1486,7 +1556,7 @@ public class DatabaseAdapter
 		return returnValue;
 	}
 
-	public long addOrUpdateItem(Item item)
+	public long addOrUpdateItem(Item item, int limit)
 	{
 		long returnValue = -1;
 		Cursor queryCursor = null;
@@ -1511,6 +1581,10 @@ public class DatabaseAdapter
 					if (queryCursor.getCount() == 0)
 					{
 						returnValue = addItem(item);
+						
+						if (limit != -1) {
+							this.deleteOverLimitItems(limit);
+						}
 					}
 					else
 					{

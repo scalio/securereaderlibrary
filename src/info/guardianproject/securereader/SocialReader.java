@@ -118,6 +118,8 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public static final int TIMER_PERIOD = 60000;  // 1 minute 
 	
+	public final int itemLimit;
+	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
 	public static final String SHARE_ITEM_ID = "SHARE_ITEM_ID";
@@ -145,6 +147,8 @@ public class SocialReader implements ICacheWordSubscriber
 		expirationCheckFrequency = applicationContext.getResources().getInteger(R.integer.expiration_check_frequency);
 		opmlCheckFrequency = applicationContext.getResources().getInteger(R.integer.opml_check_frequency);
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
+		
+		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
 		
 		this.settings = new Settings(applicationContext);
 		
@@ -1249,10 +1253,9 @@ public class SocialReader implements ICacheWordSubscriber
 
 	public long setItemData(Item item)
 	{
-		
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
-			return databaseAdapter.addOrUpdateItem(item);
+			return databaseAdapter.addOrUpdateItem(item, itemLimit);
 		}
 		else
 		{
