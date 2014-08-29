@@ -377,13 +377,11 @@ public class DatabaseAdapter
 
 	public void deleteOverLimitItems(int limit) {
 		Cursor queryCursor = null;
-		
-		//DELETE FROM table where _id NOT IN (SELECT _id from table ORDER BY insertion_date DESC LIMIT 50)
-		
+				
 		String query = "select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", "
 				+ DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " 
 				+ DatabaseHelper.ITEMS_TABLE_FEED_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where "
-				+ DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " NOT IN (select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " from " + DatabaseHelper.ITEMS_TABLE + " order by " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " DESC LIMIT " + limit + ") and "
+				+ DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " NOT IN (select " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " from " + DatabaseHelper.ITEMS_TABLE + " order by " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " DESC LIMIT ?) and "
 				+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " != ? and " + DatabaseHelper.ITEMS_TABLE_SHARED + " != ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 		
 		if (LOGGING)
@@ -392,7 +390,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1), String.valueOf(1)});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(limit), String.valueOf(1), String.valueOf(1)});
 			
 				if (LOGGING)
 					Log.v(LOGTAG,"Count " + queryCursor.getCount());
