@@ -71,8 +71,11 @@ public class SocialReader implements ICacheWordSubscriber
 		void onUnlocked();
 	}
 	
+	// Change this when building for release
+	public static final boolean TESTING = false;
+	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -115,6 +118,8 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public static final int TIMER_PERIOD = 60000;  // 1 minute 
 	
+	public final int itemLimit;
+	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
 	public static final String SHARE_ITEM_ID = "SHARE_ITEM_ID";
@@ -142,6 +147,8 @@ public class SocialReader implements ICacheWordSubscriber
 		expirationCheckFrequency = applicationContext.getResources().getInteger(R.integer.expiration_check_frequency);
 		opmlCheckFrequency = applicationContext.getResources().getInteger(R.integer.opml_check_frequency);
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
+		
+		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
 		
 		this.settings = new Settings(applicationContext);
 		
@@ -482,6 +489,9 @@ public class SocialReader implements ICacheWordSubscriber
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
 			}
+			
+			if (TESTING) 
+				finalOpmlUrl += "&testing=1";
 			
 			if (LOGGING)
 				Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
@@ -1038,27 +1048,16 @@ public class SocialReader implements ICacheWordSubscriber
 		} catch ( IOException e ) {
 			if (LOGGING) {
 				Log.e(LOGTAG,"IOCipher open failure");
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			
-			Log.v(LOGTAG,"Are you alive?");
 			java.io.File existingVFS = new java.io.File(ioCipherFilePath);
-			if (LOGGING) {
-				Log.v(LOGTAG,"Does exist? " + existingVFS.exists());
-			}
 			
 			if (existingVFS.exists()) {
-				if (LOGGING) {
-					Log.v(LOGTAG,"Let's delete it");
-				}
 				existingVFS.delete();
 
 				if (LOGGING) {
 					Log.v(LOGTAG,"Deleted existing VFS " + ioCipherFilePath);
-				}
-			} else {
-				if (LOGGING) {
-					Log.v(LOGTAG,"Strange, it doesn't exist");
 				}
 			}
 		
@@ -1067,7 +1066,7 @@ public class SocialReader implements ICacheWordSubscriber
 				vfs = ioHelper.mount(ioCipherFilePath);
 			} catch (IOException e1) {
 				if (LOGGING) {
-					Log.e(LOGTAG, "Still didn't work, IOCipher open failure");
+					Log.e(LOGTAG, "Still didn't work, IOCipher open failure, giving up");
 					//e1.printStackTrace();
 				}
 			}			
@@ -1254,10 +1253,9 @@ public class SocialReader implements ICacheWordSubscriber
 
 	public long setItemData(Item item)
 	{
-		
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
-			return databaseAdapter.addOrUpdateItem(item);
+			return databaseAdapter.addOrUpdateItem(item, itemLimit);
 		}
 		else
 		{
@@ -1497,7 +1495,7 @@ public class SocialReader implements ICacheWordSubscriber
 			{
 				if (builder.length() > 0)
 					builder.append("\n\n");
-				builder.append(subscribedFeed.getTitle() + "\n" + subscribedFeed.getLink() + "\n" + subscribedFeed.getDescription());
+				builder.append(subscribedFeed.getTitle() + "\n" + subscribedFeed.getLink() + "\n" + subscribedFeed.getFeedURL() + "\n" + subscribedFeed.getDescription());
 			}
 			sendIntent.putExtra(Intent.EXTRA_TEXT, builder.toString());
 		}

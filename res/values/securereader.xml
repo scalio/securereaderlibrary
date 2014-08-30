@@ -38,4 +38,6 @@
 	<bool name="require_tor_default">true</bool>
 	<string name="sync_mode_default">BitWise</string>	
 	
+	<!-- Limit number of items to keep in database -1 for no limit -->
+	<integer name="item_limit">-1</integer>
 </resources>
