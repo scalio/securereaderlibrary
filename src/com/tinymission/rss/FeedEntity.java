@@ -2,9 +2,9 @@ package com.tinymission.rss;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-
+import java.util.HashMap;
 import org.xml.sax.Attributes;
-
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 /**
@@ -30,6 +30,37 @@ public class FeedEntity implements Serializable
 		}
 	}
 
+	public static HashMap<Class<?>, HashMap<String,Method>> gPropertyMap= new HashMap<Class<?>, HashMap<String,Method>>();
+	
+	@SuppressLint("DefaultLocale")
+	private Method getMethod(String propertyName) {
+		synchronized (gPropertyMap) {
+			HashMap<String, Method> methodMap = null;
+			if (!gPropertyMap.containsKey(getClass())) {
+				methodMap = new HashMap<String, Method>();
+				gPropertyMap.put(getClass(), methodMap);
+			} else {
+				methodMap = gPropertyMap.get(getClass());
+			}
+
+			if (methodMap.containsKey(propertyName))
+				return methodMap.get(propertyName);
+
+			// Try to find it!
+			String methodName = "set" + propertyName;
+
+			for (Method m : getClass().getMethods()) {
+				if (m.getName().equalsIgnoreCase(methodName)
+						&& m.getParameterTypes().length == 1) {
+					// a single argument method with the correct name
+					methodMap.put(propertyName, m);
+					return m;
+				}
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Sets the string value of a property by name.
 	 * 
@@ -40,43 +71,31 @@ public class FeedEntity implements Serializable
 	 */
 	public void setProperty(String name, String value)
 	{
-		String methodName = "set" + name;
-		String logTag = LOGTAG + ": " + getClass().getName();
-
-		// This doesn't work
-		/*
-		 * try { Method m = getClass().getMethod(methodName, String.class);
-		 * m.invoke(this, value); } catch (Exception e) { e.printStackTrace();
-		 * Log.v(logTag, "Attempting to call " + methodName +
-		 * " doesn't exist?"); }
-		 */
+		String methodName = LOGGING ? "set" + name : "";
+		String logTag = LOGGING ? LOGTAG + ": " + getClass().getName() : "";
 
 		try
 		{
 			if (LOGGING)
 				Log.v(logTag, "Attempting to call " + methodName);
 
-			// This looping through all of the methods seems a bit cumbersome,
-			// wouldn't the above work better?
-			for (Method m : getClass().getMethods())
+			Method m = getMethod(name);
+			if (m != null)
 			{
-				if (m.getName().equalsIgnoreCase(methodName) && m.getParameterTypes().length == 1)
-				{ // a single argument method with the correct name
-					if (m.getParameterTypes()[0] == String.class)
-					{ // it's just a string argument, pass the string
-						m.invoke(this, value);
-						if (LOGGING)
-							Log.v(logTag, "Assigned property " + name + " string value: " + value);
-					}
-					else if (m.getParameterTypes()[0] == Integer.class)
-					{ // it's an int argument, we can handle that
-						int intVal = Integer.parseInt(value);
-						m.invoke(this, intVal);
-						if (LOGGING)
-							Log.v(logTag, "Assigned property " + name + " int value: " + Integer.toString(intVal));
-					}
-					return;
+				if (m.getParameterTypes()[0] == String.class)
+				{ // it's just a string argument, pass the string
+					m.invoke(this, value);
+					if (LOGGING)
+						Log.v(logTag, "Assigned property " + name + " string value: " + value);
 				}
+				else if (m.getParameterTypes()[0] == Integer.class)
+				{ // it's an int argument, we can handle that
+					int intVal = Integer.parseInt(value);
+					m.invoke(this, intVal);
+					if (LOGGING)
+						Log.v(logTag, "Assigned property " + name + " int value: " + Integer.toString(intVal));
+				}
+				return;
 			}
 			if (LOGGING)
 				Log.w(logTag, "Couldn't find property setter " + methodName);
