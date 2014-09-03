@@ -1355,11 +1355,10 @@ public class DatabaseAdapter
 		
 					returnItem.setGuid(guid);
 					returnItem.setLink(link);
+					returnItem.setMediaContent(this.getItemMedia(returnItem));
+					returnItem.setCategories(getItemTags(returnItem));
 				}
 				queryCursor.close();
-				
-				returnItem.setMediaContent(this.getItemMedia(returnItem));
-				returnItem.setCategories(getItemTags(returnItem));
 			}
 		}
 		catch (SQLException e)
