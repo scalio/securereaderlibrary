@@ -97,7 +97,7 @@ public class SyncService extends Service {
     	public static final int FINISHED = 3;
     	
     	public Feed feed;
-    	MediaContent mediaContent;
+    	public MediaContent mediaContent;
     	
     	//SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback;
     	public int status = CREATED;

@@ -1972,6 +1972,15 @@ public class DatabaseAdapter
 	}
 	
 	public ArrayList<Item> getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags, String mediaMimeType, boolean randomize, int limit) {
+		ArrayList<Item> items = getFeedItemsWithMediaTagsInternal(feed, tags, tags.size(), mediaMimeType, randomize, limit);
+		if (items == null || items.size() == 0)
+			items = getFeedItemsWithMediaTagsInternal(feed, tags, tags.size() - 1, mediaMimeType, randomize, limit);
+		if (items == null || items.size() == 0)
+			items = getFeedItemsWithMediaTagsInternal(null, tags, 0, mediaMimeType, randomize, 1);
+		return items;
+	}
+
+	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(Feed feed, ArrayList<String> tags, int tagMatchCount, String mediaMimeType, boolean randomize, int limit) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
 		Cursor queryCursor = null;
@@ -1991,13 +2000,13 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE + " i,"
 					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
 					+ " WHERE "
-					+ " i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + "=?"
-					+ " AND t.tag IN (" + tagsArray.toString() + ")"
+					+ ((feed != null) ? " i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + "=? AND" : "")
+					+ " t.tag IN (" + tagsArray.toString() + ")"
 					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?"
 					+ " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
-					+ " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ")=" + tags.size();
+					+ " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ") >= " + tagMatchCount;
 				
 			if (randomize) {
 				 query = query + " order by RANDOM()";
@@ -2012,7 +2021,8 @@ public class DatabaseAdapter
 			
 			if (databaseReady()) {
 				ArrayList<String> queryParams = new ArrayList<String>();
-				queryParams.add(String.valueOf(feed.getDatabaseId()));
+				if (feed != null)
+					queryParams.add(String.valueOf(feed.getDatabaseId()));
 				queryParams.add("%"+mediaMimeType+"%");
 				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
 				
