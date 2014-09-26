@@ -220,6 +220,11 @@ public class SocialReader implements ICacheWordSubscriber
     private SyncService syncService;
     private SyncService.SyncServiceListener syncServiceListener;
 
+    public SyncService getSyncService()
+    {
+    	return syncService;
+    }
+    
     public void setSyncServiceListener(SyncService.SyncServiceListener listener) {
     	syncServiceListener = listener;
 
