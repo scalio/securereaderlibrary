@@ -183,7 +183,12 @@ public class SyncService extends Service {
     
     void syncServiceEvent(SyncTask _syncTask) {
     	
-    	// Need to do a better job of queue management
+    	if (_syncTask.status == SyncTask.FINISHED) {
+    		syncList.remove(_syncTask);
+    	} else if (_syncTask.status == SyncTask.ERROR) {
+    		syncList.remove(_syncTask);
+    	}
+    	
     	for (int i = 0; i < syncList.size(); i++) {
     		if (syncList.get(i).status == SyncTask.STARTED) {
     			break;
@@ -191,6 +196,11 @@ public class SyncService extends Service {
     		else if (syncList.get(i).status == SyncTask.QUEUED) {
     			syncList.get(i).start();
     			break;
+    		} else {
+    			// What is it's status?
+    			if (LOGGING) {
+    				Log.v(LOGTAG," syncList pos: " + i + " status: " + syncList.get(i).status);
+    			}
     		}
     	}
     	
@@ -205,5 +215,13 @@ public class SyncService extends Service {
     	newSyncTask.updateStatus(SyncTask.QUEUED);
     	
 		syncServiceEvent(newSyncTask);
+    }
+    
+    public void addMediaContentSyncTaskToFront(MediaContent mediaContent) {
+    	SyncTask newSyncTask = new SyncTask(mediaContent);
+    	newSyncTask.updateStatus(SyncTask.QUEUED);
+    	syncList.add(0, newSyncTask);
+    	
+		syncServiceEvent(newSyncTask);    	
     }
 }
