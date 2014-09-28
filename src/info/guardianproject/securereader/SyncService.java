@@ -14,7 +14,7 @@ import android.util.Log;
 public class SyncService extends Service {
 
 	public static final String LOGTAG = "SyncService";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	// ArrayList of SyncTask objects, basically a queue of work to be done
 	ArrayList<SyncTask> syncList = new ArrayList<SyncTask>();
@@ -189,21 +189,20 @@ public class SyncService extends Service {
     		syncList.remove(_syncTask);
     	}
     	
-    	for (int i = 0; i < syncList.size(); i++) {
+    	boolean startNewTask = true;
+    	for (int i = 0; i < syncList.size() && startNewTask; i++) {
     		if (syncList.get(i).status == SyncTask.STARTED) {
-    			break;
-    		}
-    		else if (syncList.get(i).status == SyncTask.QUEUED) {
-    			syncList.get(i).start();
-    			break;
-    		} else {
-    			// What is it's status?
-    			if (LOGGING) {
-    				Log.v(LOGTAG," syncList pos: " + i + " status: " + syncList.get(i).status);
-    			}
+    			startNewTask = false;
     		}
     	}
     	
+    	for (int i = 0; i < syncList.size(); i++) {
+    		if (syncList.get(i).status == SyncTask.QUEUED) {
+    			syncList.get(i).start();	
+    			break;
+    		}
+    	}
+    	    	
     	if (syncServiceCallback != null && SocialReader.getInstance(getApplicationContext()).appStatus == SocialReader.APP_IN_FOREGROUND) {
     		syncServiceCallback.syncEvent(_syncTask);
     	}
@@ -220,6 +219,9 @@ public class SyncService extends Service {
     public void addMediaContentSyncTaskToFront(MediaContent mediaContent) {
     	SyncTask newSyncTask = new SyncTask(mediaContent);
     	newSyncTask.updateStatus(SyncTask.QUEUED);
+    	if (LOGGING) {
+    		Log.v(LOGTAG, "addMediaContentSyncTaskToFront " + mediaContent.getUrl());
+    	}
     	syncList.add(0, newSyncTask);
     	
 		syncServiceEvent(newSyncTask);    	
