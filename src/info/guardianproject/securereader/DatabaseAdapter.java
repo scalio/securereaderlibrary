@@ -2028,6 +2028,9 @@ public class DatabaseAdapter
 				
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
 		
+				if (LOGGING)
+					Log.v(LOGTAG,"Got " + queryCursor.getCount() + " items");
+				
 				if (queryCursor.moveToFirst())
 				{
 					do {
