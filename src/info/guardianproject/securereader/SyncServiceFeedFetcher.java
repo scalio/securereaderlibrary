@@ -53,6 +53,8 @@ public class SyncServiceFeedFetcher implements Runnable
 		syncTask.feed = reader.fetchFeed();
 
 		SocialReader.getInstance(syncService.getApplicationContext()).setFeedAndItemData(syncTask.feed);
+		SocialReader.getInstance(syncService.getApplicationContext()).backgroundDownloadFeedItemMedia(syncTask.feed);
+
 		
 		if (LOGGING)
 			Log.v(LOGTAG,"syncTask.feed should be complete");

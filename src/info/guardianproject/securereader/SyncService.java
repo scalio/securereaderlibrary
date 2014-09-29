@@ -14,7 +14,7 @@ import android.util.Log;
 public class SyncService extends Service {
 
 	public static final String LOGTAG = "SyncService";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	// ArrayList of SyncTask objects, basically a queue of work to be done
 	ArrayList<SyncTask> syncList = new ArrayList<SyncTask>();
@@ -161,7 +161,7 @@ public class SyncService extends Service {
     		if (status == FINISHED) {
     			if (type == TYPE_FEED) {
     				//((App) getApplicationContext()).socialReader.setFeedAndItemData(feed);
-    				SocialReader.getInstance(getApplicationContext()).backgroundDownloadFeedItemMedia(feed);
+    				//SocialReader.getInstance(getApplicationContext()).backgroundDownloadFeedItemMedia(feed);
     			}
     			//if (callback != null) {
     			//	callback.feedFetched(feed);
@@ -196,13 +196,15 @@ public class SyncService extends Service {
     		}
     	}
     	
-    	for (int i = 0; i < syncList.size(); i++) {
-    		if (syncList.get(i).status == SyncTask.QUEUED) {
-    			syncList.get(i).start();	
-    			break;
-    		}
+    	if (startNewTask) {
+	    	for (int i = 0; i < syncList.size(); i++) {
+	    		if (syncList.get(i).status == SyncTask.QUEUED) {
+	    			syncList.get(i).start();	
+	    			break;
+	    		}
+	    	}
     	}
-    	    	
+    	
     	if (syncServiceCallback != null && SocialReader.getInstance(getApplicationContext()).appStatus == SocialReader.APP_IN_FOREGROUND) {
     		syncServiceCallback.syncEvent(_syncTask);
     	}
