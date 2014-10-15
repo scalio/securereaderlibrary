@@ -1972,20 +1972,45 @@ public class DatabaseAdapter
 	}
 	
 	public ArrayList<Item> getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags, String mediaMimeType, boolean randomize, int limit) {
-		ArrayList<Item> items = getFeedItemsWithMediaTagsInternal(feed, tags, tags.size(), mediaMimeType, randomize, limit);
+		
+		// If no specific feed is given we search through all subscribed ones!
+		ArrayList<Feed> feeds;
+		if (feed != null)
+		{
+			feeds = new ArrayList<Feed>();
+			feeds.add(feed);
+		}
+		else
+		{
+			feeds = getSubscribedFeeds();
+		}
+		
+		ArrayList<Item> items = getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size(), mediaMimeType, randomize, limit);
 		if (items == null || items.size() == 0)
-			items = getFeedItemsWithMediaTagsInternal(feed, tags, tags.size() - 1, mediaMimeType, randomize, limit);
+			items = getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size() - 1, mediaMimeType, randomize, limit);
 		if (items == null || items.size() == 0)
 			items = getFeedItemsWithMediaTagsInternal(null, tags, 0, mediaMimeType, randomize, 1);
 		return items;
 	}
 
-	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(Feed feed, ArrayList<String> tags, int tagMatchCount, String mediaMimeType, boolean randomize, int limit) {
+	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> tags, int tagMatchCount, String mediaMimeType, boolean randomize, int limit) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
 		Cursor queryCursor = null;
-		
+
 		try {
+
+			StringBuilder feedsArray = null;
+			if (feeds != null && feeds.size() > 0)
+			{
+				feedsArray = new StringBuilder();
+				for (int a = 0; a < feeds.size(); a++) 
+				{
+					if (feedsArray.length() != 0)
+						feedsArray.append(",");
+					feedsArray.append("'" + feeds.get(a).getDatabaseId() + "'");
+				}
+			}
 			
 			StringBuilder tagsArray = new StringBuilder();
 			for (int a = 0; a < tags.size(); a++) 
@@ -2000,7 +2025,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE + " i,"
 					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
 					+ " WHERE "
-					+ ((feed != null) ? " i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + "=? AND" : "")
+					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + "IN (" + feedsArray.toString() + ") AND") : "")
 					+ " t.tag IN (" + tagsArray.toString() + ")"
 					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
@@ -2021,8 +2046,6 @@ public class DatabaseAdapter
 			
 			if (databaseReady()) {
 				ArrayList<String> queryParams = new ArrayList<String>();
-				if (feed != null)
-					queryParams.add(String.valueOf(feed.getDatabaseId()));
 				queryParams.add("%"+mediaMimeType+"%");
 				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
 				
