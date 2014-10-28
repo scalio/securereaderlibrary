@@ -2025,7 +2025,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE + " i,"
 					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
 					+ " WHERE "
-					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + "IN (" + feedsArray.toString() + ") AND") : "")
+					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " IN (" + feedsArray.toString() + ") AND") : "")
 					+ " t.tag IN (" + tagsArray.toString() + ")"
 					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
