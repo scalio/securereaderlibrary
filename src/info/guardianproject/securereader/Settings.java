@@ -354,7 +354,8 @@ public class Settings
 	 */
 	public SyncNetwork syncNetwork()
 	{
-		return Enum.valueOf(SyncNetwork.class, mPrefs.getString(KEY_SYNC_NETWORK, SyncNetwork.WifiAndMobile.name()));
+		String syncNetworkDefault = context.getResources().getString(R.string.sync_network_default);
+		return Enum.valueOf(SyncNetwork.class, mPrefs.getString(KEY_SYNC_NETWORK, syncNetworkDefault));
 	}
 
 	/**
