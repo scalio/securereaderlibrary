@@ -91,6 +91,12 @@ public class SocialReader implements ICacheWordSubscriber
 	public final static String PROXY_TYPE = "SOCKS";
 	public final static String PROXY_HOST = "127.0.0.1";
 	public final static int PROXY_PORT = 9050; // default for SOCKS Orbot/Tor
+	
+	public final static String PSIPHON_PROXY_HOST = "127.0.0.1";
+	public final static String PSIPHON_PROXY_TYPE = "SOCKS";
+	public final static int PSIPHON_PROXY_PORT = 1080;
+	
+	//proxy type tor or psiphon
 
 	public final static boolean RESET_DATABASE = false;
 
@@ -1528,6 +1534,8 @@ public class SocialReader implements ICacheWordSubscriber
 			if (LOGGING)
 				Log.v(LOGTAG, "This shouldn't happen");
 		}
+
+		//applicationContext.finish();
 	}
 
 	private void deleteApp()
