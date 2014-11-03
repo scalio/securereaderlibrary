@@ -125,6 +125,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final int TIMER_PERIOD = 60000;  // 1 minute 
 	
 	public final int itemLimit;
+	public final int mediaCacheSize;
 	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
@@ -155,6 +156,7 @@ public class SocialReader implements ICacheWordSubscriber
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
 		
 		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
+		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
 		
 		this.settings = new Settings(applicationContext);
 		
@@ -1262,6 +1264,36 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	public void addToItemViewCount(Item item) {
+		
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			// Pass in the item that will be marked as a favorite
+			// Take a boolean so we can "unmark" a favorite as well.
+			item.incrementViewCount();
+			setItemData(item);
+		}
+		else
+		{
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: markItemAsFavorite");
+		}		
+	}
+	
+	public void setMediaContentDownloaded(MediaContent mc) {
+		mc.setDownloaded(true);
+		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
+			databaseAdapter.updateItemMedia(mc);
+		}
+	}
+	
+	public void unsetMediaContentDownloaded(MediaContent mc) {
+		mc.setDownloaded(false);
+		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
+			databaseAdapter.updateItemMedia(mc);
+		}
+	}
+	
 	public long setItemData(Item item)
 	{
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
@@ -1789,7 +1821,40 @@ public class SocialReader implements ICacheWordSubscriber
 			return false;
 		}
 	}
+	
+	public void deleteMediaContentFile(int mediaContentDatabaseId) {
+		File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContentDatabaseId);
+		if (possibleFile.exists())
+		{
+			possibleFile.delete();
+			if (LOGGING)
+				Log.v(LOGTAG, "Deleting: " + possibleFile.getAbsolutePath());
+			
+			// Update the database
+			MediaContent mc = databaseAdapter.getMediaContentById(mediaContentDatabaseId);
+			unsetMediaContentDownloaded(mc);
+		}		
+	}
 
+	/*
+	public long sizeOfMediaContent() {
+		long totalSize = 0;
+		String[] possibleMediaFiles = getFileSystemDir().list();
+		for (int i = 0; i < possibleMediaFiles.length; i++) {
+			if (possibleMediaFiles[i].contains(MEDIA_CONTENT_FILE_PREFIX)) {
+				totalSize += new File(possibleMediaFiles[i]).length();
+			}
+		}
+		return totalSize;
+	}
+	
+	public void checkMediaContent() {
+		while (sizeOfMediaContent() > mediaCacheSize * 1024 * 1024) {
+			
+		}
+	}
+	*/
+	
 	public File vfsTempItemBundle() {
 		File tempContentFile = new File(getVFSSharingDir(), CONTENT_BUNDLE_FILE_PREFIX + System.currentTimeMillis() + Item.DEFAULT_DATABASE_ID + "." + SocialReader.CONTENT_SHARING_EXTENSION);
 		return tempContentFile;
