@@ -9,7 +9,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLCipherOpenHelper
 {
 	public static String LOGTAG = "DatabaseHelper";
-	public static boolean LOGGING = false;
+	public static boolean LOGGING = true;
 
 	public static final String DATABASE_NAME = "bigbuffalo.db";
 	public static final int DATABASE_VERSION = 1;
@@ -52,12 +52,13 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 																		// default
 																		// 0
 	public static final String ITEMS_TABLE_SHARED = "item_shared"; // boolean default 0
+	public static final String ITEMS_TABLE_VIEWCOUNT = "item_viewcount"; 
 
 	public static final String ITEMS_TABLE_CREATE_SQL = "create table " + ITEMS_TABLE + " (" + ITEMS_TABLE_COLUMN_ID + " integer primary key autoincrement, "
 			+ ITEMS_TABLE_FEED_ID + " integer not null, " + ITEMS_TABLE_TITLE + " text null, " + ITEMS_TABLE_LINK + " text null, " + ITEMS_TABLE_DESCRIPTION
 			+ " text null, " + ITEMS_TABLE_CONTENT_ENCODED + " text null, " + ITEMS_TABLE_PUBLISH_DATE + " text null, " + ITEMS_TABLE_GUID + " text null, "
 			+ ITEMS_TABLE_AUTHOR + " text null, " + ITEMS_TABLE_COMMENTS_URL + " text null, " + ITEMS_TABLE_SOURCE + " text null, " + ITEMS_TABLE_CATEGORY
-			+ " text null, " + ITEMS_TABLE_FAVORITE + " boolean default 0, " + ITEMS_TABLE_SHARED + " boolean default 0);";
+			+ " text null, " + ITEMS_TABLE_FAVORITE + " boolean default 0, " + ITEMS_TABLE_SHARED + " boolean default 0, " + ITEMS_TABLE_VIEWCOUNT + " integer default 0);";
 	
 	public static final String ITEMS_TABLE_CREATE_INDEX = "create index item_publish_date_index on " + ITEMS_TABLE + " (" + ITEMS_TABLE_PUBLISH_DATE + ");";
 
@@ -77,11 +78,13 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	public static final String ITEM_MEDIA_FRAMERATE = "item_media_framerate";
 	public static final String ITEM_MEDIA_LANG = "item_media_lang";
 	public static final String ITEM_MEDIA_SAMPLE_RATE = "item_media_sample_rate";
-
+	
+	public static final String ITEM_MEDIA_DOWNLOADED = "item_media_downloaded";
+	
 	public static final String ITEMS_MEDIA_TABLE_CREATE_SQL = "create table " + ITEM_MEDIA_TABLE + " (" + ITEM_MEDIA_TABLE_COLUMN_ID
 			+ " integer primary key autoincrement, " + ITEM_MEDIA_ITEM_ID + " integer not null, " + ITEM_MEDIA_URL + " text not null, " + ITEM_MEDIA_TYPE
 			+ " text null, " + ITEM_MEDIA_MEDIUM + " text null, " + ITEM_MEDIA_HEIGHT + " integer null, " + ITEM_MEDIA_WIDTH + " integer null, "
-			+ ITEM_MEDIA_FILESIZE + " integer null, " + ITEM_MEDIA_DURATION + " text null, " + ITEM_MEDIA_DEFAULT + " boolean default 0, "
+			+ ITEM_MEDIA_FILESIZE + " long null, " + ITEM_MEDIA_DURATION + " text null, " + ITEM_MEDIA_DEFAULT + " boolean default 0, " + ITEM_MEDIA_DOWNLOADED + " boolean default 0, "
 			+ ITEM_MEDIA_EXPRESSION + " text null, " + ITEM_MEDIA_BITRATE + " integer null, " + ITEM_MEDIA_FRAMERATE + " integer null, " + ITEM_MEDIA_LANG
 			+ " text null, " + ITEM_MEDIA_SAMPLE_RATE + " text null);";
 

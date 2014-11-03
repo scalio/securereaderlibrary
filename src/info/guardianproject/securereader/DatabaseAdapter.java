@@ -842,6 +842,8 @@ public class DatabaseAdapter
 			{
 				values.put(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE, dateFormat.format(item.getPubDate()));
 			}
+			
+			values.put(DatabaseHelper.ITEMS_TABLE_VIEWCOUNT, item.getViewCount());
 
 			if (databaseReady())
 				returnValue = db
@@ -1537,6 +1539,8 @@ public class DatabaseAdapter
 				values.put(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE, dateFormat.format(item.getPubDate()));
 			}
 
+			values.put(DatabaseHelper.ITEMS_TABLE_VIEWCOUNT, item.getViewCount());
+			
 			if (databaseReady()) {
 				returnValue = db.insert(DatabaseHelper.ITEMS_TABLE, null, values);
 	
@@ -1650,7 +1654,8 @@ public class DatabaseAdapter
 				+ DatabaseHelper.ITEM_MEDIA_HEIGHT + ", " + DatabaseHelper.ITEM_MEDIA_WIDTH + ", " + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", "
 				+ DatabaseHelper.ITEM_MEDIA_DURATION + ", " + DatabaseHelper.ITEM_MEDIA_DEFAULT + ", " + DatabaseHelper.ITEM_MEDIA_EXPRESSION + ", "
 				+ DatabaseHelper.ITEM_MEDIA_BITRATE + ", " + DatabaseHelper.ITEM_MEDIA_FRAMERATE + ", " + DatabaseHelper.ITEM_MEDIA_LANG + ", "
-				+ DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE + " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " where " + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = "
+				+ DatabaseHelper.ITEM_MEDIA_DOWNLOADED + ", " + DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE
+				+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " where " + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = "
 				+ "?;";
 
 		if (LOGGING)
@@ -1679,7 +1684,8 @@ public class DatabaseAdapter
 				int framerateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_FRAMERATE);
 				int langColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_LANG);
 				int samplerateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE);
-	
+				int itemMediaDownloadedColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_DOWNLOADED);
+				
 				if (queryCursor.moveToFirst())
 				{
 					do {
@@ -1719,7 +1725,14 @@ public class DatabaseAdapter
 						mc.setFramerate(framerate);
 						mc.setLang(lang);
 						mc.setSampligRate(samplerate);
-		
+						
+						boolean downloaded = false;
+						if (queryCursor.getInt(itemMediaDownloadedColumn) == 1)
+						{
+							downloaded = true;
+						}	
+						mc.setDownloaded(downloaded);
+						
 						mediaContent.add(mc);
 					} while (queryCursor.moveToNext());
 				}
@@ -1746,6 +1759,120 @@ public class DatabaseAdapter
 			}
 		}
 		return mediaContent;
+	}
+	
+	public MediaContent getMediaContentById(int mediaContentId) {
+		
+		MediaContent returnMC = null;
+		
+		if (LOGGING)
+			Log.v(LOGTAG,"getMediaContentById");
+		
+		String query = "select " + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEM_MEDIA_ITEM_ID + ", "
+				+ DatabaseHelper.ITEM_MEDIA_URL + ", " + DatabaseHelper.ITEM_MEDIA_TYPE + ", " + DatabaseHelper.ITEM_MEDIA_MEDIUM + ", "
+				+ DatabaseHelper.ITEM_MEDIA_HEIGHT + ", " + DatabaseHelper.ITEM_MEDIA_WIDTH + ", " + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", "
+				+ DatabaseHelper.ITEM_MEDIA_DURATION + ", " + DatabaseHelper.ITEM_MEDIA_DEFAULT + ", " + DatabaseHelper.ITEM_MEDIA_EXPRESSION + ", "
+				+ DatabaseHelper.ITEM_MEDIA_BITRATE + ", " + DatabaseHelper.ITEM_MEDIA_FRAMERATE + ", " + DatabaseHelper.ITEM_MEDIA_LANG + ", "
+				+ DatabaseHelper.ITEM_MEDIA_DOWNLOADED + ", " + DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE
+				+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " where " + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + " = "
+				+ "?;";
+
+		if (LOGGING)
+			Log.v(LOGTAG, query);
+
+		Cursor queryCursor = null;
+		
+		if (databaseReady()) {
+			
+			try
+			{
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(mediaContentId)});
+	
+				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID);
+				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_ITEM_ID);
+				int urlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_URL);
+				int typeColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TYPE);
+				int mediumColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_MEDIUM);
+				int heightColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_HEIGHT);
+				int widthColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_WIDTH);
+				int filesizeColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_FILESIZE);
+				int durationColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_DURATION);
+				int defaultColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_DEFAULT);
+				int expressionColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_EXPRESSION);
+				int bitrateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_BITRATE);
+				int framerateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_FRAMERATE);
+				int langColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_LANG);
+				int samplerateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE);
+				int itemMediaDownloadedColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_DOWNLOADED);
+				
+				if (queryCursor.moveToFirst())
+				{
+					long id = queryCursor.getLong(idColumn);
+					long itemId = queryCursor.getLong(itemIdColumn);
+					String url = queryCursor.getString(urlColumn);
+					String type = queryCursor.getString(typeColumn);
+					String medium = queryCursor.getString(mediumColumn);
+					int height = queryCursor.getInt(heightColumn);
+					int width = queryCursor.getInt(widthColumn);
+					int filesize = queryCursor.getInt(filesizeColumn);
+					int duration = queryCursor.getInt(durationColumn);
+					boolean isDefault = false;
+					if (queryCursor.getInt(defaultColumn) == 1)
+					{
+						isDefault = true;
+					}
+					String expression = queryCursor.getString(expressionColumn);
+					int bitrate = queryCursor.getInt(bitrateColumn);
+					int framerate = queryCursor.getInt(framerateColumn);
+					String lang = queryCursor.getString(langColumn);
+					String samplerate = queryCursor.getString(samplerateColumn);
+	
+					if (LOGGING)
+						Log.v(LOGTAG,"new MediaContent");
+					
+					MediaContent mc = new MediaContent(itemId, url, type);
+					mc.setDatabaseId(id);
+					mc.setMedium(medium);
+					mc.setHeight(height);
+					mc.setWidth(width);
+					mc.setFileSize(filesize);
+					mc.setDuration(duration);
+					mc.setIsDefault(isDefault);
+					mc.setExpression(expression);
+					mc.setBitrate(bitrate);
+					mc.setFramerate(framerate);
+					mc.setLang(lang);
+					mc.setSampligRate(samplerate);
+					
+					boolean downloaded = false;
+					if (queryCursor.getInt(itemMediaDownloadedColumn) == 1)
+					{
+						downloaded = true;
+					}	
+					mc.setDownloaded(downloaded);
+					
+					returnMC  = mc;
+				}
+	
+				queryCursor.close();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+			{
+				if (queryCursor != null)
+				{
+					try
+					{
+						queryCursor.close();					
+					}
+					catch(Exception e) {}
+				}
+			}
+		}
+		return returnMC;		
 	}
 
 	public void addOrUpdateItemMedia(Item item, ArrayList<MediaContent> itemMediaList)
@@ -1802,6 +1929,12 @@ public class DatabaseAdapter
 					values.put(DatabaseHelper.ITEM_MEDIA_LANG, itemMedia.getLang());
 					values.put(DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE, itemMedia.getSampligRate());
 			
+					if (itemMedia.getDownloaded()) {
+						values.put(DatabaseHelper.ITEM_MEDIA_DOWNLOADED, 1);
+					} else {
+						values.put(DatabaseHelper.ITEM_MEDIA_DOWNLOADED, 0);
+					}
+					
 					try
 					{
 						returnValue = db.insert(DatabaseHelper.ITEM_MEDIA_TABLE, null, values);
@@ -1958,6 +2091,12 @@ public class DatabaseAdapter
 		values.put(DatabaseHelper.ITEM_MEDIA_LANG, itemMedia.getLang());
 		values.put(DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE, itemMedia.getSampligRate());
 
+		if (itemMedia.getDownloaded()) {
+			values.put(DatabaseHelper.ITEM_MEDIA_DOWNLOADED, 1);
+		} else {
+			values.put(DatabaseHelper.ITEM_MEDIA_DOWNLOADED, 0);
+		}
+		
 		if (databaseReady()) {
 			try
 			{
@@ -1969,7 +2108,7 @@ public class DatabaseAdapter
 			}		
 		}
 		return returnValue;
-	}
+	}	
 	
 	public ArrayList<Item> getFeedItemsWithMediaTags(Feed feed, ArrayList<String> tags, String mediaMimeType, boolean randomize, int limit) {
 		
@@ -2293,6 +2432,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
+				//ArrayList<String> itemMediaFiles = getItemMediaFiles(itemId);
 				long returnValue = db.delete(DatabaseHelper.ITEM_MEDIA_TABLE, DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=?", new String[] { String.valueOf(itemId) });
 			}
 			catch (SQLException e)
@@ -2301,6 +2441,14 @@ public class DatabaseAdapter
 			}
 		}
 	}
+
+	/*
+	public ArrayList<String> getItemMediaFiles(long itemId) {
+		if (databaseReady()) {
+
+		}
+	}
+	*/
 	
 	private long deleteOldItemMedia(Item item, ArrayList<MediaContent> itemMediaList)
 	{
@@ -2324,6 +2472,80 @@ public class DatabaseAdapter
 		}
 		return numDeleted;
 	}
+	
+	public void deleteOverLimitMedia(int mediaLimit, SocialReader socialReader) {
+		// mediaLimit in bytes?
+		
+		Cursor queryCursor = null;
+		
+		String query = "select " + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", " 
+						+ DatabaseHelper.ITEMS_TABLE + "." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE 
+						+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + ", " + DatabaseHelper.ITEMS_TABLE 
+						+ " where " + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + " > ? and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? and " 
+						+ DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
+						+ " order by RANDOM()";; 
+								
+		if (LOGGING)
+			Log.v(LOGTAG, query);
+			
+		if (databaseReady()) {
+			try
+			{
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(0), String.valueOf(0), String.valueOf(1)});
+			
+				if (LOGGING)
+					Log.v(LOGTAG,"Count " + queryCursor.getCount());
+	
+				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
+				int mediaIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID);
+				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_TITLE);
+				int mediaFileSizeColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_FILESIZE);
+	
+				int totalFileSize = 0;
+				
+				if (queryCursor.moveToFirst())
+				{
+					do
+					{
+						int itemId = queryCursor.getInt(itemIdColumn);
+						int mediaId = queryCursor.getInt(mediaIdColumn);
+						String title = queryCursor.getString(titleColumn);
+						int mediaFileSize = queryCursor.getInt(mediaFileSizeColumn);
+						
+						if (LOGGING)
+							Log.v(LOGTAG,"Going to delete media files for " + itemId + " " + title + " filesize");
+						
+						if (totalFileSize < mediaLimit + mediaFileSize) 
+						{
+							totalFileSize = totalFileSize + mediaFileSize;
+						}
+						else {
+							// This shouldn't be here
+							socialReader.deleteMediaContentFile(mediaId);
+						}
+					}
+					while (queryCursor.moveToNext());
+				}
+	
+				queryCursor.close();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+			{
+				if (queryCursor != null)
+				{
+					try
+					{
+						queryCursor.close();					
+					}
+					catch(Exception e) {}
+				}
+			}
+		}
+	}		
 	
 	public void deleteAll()
 	{
