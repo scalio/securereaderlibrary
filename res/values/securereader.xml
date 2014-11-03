@@ -41,4 +41,7 @@
 	
 	<!-- Limit number of items to keep in database -1 for no limit -->
 	<integer name="item_limit">-1</integer>
+	
+	<!-- Limit amount of media items to keep on disk in megabytes -1 for no limit -->
+	<integer name="media_cache_size">-1</integer>
 </resources>
