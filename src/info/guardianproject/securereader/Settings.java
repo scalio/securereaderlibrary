@@ -273,7 +273,7 @@ public class Settings
 			return   86400000L;
 		} else if (articleExpiration() == ArticleExpiration.OneWeek) {
 			return  604800000L;
-		} else if (articleExpiration() == ArticleExpiration.OneWeek) {
+		} else if (articleExpiration() == ArticleExpiration.OneMonth) {
 			return 2592000000L;
 		} else {
 			return -1L;
