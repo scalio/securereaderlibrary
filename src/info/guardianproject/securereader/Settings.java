@@ -43,7 +43,15 @@ public class Settings
 	public static final String KEY_CHAT_SECURE_INFO_SHOWN = "chat_secure_info_shown";
 	public static final String KEY_USERNAME_PASSWORD_CHAT_REGISTERED = "chat_username_password_registered";
 	public static final String KEY_DOWNLOAD_EPUB_READER_DIALOG_SHOWN = "download_epub_reader_dialog_shown";
-		
+	
+	public static final String KEY_REQUIRE_PROXY = "require_proxy";
+
+	public static final String KEY_PROXY_TYPE = "proxy_type"; 
+	
+	public static final String PROXY_TYPE_TOR = "tor";
+	public static final String PROXY_TYPE_PSIPHON = "psiphon";
+	
+	
 	public Settings(Context _context)
 	{
 		context = _context;
@@ -98,26 +106,48 @@ public class Settings
 	public void setFirstRun(boolean value) {
 		mPrefs.edit().putBoolean("firstrunkey", value).commit();
 	}
-	
+
 	/**
 	 * @return Gets whether or not a TOR connection is required
 	 * 
 	 */
-	public boolean requireTor()
+	public boolean requireProxy()
 	{
-		boolean torRequiredDefault = context.getResources().getBoolean(R.bool.require_tor_default);
-		return mPrefs.getBoolean(KEY_REQUIRE_TOR, torRequiredDefault);
+		boolean proxyRequiredDefault = context.getResources().getBoolean(R.bool.require_proxy_default);
+		return mPrefs.getBoolean(KEY_REQUIRE_PROXY, proxyRequiredDefault);
 	}
 
 	/**
 	 * @return Sets whether a TOR connection is required
 	 * 
 	 */
-	public void setRequireTor(boolean require)
+	public void setRequireProxy(boolean require)
 	{
-		mPrefs.edit().putBoolean(KEY_REQUIRE_TOR, require).commit();
+		mPrefs.edit().putBoolean(KEY_REQUIRE_PROXY, require).commit();
+	}
+	
+	/**
+	 * @return Gets whether or not a TOR connection is required
+	 * 
+	 */
+	public String proxyType()
+	{
+		String defaultProxyType = context.getResources().getString(R.string.default_proxy_type);
+		return mPrefs.getString(KEY_PROXY_TYPE, defaultProxyType);
 	}
 
+	/**
+	 * @return Sets whether a TOR connection is required
+	 * 
+	 */
+	public void setProxyType(String proxyType)
+	{
+		mPrefs.edit().putString(KEY_PROXY_TYPE, proxyType).commit();
+	}
+	
+	
+	
+	
 	/**
 	 * @return Gets the timeout before lock screen is shown
 	 * 

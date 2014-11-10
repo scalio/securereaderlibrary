@@ -88,14 +88,14 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 		MediaContent mediaContent = params[0];
 		StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
 
-		if (socialReader.useTor())
+		if (socialReader.useProxy())
 		{
-			httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-
 			if (LOGGING) 
-				Log.v(LOGTAG, "MediaDownloader: USE_TOR");
-		}
+				Log.v(LOGTAG, "MediaDownloader: USE_PROXY");
 
+			httpClient.useProxy(true, socialReader.getProxyType(), socialReader.getProxyHost(), socialReader.getProxyPort());
+		}
+				
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
 		{
 			try
