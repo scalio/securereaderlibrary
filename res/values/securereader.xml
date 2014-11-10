@@ -38,7 +38,8 @@
 	<string name="xmlrpc_endpoint">http://securereader.guardianproject.info/xmlrpc.php</string>
 	
 	<!-- Default values that should be referenced in Settings.java -->
-	<bool name="require_tor_default">true</bool>
+	<bool name="require_proxy_default">true</bool>
+	<string name="default_proxy_type">tor</string>
 	<string name="article_expiration_default">Never</string>
 	<string name="sync_mode_default">BitWise</string>	
 	<string name="sync_network_default">WifiAndMobile</string>

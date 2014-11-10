@@ -44,7 +44,7 @@ public class SocialReporter
 		xmlrpcEndpoint = applicationContext.getResources().getString(R.string.xmlrpc_endpoint);
 	}
 
-	public boolean useTor() 
+	public boolean useProxy() 
 	{
 		return true;
 	}
