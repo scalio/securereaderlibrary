@@ -22,6 +22,7 @@ import info.guardianproject.iocipher.VirtualFileSystem;
 import info.guardianproject.onionkit.ui.OrbotHelper;
 import info.guardianproject.securereader.HTMLRSSFeedFinder.RSSFeed;
 import info.guardianproject.securereader.MediaDownloader.MediaDownloaderCallback;
+import info.guardianproject.securereader.Settings.ProxyType;
 import info.guardianproject.securereader.Settings.UiLanguage;
 import info.guardianproject.securereader.SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback;
 
@@ -557,12 +558,12 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public boolean isProxyOnline() 
 	{
-		if (useProxy() && settings.proxyType() == Settings.PROXY_TYPE_TOR 
+		if (useProxy() && settings.proxyType() == ProxyType.Tor 
 				&& oc.isOrbotInstalled() && oc.isOrbotRunning()) 
 		{
 			return true;
 		} 
-		else if (useProxy() && settings.proxyType() == Settings.PROXY_TYPE_PSIPHON)
+		else if (useProxy() && settings.proxyType() == ProxyType.Psiphon)
 		{
 			// Need is Psiphon Connected
 			return true;
@@ -607,7 +608,7 @@ public class SocialReader implements ICacheWordSubscriber
 
 		if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
 			if (settings.requireProxy()) {
-				if (settings.proxyType() == Settings.PROXY_TYPE_TOR) {
+				if (settings.proxyType() == ProxyType.Tor) {
 					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
 						// Network is connected
 						// Tor is running we are good
@@ -616,7 +617,7 @@ public class SocialReader implements ICacheWordSubscriber
 						// Tor not running or not installed
 						return NOT_ONLINE_NO_TOR;
 					}
-				} else if (settings.proxyType() == Settings.PROXY_TYPE_PSIPHON) {
+				} else if (settings.proxyType() == ProxyType.Psiphon) {
 					// NEED check for Psiphon running
 					return ONLINE;
 				} else {
@@ -653,7 +654,7 @@ public class SocialReader implements ICacheWordSubscriber
 
 	// SOCKS
 	public String getProxyType() {
-		if (settings.proxyType() == Settings.PROXY_TYPE_PSIPHON) {
+		if (settings.proxyType() == ProxyType.Psiphon) {
 			return PSIPHON_PROXY_TYPE;
 		} else {
 			return TOR_PROXY_TYPE;
@@ -661,7 +662,7 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public String getProxyHost() {
-		if (settings.proxyType() == Settings.PROXY_TYPE_PSIPHON) {
+		if (settings.proxyType() == ProxyType.Psiphon) {
 			return PSIPHON_PROXY_HOST;
 		} else {
 			return TOR_PROXY_HOST;
@@ -669,7 +670,7 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public int getProxyPort() {
-		if (settings.proxyType() == Settings.PROXY_TYPE_PSIPHON) {
+		if (settings.proxyType() == ProxyType.Psiphon) {
 			return PSIPHON_PROXY_PORT;
 		} else {
 			return TOR_PROXY_PORT;
@@ -687,15 +688,15 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "Require Proxy is False");
 			}
 			
-			if (settings.proxyType() == Settings.PROXY_TYPE_TOR) {
+			if (settings.proxyType() == ProxyType.Tor) {
 				Log.v(LOGTAG, "Proxy Type Tor is selected");
 				Log.v(LOGTAG, "isOrbotInstalled: " + oc.isOrbotInstalled());
-			} else if (settings.proxyType() == Settings.PROXY_TYPE_PSIPHON) {
+			} else if (settings.proxyType() == ProxyType.Psiphon) {
 				Log.v(LOGTAG, "Proxy Type Psiphon is selected");
 			}
 		}
 
-		if (settings.proxyType() == Settings.PROXY_TYPE_TOR) {
+		if (settings.proxyType() == ProxyType.Tor) {
 			
 			if (!oc.isOrbotInstalled())
 			{
@@ -708,7 +709,7 @@ public class SocialReader implements ICacheWordSubscriber
 				oc.requestOrbotStart(_activity);
 			}				
 			
-		} else if (settings.proxyType() == Settings.PROXY_TYPE_PSIPHON) {
+		} else if (settings.proxyType() == ProxyType.Psiphon) {
 			// NEED isPsiphonInstalled/Running?
 			
 		}		
