@@ -39,8 +39,8 @@
 	
 	<!-- Default values that should be referenced in Settings.java -->
 	<bool name="require_proxy_default">true</bool>
-	<string name="default_proxy_type">tor</string>
 	<string name="article_expiration_default">Never</string>
+	<string name="default_proxy_type">Tor</string>
 	<string name="sync_mode_default">BitWise</string>	
 	<string name="sync_network_default">WifiAndMobile</string>
 	<string name="sync_frequency_default">InBackground</string>
