@@ -1985,11 +1985,12 @@ public class DatabaseAdapter
 			feeds = getSubscribedFeeds();
 		}
 		
-		ArrayList<Item> items = getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size(), mediaMimeType, randomize, limit);
-		if (items == null || items.size() == 0)
-			items = getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size() - 1, mediaMimeType, randomize, limit);
-		if (items == null || items.size() == 0)
-			items = getFeedItemsWithMediaTagsInternal(null, tags, 0, mediaMimeType, randomize, 1);
+		ArrayList<Item> items = new ArrayList<Item>();
+		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size(), mediaMimeType, randomize, limit));
+		if (items.size() < limit)
+			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size() - 1, mediaMimeType, randomize, limit));
+		if (items.size() == 0)
+			items.addAll(getFeedItemsWithMediaTagsInternal(null, tags, 0, mediaMimeType, randomize, 1));
 		return items;
 	}
 
