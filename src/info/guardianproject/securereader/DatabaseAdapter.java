@@ -2124,15 +2124,26 @@ public class DatabaseAdapter
 			feeds = getSubscribedFeeds();
 		}
 		
-		ArrayList<Item> items = getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size(), mediaMimeType, randomize, limit);
-		if (items == null || items.size() == 0)
-			items = getFeedItemsWithMediaTagsInternal(feeds, tags, tags.size() - 1, mediaMimeType, randomize, limit);
-		if (items == null || items.size() == 0)
-			items = getFeedItemsWithMediaTagsInternal(null, tags, 0, mediaMimeType, randomize, 1);
+		ArrayList<String> requiredTags = new ArrayList<String>();
+		ArrayList<String> ignoredTags = new ArrayList<String>();
+		for (String tag : tags)
+		{
+			if (tag.startsWith("!"))
+				ignoredTags.add(tag.substring(1));
+			else
+				requiredTags.add(tag);
+		}
+		
+		ArrayList<Item> items = new ArrayList<Item>();
+		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), mediaMimeType, randomize, limit));
+		if (items.size() < limit)
+			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size() - 1, mediaMimeType, randomize, limit));
+		if (items.size() == 0)
+			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, mediaMimeType, randomize, 1));
 		return items;
 	}
 
-	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> tags, int tagMatchCount, String mediaMimeType, boolean randomize, int limit) {
+	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> tags, ArrayList<String> ignoredTags, int tagMatchCount, String mediaMimeType, boolean randomize, int limit) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
 		Cursor queryCursor = null;
@@ -2151,12 +2162,33 @@ public class DatabaseAdapter
 				}
 			}
 			
-			StringBuilder tagsArray = new StringBuilder();
-			for (int a = 0; a < tags.size(); a++) 
+			String requiredTagsSubquery = "";
+			String requiredTagsSubqueryMatch = "";
+			if (tags != null && tags.size() > 0)
 			{
-				if (tagsArray.length() != 0)
-					tagsArray.append(",");
-				tagsArray.append("'" + tags.get(a) + "'");
+				StringBuilder s = new StringBuilder();
+				for (int i = 0; i < tags.size(); i++) 
+				{
+					if (s.length() != 0)
+						s.append(",");
+					s.append("'" + tags.get(i) + "'");
+				}				
+				requiredTagsSubquery = " AND t.tag IN (" + s.toString() + ")";
+				requiredTagsSubqueryMatch = " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
+						+ " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ") >= " + tagMatchCount;
+			}
+		
+			String ignoredTagsSubquery = "";
+			if (ignoredTags != null && ignoredTags.size() > 0)
+			{
+				StringBuilder s = new StringBuilder();
+				for (int i = 0; i < ignoredTags.size(); i++) 
+				{
+					if (s.length() != 0)
+						s.append(",");
+					s.append("'" + ignoredTags.get(i) + "'");
+				}				
+				ignoredTagsSubquery = " AND t.tag NOT IN (" + s.toString() + ")";
 			}
 			
 			String query = "SELECT t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " FROM "
@@ -2164,13 +2196,13 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE + " i,"
 					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
 					+ " WHERE "
-					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " IN (" + feedsArray.toString() + ") AND") : "")
-					+ " t.tag IN (" + tagsArray.toString() + ")"
+					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " IN (" + feedsArray.toString() + ")") : "")
+					+ requiredTagsSubquery
+					+ ignoredTagsSubquery
 					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?"
-					+ " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
-					+ " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ") >= " + tagMatchCount;
+					+ requiredTagsSubqueryMatch;
 				
 			if (randomize) {
 				 query = query + " order by RANDOM()";
