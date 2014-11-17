@@ -302,7 +302,7 @@ public class Settings
 	{
 		// return Enum.valueOf(SyncFrequency.class,
 		// mPrefs.getString(KEY_SYNC_FREQUENCY, SyncFrequency.Manual.name()));
-		return Enum.valueOf(SyncFrequency.class, mPrefs.getString(KEY_SYNC_FREQUENCY, SyncFrequency.WhenRunning.name()));
+		return Enum.valueOf(SyncFrequency.class, mPrefs.getString(KEY_SYNC_FREQUENCY, context.getResources().getString(R.string.sync_frequency_default)));
 	}
 
 	/**
