@@ -75,7 +75,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -115,6 +115,9 @@ public class SocialReader implements ICacheWordSubscriber
 	private VirtualFileSystem vfs;
 
 	public static final int DEFAULT_NUM_FEED_ITEMS = 20;
+	
+	public static final int MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION = 5;
+	//mediaItemDownloadLimitPerFeedPerSession
 
 	public long defaultFeedId = -1;
 	public final int feedRefreshAge;
@@ -126,6 +129,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public final int itemLimit;
 	public final int mediaCacheSize;
+	public final long mediaCacheSizeLimitInBytes;
 	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
@@ -157,29 +161,29 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
 		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
+		mediaCacheSizeLimitInBytes = mediaCacheSize * 1000 * 1000;
 		
 		this.settings = new Settings(applicationContext);
 		
 		this.cacheWordSettings = new CacheWordSettings(applicationContext);
 		this.cacheWord = new CacheWordHandler(applicationContext, this, cacheWordSettings);
 		cacheWord.connectToService();
-
+		
 		this.oc = new OrbotHelper(applicationContext);
 		
 		
-        LocalBroadcastManager.getInstance(_context).registerReceiver(
-        		new BroadcastReceiver() {
-        	        @Override
-        	        public void onReceive(Context context, Intent intent) {
-        	            if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
-        	            	// Locked because of timeout
-        	            	if (initialized && cacheWord.getCachedSecrets() == null)
-        	            		SocialReader.this.onCacheWordLocked();
-        	            }
-        	            }
-        	        },
-                new IntentFilter(Constants.INTENT_NEW_SECRETS));
-	}	
+		LocalBroadcastManager.getInstance(_context).registerReceiver(
+				new BroadcastReceiver() {
+			        @Override
+			        public void onReceive(Context context, Intent intent) {
+			            if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
+			            	// Locked because of timeout
+			            	if (initialized && cacheWord.getCachedSecrets() == null)
+			            		SocialReader.this.onCacheWordLocked();
+			            }
+			        }
+			    }, new IntentFilter(Constants.INTENT_NEW_SECRETS));
+		}
 	
     private static SocialReader socialReader = null;
     public static SocialReader getInstance(Context _context) {
@@ -212,6 +216,7 @@ public class SocialReader implements ICacheWordSubscriber
     				
     	        	checkOPML();
     				backgroundSyncSubscribedFeeds();
+    				checkMediaDownloadQueue();
     			} else {
     				if (LOGGING)
     					Log.v(LOGTAG, "App in background and sync frequency not set to background");
@@ -787,6 +792,56 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	public void checkMediaDownloadQueue() {
+		if (LOGGING) 
+			Log.v(LOGTAG, "checkMediaDownloadQueue");		
+		
+		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
+				settings.syncMode() != Settings.SyncMode.BitWise
+				&& syncService != null) {
+				
+			int numWaiting = syncService.getNumWaitingToSync();
+			
+			if (LOGGING) 
+				Log.v(LOGTAG, "Num Waiting TO Sync: " + numWaiting);
+			
+			if (numWaiting > 0) {
+				// Send a no-op to get any going that should be going
+				
+			} else {
+				
+				// Check database for new items to sync
+				if (databaseAdapter != null && databaseAdapter.databaseReady())
+				{
+					// Delete over limit media
+					int numDeleted = databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
+					Log.v(LOGTAG,"Deleted " + numDeleted + " over limit media items");
+					
+					long mediaFileSize = databaseAdapter.mediaFileSize();
+					Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
+					
+					if (numDeleted > 0 || mediaFileSize < mediaCacheSizeLimitInBytes) {
+						
+						ArrayList<Item> itemsToDownload = databaseAdapter.getItemsWithMediaNotDownloaded(DEFAULT_NUM_FEED_ITEMS);
+	
+						for (Item item : itemsToDownload)
+						{
+							ArrayList<MediaContent> mc = item.getMediaContent();
+							for (MediaContent m : mc) {
+								
+								if (LOGGING)
+									Log.v(LOGTAG, "Adding to sync " + m.getUrl());
+								
+								syncService.addMediaContentSyncTask(m);
+							}
+						}
+					}
+				}	
+			}
+		}
+		
+	}
+	
 	public boolean manualSyncInProgress() {
 		return requestPending;
 	}
@@ -1276,7 +1331,7 @@ public class SocialReader implements ICacheWordSubscriber
 		else
 		{
 			if (LOGGING)
-				Log.e(LOGTAG,"Database not ready: markItemAsFavorite");
+				Log.e(LOGTAG,"Database not ready: addToItemViewCount");
 		}		
 	}
 	
@@ -1284,6 +1339,7 @@ public class SocialReader implements ICacheWordSubscriber
 		mc.setDownloaded(true);
 		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
 			databaseAdapter.updateItemMedia(mc);
+			databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
 		}
 	}
 	
@@ -1376,13 +1432,21 @@ public class SocialReader implements ICacheWordSubscriber
 
 	public void backgroundDownloadFeedItemMedia(Feed feed)
 	{
+		int count = 0;
 		feed = getFeed(feed);
 		for (Item item : feed.getItems())
 		{
+			if (count >= MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION) {
+				break;
+			}
+			if (LOGGING)
+				Log.v(LOGTAG, "Adding " + count + " media item to background feed download");
 			backgroundDownloadItemMedia(item);
+			count++;
 		}
 	}
-
+	
+	
 	public void backgroundDownloadItemMedia(Item item)
 	{
 		if (settings.syncMode() != Settings.SyncMode.BitWise) {

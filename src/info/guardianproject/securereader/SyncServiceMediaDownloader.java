@@ -171,6 +171,7 @@ public class SyncServiceMediaDownloader implements Runnable
 					}
 				}
 				SocialReader sr = SocialReader.getInstance(syncService.getApplicationContext());
+				// Should make sure this an image before calling getStoreBitmapDimensions
 				sr.getStoreBitmapDimensions(mediaContent);
 				sr.setMediaContentDownloaded(mediaContent);
 			}
