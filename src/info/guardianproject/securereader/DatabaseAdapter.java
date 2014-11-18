@@ -2136,15 +2136,15 @@ public class DatabaseAdapter
 		}
 		
 		ArrayList<Item> items = new ArrayList<Item>();
-		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), mediaMimeType, randomize, limit));
+		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), true, mediaMimeType, randomize, limit));
 		if (items.size() < limit)
-			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size() - 1, mediaMimeType, randomize, limit));
+			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), false, mediaMimeType, randomize, limit));
 		if (items.size() == 0)
-			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, mediaMimeType, randomize, 1));
+			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, false, mediaMimeType, randomize, 1));
 		return items;
 	}
 
-	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> tags, ArrayList<String> ignoredTags, int tagMatchCount, String mediaMimeType, boolean randomize, int limit) {
+	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> tags, ArrayList<String> ignoredTags, int tagMatchCount, boolean downloaded, String mediaMimeType, boolean randomize, int limit) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
 		Cursor queryCursor = null;
@@ -2175,8 +2175,7 @@ public class DatabaseAdapter
 					s.append("'" + tags.get(i) + "'");
 				}				
 				requiredTagsSubquery = " AND t.tag IN (" + s.toString() + ")";
-				requiredTagsSubqueryMatch = " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
-						+ " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ") >= " + tagMatchCount;
+				requiredTagsSubqueryMatch = " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ") >= " + tagMatchCount;
 			}
 		
 			String ignoredTagsSubquery = "";
@@ -2202,7 +2201,9 @@ public class DatabaseAdapter
 					+ ignoredTagsSubquery
 					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
+					+ " AND m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ?"
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?"
+					+ " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
 					+ requiredTagsSubqueryMatch;
 				
 			if (randomize) {
@@ -2218,6 +2219,7 @@ public class DatabaseAdapter
 			
 			if (databaseReady()) {
 				ArrayList<String> queryParams = new ArrayList<String>();
+				queryParams.add(downloaded ? "1" : "0");
 				queryParams.add("%"+mediaMimeType+"%");
 				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
 				
