@@ -19,6 +19,7 @@ import info.guardianproject.iocipher.FileInputStream;
 import info.guardianproject.iocipher.FileOutputStream;
 import info.guardianproject.iocipher.VirtualFileSystem;
 import info.guardianproject.onionkit.ui.OrbotHelper;
+import info.guardianproject.onionkit.ui.TorServiceUtils;
 import info.guardianproject.securereader.HTMLRSSFeedFinder.RSSFeed;
 import info.guardianproject.securereader.MediaDownloader.MediaDownloaderCallback;
 import info.guardianproject.securereader.Settings.ProxyType;
@@ -50,6 +51,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
@@ -106,6 +108,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final static String PSIPHON_PROXY_HOST = "127.0.0.1";
 	public final static String PSIPHON_PROXY_TYPE = "SOCKS";
 	public final static int PSIPHON_PROXY_PORT = 1080;
+	public final static String PSIPHON_PACKAGE_NAME = "com.psiphon3";
 	
 	public final static String USERAGENT = "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19";
 	
@@ -689,9 +692,8 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			return true;
 		} 
-		else if (useProxy() && settings.proxyType() == ProxyType.Psiphon)
+		else if (useProxy() && settings.proxyType() == ProxyType.Psiphon && isPsiphonInstalled() && isPsiphonRunning())
 		{
-			// Need is Psiphon Connected
 			return true;
 		}
 		else {
@@ -744,8 +746,14 @@ public class SocialReader implements ICacheWordSubscriber
 						return NOT_ONLINE_NO_TOR;
 					}
 				} else if (settings.proxyType() == ProxyType.Psiphon) {
-					// NEED check for Psiphon running
-					return ONLINE;
+					if (isPsiphonInstalled() && isPsiphonRunning()) {
+						// Network is connected
+						// Tor is running we are good
+						return ONLINE;
+					} else {
+						// Tor not running or not installed
+						return NOT_ONLINE_NO_TOR;
+					}
 				} else {
 					// This shouldn't happen
 					return ONLINE;
@@ -803,6 +811,17 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	private boolean isPsiphonInstalled()
+	{
+		return PackageHelper.isAppInstalled(applicationContext, PSIPHON_PACKAGE_NAME);
+	}
+	
+	private boolean isPsiphonRunning()
+	{
+        int procId = TorServiceUtils.findProcessId(PSIPHON_PACKAGE_NAME);
+        return (procId != -1);
+	}
+	
 	public boolean connectProxy(Activity _activity)
 	{
 		if (LOGGING) {
@@ -836,7 +855,17 @@ public class SocialReader implements ICacheWordSubscriber
 			}				
 			
 		} else if (settings.proxyType() == ProxyType.Psiphon) {
-			// NEED isPsiphonInstalled/Running?
+			if (!isPsiphonInstalled())
+			{
+				// This is getting intercepted by the lock screen at the moment
+				PackageHelper.showDownloadDialog(_activity, R.string.psiphon_install_title, R.string.psiphon_install_prompt, R.string.psiphon_install_ok, R.string.psiphon_install_cancel, _activity.getString(R.string.psiphon_install_uri));
+			}
+			else if (!isPsiphonRunning())
+			{
+				Intent intentStart = _activity.getPackageManager().getLaunchIntentForPackage(PSIPHON_PACKAGE_NAME);
+				intentStart.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				_activity.startActivity(intentStart);
+			}				
 			
 		}		
 
