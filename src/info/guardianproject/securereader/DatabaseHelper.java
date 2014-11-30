@@ -9,7 +9,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLCipherOpenHelper
 {
 	public static String LOGTAG = "DatabaseHelper";
-	public static boolean LOGGING = true;
+	public static boolean LOGGING = false;
 
 	public static final String DATABASE_NAME = "bigbuffalo.db";
 	public static final int DATABASE_VERSION = 1;
