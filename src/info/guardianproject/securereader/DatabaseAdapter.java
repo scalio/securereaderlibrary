@@ -25,7 +25,7 @@ import com.tinymission.rss.MediaContent;
 
 public class DatabaseAdapter
 {
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	public static final String LOGTAG = "DatabaseAdapter";
 	
 	private final DatabaseHelper databaseHelper;
@@ -2093,8 +2093,12 @@ public class DatabaseAdapter
 		values.put(DatabaseHelper.ITEM_MEDIA_SAMPLE_RATE, itemMedia.getSampligRate());
 
 		if (itemMedia.getDownloaded()) {
+			if (LOGGING) 
+				Log.v(LOGTAG, "itemMedia Downlaoded is true");
 			values.put(DatabaseHelper.ITEM_MEDIA_DOWNLOADED, 1);
 		} else {
+			if (LOGGING)
+				Log.v(LOGTAG, "itemMedia Downlaoded is false");
 			values.put(DatabaseHelper.ITEM_MEDIA_DOWNLOADED, 0);
 		}
 		
@@ -2102,6 +2106,8 @@ public class DatabaseAdapter
 			try
 			{
 				returnValue = db.update(DatabaseHelper.ITEM_MEDIA_TABLE, values, DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + "=?", new String[] { String.valueOf(itemMedia.getDatabaseId()) });
+				if (LOGGING)
+					Log.v(LOGTAG, "updateItemMedia database query returnValue: " + returnValue);
 			}
 			catch (SQLException e)
 			{
@@ -2575,8 +2581,7 @@ public class DatabaseAdapter
 		String query = "select " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + "m." + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + ", " + "i." + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + "m." + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", " 
 				+ "i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + "i." + DatabaseHelper.ITEMS_TABLE_FAVORITE 
 				+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " m, " + DatabaseHelper.ITEMS_TABLE + " i"
-				+ " where " + "i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + " > ? and " + "i." + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? and " 
-				+ "m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + "m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
+				+ " where " + "m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + "m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
 				+ " order by RANDOM()";; 
 						
 		if (LOGGING)
@@ -2585,7 +2590,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				queryCursor = db.rawQuery(query, new String[] {String.valueOf(0), String.valueOf(0), String.valueOf(1)});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1)});
 			
 				if (LOGGING)
 					Log.v(LOGTAG,"Count " + queryCursor.getCount());
@@ -2604,10 +2609,10 @@ public class DatabaseAdapter
 						String title = queryCursor.getString(titleColumn);
 						long mediaFileSize = queryCursor.getLong(mediaFileSizeColumn);
 						
-						if (LOGGING)
-							Log.v(LOGTAG,"Going to delete media files for " + itemId + " " + title + " " + mediaFileSize);
-						
 						totalFileSize += mediaFileSize;
+
+						//if (LOGGING)
+						//	Log.v(LOGTAG,"Size: " + itemId + " " + title + " " + mediaFileSize + " " + totalFileSize);
 						
 					}
 					while (queryCursor.moveToNext());
@@ -2636,6 +2641,9 @@ public class DatabaseAdapter
 	}	
 	
 	public int deleteOverLimitMedia(long mediaLimit, SocialReader socialReader) {
+		if (LOGGING) 
+			Log.v(LOGTAG, "deleteOverLimitMedia");
+		
 		// mediaLimit in bytes
 		int numMediaFilesDeleted = 0;
 		
@@ -2644,7 +2652,7 @@ public class DatabaseAdapter
 		String query = "select " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + "m." + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + ", " + "i." + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + "m." + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", " 
 						+ "i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + "i." + DatabaseHelper.ITEMS_TABLE_FAVORITE 
 						+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " m, " + DatabaseHelper.ITEMS_TABLE + " i"
-						+ " where " + "i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + " > ? and " + "i." + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? and " 
+						+ " where " 
 						+ "m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + "m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
 						+ " order by RANDOM()";; 
 								
@@ -2654,16 +2662,18 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try
 			{
-				queryCursor = db.rawQuery(query, new String[] {String.valueOf(0), String.valueOf(0), String.valueOf(1)});
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(1)});
 			
-				if (LOGGING)
-					Log.v(LOGTAG,"Count " + queryCursor.getCount());
+				//if (LOGGING)
+				//	Log.v(LOGTAG,"Count " + queryCursor.getCount());
 	
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COLUMN_ID);
 				int mediaIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID);
 				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_TITLE);
 				int mediaFileSizeColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_FILESIZE);
-	
+				int viewCountColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_VIEWCOUNT);
+				int favoriteColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FAVORITE);
+				
 				long totalFileSize = 0;
 				
 				if (queryCursor.moveToFirst())
@@ -2674,20 +2684,40 @@ public class DatabaseAdapter
 						int mediaId = queryCursor.getInt(mediaIdColumn);
 						String title = queryCursor.getString(titleColumn);
 						long mediaFileSize = queryCursor.getLong(mediaFileSizeColumn);
-						
-						if (LOGGING)
-							Log.v(LOGTAG,"Going to delete media files for " + itemId + " " + title + " " + mediaFileSize);
-						
-						if (totalFileSize < mediaLimit + mediaFileSize) 
-						{
-							totalFileSize = totalFileSize + mediaFileSize;
+						boolean favorite = false;
+						if (queryCursor.getInt(favoriteColumn) == 1) {
+							favorite = true;
 						}
-						else {
+						int viewCount = queryCursor.getInt(viewCountColumn);
+						
+						if (totalFileSize + mediaFileSize > mediaLimit && !favorite && viewCount > 0) {
+							if (LOGGING)
+								Log.v(LOGTAG,"Going to delete media files for " + itemId + " " + title + " " + mediaFileSize);
+							
 							socialReader.deleteMediaContentFile(mediaId);
 							numMediaFilesDeleted++;
+						} else {
+							totalFileSize = totalFileSize + mediaFileSize;
+							
+							/*
+							if (LOGGING) {
+								if (viewCount == 0) {
+									Log.v(LOGTAG, "viewCount == 0");
+								} else if (favorite) {
+									Log.v(LOGTAG, "favorite");
+								} else {
+									Log.v(LOGTAG, "not sure");
+								}
+							}
+							*/
+							
 						}
 					}
 					while (queryCursor.moveToNext());
+				}
+				else {
+					if (LOGGING)
+						Log.v(LOGTAG,"Couldn't move to first?");
 				}
 	
 				queryCursor.close();

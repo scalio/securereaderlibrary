@@ -820,9 +820,9 @@ public class SocialReader implements ICacheWordSubscriber
 					long mediaFileSize = databaseAdapter.mediaFileSize();
 					Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
 					
-					if (numDeleted > 0 || mediaFileSize < mediaCacheSizeLimitInBytes) {
+					if (mediaFileSize < mediaCacheSizeLimitInBytes) {
 						
-						ArrayList<Item> itemsToDownload = databaseAdapter.getItemsWithMediaNotDownloaded(DEFAULT_NUM_FEED_ITEMS);
+						ArrayList<Item> itemsToDownload = databaseAdapter.getItemsWithMediaNotDownloaded(MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION);
 	
 						for (Item item : itemsToDownload)
 						{
@@ -1339,14 +1339,19 @@ public class SocialReader implements ICacheWordSubscriber
 		mc.setDownloaded(true);
 		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
 			databaseAdapter.updateItemMedia(mc);
-			databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
+			//databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
 		}
 	}
 	
 	public void unsetMediaContentDownloaded(MediaContent mc) {
+		if (LOGGING)
+			Log.v(LOGTAG, "unsetMediaContentDownloaded");
 		mc.setDownloaded(false);
 		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
 			databaseAdapter.updateItemMedia(mc);
+		} else {
+			if (LOGGING)	
+				Log.v(LOGTAG, "Can't update database, not ready");
 		}
 	}
 	
@@ -1437,12 +1442,21 @@ public class SocialReader implements ICacheWordSubscriber
 		for (Item item : feed.getItems())
 		{
 			if (count >= MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION) {
+				
+				if (LOGGING)
+					Log.v(LOGTAG, "!!! " + count + " above limit of " + MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION);
+				
 				break;
 			}
-			if (LOGGING)
-				Log.v(LOGTAG, "Adding " + count + " media item to background feed download");
-			backgroundDownloadItemMedia(item);
-			count++;
+			
+//			} else {
+				
+				if (LOGGING)
+					Log.v(LOGTAG, "Adding " + count + " media item to background feed download");
+				
+				backgroundDownloadItemMedia(item);
+				count++;
+//			}
 		}
 	}
 	
@@ -1890,13 +1904,18 @@ public class SocialReader implements ICacheWordSubscriber
 		File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContentDatabaseId);
 		if (possibleFile.exists())
 		{
-			possibleFile.delete();
-			if (LOGGING)
-				Log.v(LOGTAG, "Deleting: " + possibleFile.getAbsolutePath());
+			if (possibleFile.delete()) {
+				if (LOGGING)
+					Log.v(LOGTAG, "Deleted: " + possibleFile.getAbsolutePath());
 			
-			// Update the database
-			MediaContent mc = databaseAdapter.getMediaContentById(mediaContentDatabaseId);
-			unsetMediaContentDownloaded(mc);
+				// Update the database
+				MediaContent mc = databaseAdapter.getMediaContentById(mediaContentDatabaseId);
+				unsetMediaContentDownloaded(mc);
+			}
+			else {
+				if (LOGGING) 
+					Log.v(LOGTAG, "NOT DELETED " + possibleFile.getAbsolutePath());
+			}
 		}		
 	}
 
