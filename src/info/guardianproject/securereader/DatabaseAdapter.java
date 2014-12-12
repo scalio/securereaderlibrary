@@ -2143,8 +2143,13 @@ public class DatabaseAdapter
 		
 		ArrayList<Item> items = new ArrayList<Item>();
 		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), true, mediaMimeType, randomize, limit));
+		// If not enough downloaded songs, add more that are not loaded yet
 		if (items.size() < limit)
-			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), false, mediaMimeType, randomize, limit));
+			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), false, mediaMimeType, randomize, limit - items.size()));
+		// Fallback - try to add a random downloaded song from ANY feed.
+		if (items.size() == 0)
+			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, true, mediaMimeType, randomize, 1));
+		// Fallback 2 - try to add a random song from ANY feed.
 		if (items.size() == 0)
 			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, false, mediaMimeType, randomize, 1));
 		return items;
@@ -2202,7 +2207,7 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE + " i,"
 					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
 					+ " WHERE "
-					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " IN (" + feedsArray.toString() + ")") : "")
+					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " IN (" + feedsArray.toString() + ")") : "1=1")
 					+ requiredTagsSubquery
 					+ ignoredTagsSubquery
 					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
