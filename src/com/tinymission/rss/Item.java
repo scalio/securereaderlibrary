@@ -507,6 +507,10 @@ public class Item extends FeedEntity implements Serializable
 		return (getTitle());
 	}
 	
+	public void setViewCount(int viewCount) {
+		_viewCount = viewCount;
+	}
+	
 	public void incrementViewCount() {
 		_viewCount++;
 	}

@@ -1294,7 +1294,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", "
 					+ DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED + ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " 
 					+ DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " 
-					+ DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE 
+					+ DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", "
+					+ DatabaseHelper.ITEMS_TABLE_VIEWCOUNT
 					+ " from " + DatabaseHelper.ITEMS_TABLE
 					+ " where " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " = ?;";
 			
@@ -1317,7 +1318,8 @@ public class DatabaseAdapter
 				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_TITLE);
 				int feedIdColunn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
-		
+				int viewCountColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_VIEWCOUNT);
+				
 				if (queryCursor.moveToFirst())
 				{
 					int id = queryCursor.getInt(idColumn);
@@ -1332,7 +1334,8 @@ public class DatabaseAdapter
 					String category = queryCursor.getString(categoryColumn);
 					int favorite = queryCursor.getInt(favoriteColumn);
 					int shared = queryCursor.getInt(sharedColumn);
-		
+					int viewCount = queryCursor.getInt(viewCountColumn);
+					
 					String source = queryCursor.getString(sourceColumn);
 					String link = queryCursor.getString(linkColumn);
 		
@@ -1355,7 +1358,7 @@ public class DatabaseAdapter
 					} else {
 						returnItem.setShared(false);
 					}
-		
+					returnItem.setViewCount(viewCount);
 					returnItem.setGuid(guid);
 					returnItem.setLink(link);
 					returnItem.setMediaContent(this.getItemMedia(returnItem));
@@ -2202,7 +2205,7 @@ public class DatabaseAdapter
 				ignoredTagsSubquery = " AND t.tag NOT IN (" + s.toString() + ")";
 			}
 			
-			String query = "SELECT t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " FROM "
+			String query = "SELECT *, RANDOM() AS 'rand' FROM (SELECT t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " FROM "
 					+ DatabaseHelper.ITEM_TAGS_TABLE + " t,"
 					+ DatabaseHelper.ITEMS_TABLE + " i,"
 					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
@@ -2215,15 +2218,16 @@ public class DatabaseAdapter
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ?"
 					+ " AND m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?"
 					+ " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
-					+ requiredTagsSubqueryMatch;
+					+ requiredTagsSubqueryMatch
+					+ " ORDER BY i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + " ASC";
 				
+			query = query + " limit " + limit + ")";
 			if (randomize) {
-				 query = query + " order by RANDOM()";
+				 query = query + " order by rand;";
 			}
 			else {
-				query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC";
+				query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
 			}
-			query = query + " limit " + limit + ";";
 			
 			if (LOGGING)
 				Log.v(LOGTAG,query);
