@@ -107,6 +107,9 @@ public class SyncService extends Service {
     	
     	//SyncTask(Feed _feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback _callback) {
     	SyncTask(Feed _feed) {
+    		if (LOGGING) 
+    			Log.v(LOGTAG,"SyncTask: " + _feed.getFeedURL());
+    		
     		feed = _feed;
     		type = TYPE_FEED;
     		//callback = _callback;
