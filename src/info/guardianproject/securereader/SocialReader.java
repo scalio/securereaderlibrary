@@ -76,7 +76,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public static final String LOGTAG = "SocialReader";
 	public static final boolean LOGGING = false;
-
+	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
 	public static final String CONTENT_ITEM_EXTENSION = "bbi";
@@ -421,7 +421,7 @@ public class SocialReader implements ICacheWordSubscriber
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
-									newFeed.setSubscribed(true);
+									newFeed.setSubscribed(outlineElement.subscribe);
 									databaseAdapter.addOrUpdateFeed(newFeed);
 									if (LOGGING)
 										Log.v(LOGTAG,"May have added feed");
