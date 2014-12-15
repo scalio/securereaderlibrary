@@ -2672,7 +2672,8 @@ public class DatabaseAdapter
 						+ " where " 
 						+ "m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + "m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " 
 						+ "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
-						+ " order by RANDOM()";; 
+						+ " AND i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = f." + DatabaseHelper.FEEDS_TABLE_COLUMN_ID 
+						+ " order by RANDOM()";
 								
 		if (LOGGING)
 			Log.v(LOGTAG, query);
