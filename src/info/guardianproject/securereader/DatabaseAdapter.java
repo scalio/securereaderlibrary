@@ -2282,8 +2282,10 @@ public class DatabaseAdapter
 		Cursor queryCursor = null;
 			
 		String query = "SELECT i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " FROM "
-				+ DatabaseHelper.ITEMS_TABLE + " i," + DatabaseHelper.ITEM_MEDIA_TABLE + " m"
-				+ " WHERE " + " m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
+				+ DatabaseHelper.ITEMS_TABLE + " i, " + DatabaseHelper.ITEM_MEDIA_TABLE + " m, " + DatabaseHelper.FEEDS_TABLE + " f"
+				+ " WHERE " + "f." + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + " =  " + "i." + DatabaseHelper.ITEMS_TABLE_FEED_ID 
+				+ " AND " + "f." + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = ? "
+				+ " AND " + " m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
 				+ " AND m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ?";
 			
 		query = query + " order by RANDOM()";
@@ -2295,6 +2297,7 @@ public class DatabaseAdapter
 		if (databaseReady()) {
 			try {
 				ArrayList<String> queryParams = new ArrayList<String>();
+				queryParams.add("1");
 				queryParams.add("0");
 				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
 					
@@ -2660,11 +2663,15 @@ public class DatabaseAdapter
 		
 		Cursor queryCursor = null;
 		
-		String query = "select " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + "m." + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + ", " + "i." + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + "m." + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", " 
-						+ "i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + "i." + DatabaseHelper.ITEMS_TABLE_FAVORITE 
-						+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " m, " + DatabaseHelper.ITEMS_TABLE + " i"
+		String query = "select " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + ", " + "m." + DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID + ", " 
+						+ "i." + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + "m." + DatabaseHelper.ITEM_MEDIA_FILESIZE + ", " 
+						+ "i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + "i." + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", "
+						+ "f." + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED
+						+ " from " + DatabaseHelper.ITEM_MEDIA_TABLE + " m, " + DatabaseHelper.ITEMS_TABLE + " i, " 
+						+ DatabaseHelper.FEEDS_TABLE + " f"
 						+ " where " 
-						+ "m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + "m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " + "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
+						+ "m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ? and " + "m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + " = " 
+						+ "i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID 
 						+ " order by RANDOM()";; 
 								
 		if (LOGGING)
@@ -2684,6 +2691,7 @@ public class DatabaseAdapter
 				int mediaFileSizeColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_FILESIZE);
 				int viewCountColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_VIEWCOUNT);
 				int favoriteColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FAVORITE);
+				int subscribedColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_SUBSCRIBED);
 				
 				long totalFileSize = 0;
 				
@@ -2695,13 +2703,19 @@ public class DatabaseAdapter
 						int mediaId = queryCursor.getInt(mediaIdColumn);
 						String title = queryCursor.getString(titleColumn);
 						long mediaFileSize = queryCursor.getLong(mediaFileSizeColumn);
+					
 						boolean favorite = false;
 						if (queryCursor.getInt(favoriteColumn) == 1) {
 							favorite = true;
 						}
 						int viewCount = queryCursor.getInt(viewCountColumn);
+
+						boolean subscribed = false;
+						if (queryCursor.getInt(subscribedColumn) == 1) {
+							subscribed = true;
+						}
 						
-						if (totalFileSize + mediaFileSize > mediaLimit && !favorite && viewCount > 0) {
+						if (totalFileSize + mediaFileSize > mediaLimit && !favorite && (!subscribed || viewCount > 0)) {
 							if (LOGGING)
 								Log.v(LOGTAG,"Going to delete media files for " + itemId + " " + title + " " + mediaFileSize);
 							
