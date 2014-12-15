@@ -437,6 +437,12 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
+	public void feedSubscriptionsChanged() {
+		clearMediaDownloadQueue();
+		backgroundSyncSubscribedFeeds();
+		checkMediaDownloadQueue();
+	}
+	
 	private void expireOldContent() {
 		if (LOGGING)
 			Log.v(LOGTAG,"expireOldContent");
@@ -791,6 +797,20 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "Can't sync feeds, cacheword locked");
 		}
 	}
+	
+	public void clearMediaDownloadQueue() {
+		if (LOGGING) 
+			Log.v(LOGTAG, "clearMediaDownloadQueue");		
+		
+		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
+				settings.syncMode() != Settings.SyncMode.BitWise
+				&& syncService != null) {
+				
+			syncService.clearSyncList();
+			backgroundSyncSubscribedFeeds();
+		}
+		
+	}	
 
 	public void checkMediaDownloadQueue() {
 		if (LOGGING) 
