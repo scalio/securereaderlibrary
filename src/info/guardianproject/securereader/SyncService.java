@@ -97,6 +97,7 @@ public class SyncService extends Service {
     	public static final int QUEUED = 1;
     	public static final int STARTED = 2;
     	public static final int FINISHED = 3;
+    	public static final int CANCELLED = 4;
     	
     	public Feed feed;
     	public MediaContent mediaContent;
@@ -231,6 +232,29 @@ public class SyncService extends Service {
 		syncServiceEvent(newSyncTask);    	
     }
     
+    public void clearSyncList() {
+    	for (int i = 0; i < syncList.size(); i++) {
+    		if (syncList.get(i).status == SyncTask.QUEUED) {
+    			if (LOGGING)
+    				Log.v(LOGTAG, "syncTask QUEUED");
+    			syncList.get(i).status = SyncTask.CANCELLED;
+    		} else if (syncList.get(i).status == SyncTask.CREATED) {
+    			if (LOGGING)
+    				Log.v(LOGTAG, "syncTask CREATED");
+    			syncList.get(i).status = SyncTask.CANCELLED;
+    		} else if (syncList.get(i).status == SyncTask.ERROR) {
+    			if (LOGGING)
+    				Log.v(LOGTAG, "syncTask ERROR");
+    		} else if (syncList.get(i).status == SyncTask.FINISHED) {
+    			if (LOGGING)
+    				Log.v(LOGTAG, "syncTask FINISHED");
+    		} else if (syncList.get(i).status == SyncTask.STARTED) {
+    			if (LOGGING)
+    				Log.v(LOGTAG, "syncTask STARTED");
+    		}
+    	}    	
+    }
+    
     public int getNumWaitingToSync() {
     	int count = 0;
     	for (int i = 0; i < syncList.size(); i++) {
@@ -250,6 +274,9 @@ public class SyncService extends Service {
     		} else if (syncList.get(i).status == SyncTask.STARTED) {
     			if (LOGGING)
     				Log.v(LOGTAG, "syncTask STARTED");
+    		} else if (syncList.get(i).status == SyncTask.CANCELLED) {
+    			if (LOGGING)
+    				Log.v(LOGTAG, "syncTask CANCELLED");
     		}
     	}
     	return count;
