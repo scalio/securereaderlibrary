@@ -1971,22 +1971,27 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
-	public void deleteMediaContentFile(int mediaContentDatabaseId) {
-		File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContentDatabaseId);
+	public void deleteMediaContentFile(final int mediaContentDatabaseId) {
+		final File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContentDatabaseId);
 		if (possibleFile.exists())
 		{
-			if (possibleFile.delete()) {
-				if (LOGGING)
-					Log.v(LOGTAG, "Deleted: " + possibleFile.getAbsolutePath());
-			
-				// Update the database
-				MediaContent mc = databaseAdapter.getMediaContentById(mediaContentDatabaseId);
-				unsetMediaContentDownloaded(mc);
-			}
-			else {
-				if (LOGGING) 
-					Log.v(LOGTAG, "NOT DELETED " + possibleFile.getAbsolutePath());
-			}
+			new Thread() {
+				public void run() {
+					if (possibleFile.delete()) {
+
+						if (LOGGING)
+							Log.v(LOGTAG, "Deleted: " + possibleFile.getAbsolutePath());
+
+						// Update the database
+						MediaContent mc = databaseAdapter.getMediaContentById(mediaContentDatabaseId);
+						unsetMediaContentDownloaded(mc);
+
+					} else {
+						if (LOGGING) 
+							Log.v(LOGTAG, "NOT DELETED " + possibleFile.getAbsolutePath());
+					}
+				}				
+			}.start();
 		}		
 	}
 
