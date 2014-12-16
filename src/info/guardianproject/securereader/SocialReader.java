@@ -1087,11 +1087,41 @@ public class SocialReader implements ICacheWordSubscriber
 			Log.v(LOGTAG,"databaseAdapter initialized");
 	}
 
+	private boolean testExternalStorage(java.io.File dirToTest) {
+		if (LOGGING) 
+			Log.v(LOGTAG, "testExternalStorage: " + dirToTest);
+		if (dirToTest.exists() && dirToTest.isDirectory()) {
+			try {
+				java.io.File.createTempFile("test", null, dirToTest);
+				
+				if (LOGGING) 
+					Log.v(LOGTAG, "testExternalStorage: " + dirToTest + " is good");
+
+				return true;
+			} catch (IOException ioe) {
+				
+				if (LOGGING) 
+					Log.v(LOGTAG, "testExternalStorage: " + dirToTest + " is NOT good");
+				
+				return false;
+			}
+		}
+		
+		if (LOGGING) 
+			Log.v(LOGTAG, "testExternalStorage: " + dirToTest + " is NOT good");
+		
+		return false;
+	}
+	
 	private java.io.File getNonVirtualFileSystemDir()
 	{
 		java.io.File filesDir;
 
-		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+		if (testExternalStorage(new java.io.File("/sdcard/external_sdcard"))) {
+			filesDir = new java.io.File("/sdcard/external_sdcard/");
+			return filesDir;
+		}		
+		else if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 		{
 			filesDir = new java.io.File(applicationContext.getExternalFilesDir(null), FILES_DIR_NAME + File.separator);
 			if (!filesDir.exists())
