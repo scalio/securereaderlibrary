@@ -439,7 +439,6 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void feedSubscriptionsChanged() {
 		clearMediaDownloadQueue();
-		backgroundSyncSubscribedFeeds();
 		checkMediaDownloadQueue();
 	}
 	
