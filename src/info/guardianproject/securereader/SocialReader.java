@@ -108,7 +108,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final String VFS_SHARE_DIRECTORY = "share";
 	public static final String NON_VFS_SHARE_DIRECTORY = "share";
 
-	public final static String FILES_DIR_NAME = "files";
+	public final static String FILES_DIR_NAME = "bbfiles";
 	public final static String IOCIPHER_FILE_NAME = "vfs.db";
 
 	private String ioCipherFilePath;
@@ -1118,7 +1118,11 @@ public class SocialReader implements ICacheWordSubscriber
 		java.io.File filesDir;
 
 		if (testExternalStorage(new java.io.File("/sdcard/external_sdcard"))) {
-			filesDir = new java.io.File("/sdcard/external_sdcard/");
+			filesDir = new java.io.File("/sdcard/external_sdcard/" + FILES_DIR_NAME + "/");
+			if (!filesDir.exists())
+			{
+				filesDir.mkdirs();
+			}
 			return filesDir;
 		}		
 		else if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
@@ -1213,6 +1217,22 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 
 		// Delete all possible locations
+		
+		// This will use the removeable external if it is there
+		// otherwise it will return the external sd card
+		// otherwise it will do internal
+		java.io.File possibleDir = getNonVirtualFileSystemDir();
+		if (possibleDir.exists()) {
+			java.io.File[] possibleDirFiles = possibleDir.listFiles();
+			for (int i = 0; i < possibleDirFiles.length; i++)
+			{
+				possibleDirFiles[i].delete();
+			}
+			possibleDir.delete();	
+		}
+		
+		// This is a backup, just in case they have a removable sd card inserted but also have
+		// files on normal storage
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 		{
 			// getExternalFilesDir() These persist
@@ -1228,6 +1248,7 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 		}
 
+		// Final backup, remove from internal storage
 		java.io.File internalDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
 		java.io.File[] internalFiles = internalDir.listFiles();
 		for (int i = 0; i < internalFiles.length; i++)
