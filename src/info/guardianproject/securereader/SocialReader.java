@@ -111,6 +111,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public final static String FILES_DIR_NAME = "bbfiles";
 	public final static String IOCIPHER_FILE_NAME = "vfs.db";
 
+	public static String[] EXTERNAL_STORAGE_POSSIBLE_LOCATIONS = {"/sdcard/external_sdcard", "/sdcard/ext_sd", "/externalSdCard", "/extSdCard", "/external"};
+
 	private String ioCipherFilePath;
 	private VirtualFileSystem vfs;
 
@@ -1111,33 +1113,46 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		return false;
 	}
-	
+		
 	private java.io.File getNonVirtualFileSystemDir()
 	{
-		java.io.File filesDir;
+		java.io.File filesDir = null;
 
-		if (testExternalStorage(new java.io.File("/sdcard/external_sdcard"))) {
-			filesDir = new java.io.File("/sdcard/external_sdcard/" + FILES_DIR_NAME + "/");
-			if (!filesDir.exists())
-			{
-				filesDir.mkdirs();
-			}
-			return filesDir;
-		}		
-		else if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
-		{
-			filesDir = new java.io.File(applicationContext.getExternalFilesDir(null), FILES_DIR_NAME + File.separator);
-			if (!filesDir.exists())
-			{
-				filesDir.mkdirs();
-			}
-		}
-		else
-		{
-			filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+		boolean done = false;
+		for (int p = 0; p < EXTERNAL_STORAGE_POSSIBLE_LOCATIONS.length; p++) {
+			if (testExternalStorage(new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p]))) {
+				filesDir = new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p] + "/" + FILES_DIR_NAME);
+				if (!filesDir.exists())
+				{
+					filesDir.mkdirs();
+				}
+				done = true;
+				break;
+			}					
 		}
 		
-		filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+		if (!done) {
+			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+			{
+				if (LOGGING) 
+					Log.v(LOGTAG,"sdcard mounted");
+				
+				filesDir = applicationContext.getExternalFilesDir(null);
+				if (!filesDir.exists())
+				{
+					filesDir.mkdirs();
+				}
+				
+				if (LOGGING) 
+					Log.v(LOGTAG,"filesDir:" + filesDir.getAbsolutePath());
+
+			}
+			else
+			{
+				filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+			}
+		}
+	
 		return filesDir;
 	}
 	
@@ -1159,7 +1174,10 @@ public class SocialReader implements ICacheWordSubscriber
 
 		java.io.File filesDir = getNonVirtualFileSystemDir();
 
-		ioCipherFilePath = filesDir + IOCIPHER_FILE_NAME;
+		ioCipherFilePath = filesDir.getAbsolutePath() + "/" + IOCIPHER_FILE_NAME;
+		
+		if (LOGGING)
+			Log.v(LOGTAG, "Creating ioCipher at: " + ioCipherFilePath);
 		
 		IOCipherMountHelper ioHelper = new IOCipherMountHelper(cacheWord);
 		try {
@@ -1235,7 +1253,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 		{
 			// getExternalFilesDir() These persist
-			java.io.File externalFilesDir = new java.io.File(applicationContext.getExternalFilesDir(null), FILES_DIR_NAME + "/");
+			java.io.File externalFilesDir = applicationContext.getExternalFilesDir(null);
 			if (externalFilesDir.exists())
 			{
 				java.io.File[] externalFiles = externalFilesDir.listFiles();
