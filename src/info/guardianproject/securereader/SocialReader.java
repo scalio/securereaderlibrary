@@ -483,6 +483,7 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG,"Not already loaded from network, attempting to check");
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
+						
 			if (lang == UiLanguage.Farsi) {
 				finalOpmlUrl = finalOpmlUrl + "fa_IR";
 			} else if (lang == UiLanguage.English) {
@@ -495,7 +496,15 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl = finalOpmlUrl + "ru_RU";
 			} else if (lang == UiLanguage.Ukrainian) {
 				finalOpmlUrl = finalOpmlUrl + "uk_UA";
-			} 
+			} else if (lang == UiLanguage.Spanish) {
+				finalOpmlUrl = finalOpmlUrl + "es";
+			} else if (lang == UiLanguage.Japanese) {
+				finalOpmlUrl = finalOpmlUrl + "ja";
+			} else if (lang == UiLanguage.Norwegian) {
+				finalOpmlUrl = finalOpmlUrl + "nb";
+			} else if (lang == UiLanguage.Turkish) {
+				finalOpmlUrl = finalOpmlUrl + "tr";
+			}
 			
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
