@@ -30,13 +30,15 @@ public class MediaContent extends FeedEntity implements Serializable
 	private long itemDatabaseId;
 	private long databaseId = DEFAULT_DATABASE_ID;
 
+	private boolean downloaded = false;
+	
 	private String url;
 	private String type;
 
 	private String medium;
 	private int height;
 	private int width;
-	private int fileSize;
+	private long fileSize;
 	private int duration;
 	private Boolean isDefault;
 	private String expression;
@@ -265,7 +267,7 @@ public class MediaContent extends FeedEntity implements Serializable
 	/**
 	 * @return the fileSize
 	 */
-	public int getFileSize()
+	public long getFileSize()
 	{
 		return fileSize;
 	}
@@ -275,7 +277,7 @@ public class MediaContent extends FeedEntity implements Serializable
 	 *            the fileSize is the number of bytes of the media object. It is
 	 *            an optional attribute.
 	 */
-	public void setFileSize(int fileSize)
+	public void setFileSize(long fileSize)
 	{
 		this.fileSize = fileSize;
 	}
@@ -411,6 +413,15 @@ public class MediaContent extends FeedEntity implements Serializable
 	public void setSampligRate(String sampligRate)
 	{
 		this.sampligRate = sampligRate;
+	}
+	
+	public void setDownloaded(boolean _downloaded) {
+		this.downloaded = _downloaded;
+	}
+	
+	public boolean getDownloaded()
+	{
+		return downloaded;
 	}
 
 	public MediaContentType getMediaContentType() 

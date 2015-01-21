@@ -76,7 +76,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public static final String LOGTAG = "SocialReader";
 	public static final boolean LOGGING = false;
-
+	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
 	public static final String CONTENT_ITEM_EXTENSION = "bbi";
@@ -108,13 +108,18 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final String VFS_SHARE_DIRECTORY = "share";
 	public static final String NON_VFS_SHARE_DIRECTORY = "share";
 
-	public final static String FILES_DIR_NAME = "files";
+	public final static String FILES_DIR_NAME = "bbfiles";
 	public final static String IOCIPHER_FILE_NAME = "vfs.db";
+
+	public static String[] EXTERNAL_STORAGE_POSSIBLE_LOCATIONS = {"/sdcard/external_sdcard", "/sdcard/ext_sd", "/externalSdCard", "/extSdCard", "/external"};
 
 	private String ioCipherFilePath;
 	private VirtualFileSystem vfs;
 
 	public static final int DEFAULT_NUM_FEED_ITEMS = 20;
+	
+	public static final int MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION = 5;
+	//mediaItemDownloadLimitPerFeedPerSession
 
 	public long defaultFeedId = -1;
 	public final int feedRefreshAge;
@@ -125,6 +130,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final int TIMER_PERIOD = 60000;  // 1 minute 
 	
 	public final int itemLimit;
+	public final int mediaCacheSize;
+	public final long mediaCacheSizeLimitInBytes;
 	
 	// Constant to use when passing an item to be shared to the
 	// securebluetoothsender as an extra in the intent
@@ -155,29 +162,30 @@ public class SocialReader implements ICacheWordSubscriber
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
 		
 		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
+		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
+		mediaCacheSizeLimitInBytes = mediaCacheSize * 1000 * 1000;
 		
 		this.settings = new Settings(applicationContext);
 		
 		this.cacheWordSettings = new CacheWordSettings(applicationContext);
 		this.cacheWord = new CacheWordHandler(applicationContext, this, cacheWordSettings);
 		cacheWord.connectToService();
-
+		
 		this.oc = new OrbotHelper(applicationContext);
 		
 		
-        LocalBroadcastManager.getInstance(_context).registerReceiver(
-        		new BroadcastReceiver() {
-        	        @Override
-        	        public void onReceive(Context context, Intent intent) {
-        	            if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
-        	            	// Locked because of timeout
-        	            	if (initialized && cacheWord.getCachedSecrets() == null)
-        	            		SocialReader.this.onCacheWordLocked();
-        	            }
-        	            }
-        	        },
-                new IntentFilter(Constants.INTENT_NEW_SECRETS));
-	}	
+		LocalBroadcastManager.getInstance(_context).registerReceiver(
+				new BroadcastReceiver() {
+			        @Override
+			        public void onReceive(Context context, Intent intent) {
+			            if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
+			            	// Locked because of timeout
+			            	if (initialized && cacheWord.getCachedSecrets() == null)
+			            		SocialReader.this.onCacheWordLocked();
+			            }
+			        }
+			    }, new IntentFilter(Constants.INTENT_NEW_SECRETS));
+		}
 	
     private static SocialReader socialReader = null;
     public static SocialReader getInstance(Context _context) {
@@ -210,6 +218,7 @@ public class SocialReader implements ICacheWordSubscriber
     				
     	        	checkOPML();
     				backgroundSyncSubscribedFeeds();
+    				checkMediaDownloadQueue();
     			} else {
     				if (LOGGING)
     					Log.v(LOGTAG, "App in background and sync frequency not set to background");
@@ -414,7 +423,7 @@ public class SocialReader implements ICacheWordSubscriber
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
-									newFeed.setSubscribed(true);
+									newFeed.setSubscribed(outlineElement.subscribe);
 									databaseAdapter.addOrUpdateFeed(newFeed);
 									if (LOGGING)
 										Log.v(LOGTAG,"May have added feed");
@@ -428,6 +437,11 @@ public class SocialReader implements ICacheWordSubscriber
 					}
 				);
 		}
+	}
+	
+	public void feedSubscriptionsChanged() {
+		clearMediaDownloadQueue();
+		checkMediaDownloadQueue();
 	}
 	
 	private void expireOldContent() {
@@ -526,7 +540,7 @@ public class SocialReader implements ICacheWordSubscriber
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
-									newFeed.setSubscribed(true);
+									newFeed.setSubscribed(outlineElement.subscribe);
 									databaseAdapter.addOrUpdateFeed(newFeed);
 								}
 							} else {
@@ -793,7 +807,71 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "Can't sync feeds, cacheword locked");
 		}
 	}
+	
+	public void clearMediaDownloadQueue() {
+		if (LOGGING) 
+			Log.v(LOGTAG, "clearMediaDownloadQueue");		
+		
+		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
+				settings.syncMode() != Settings.SyncMode.BitWise
+				&& syncService != null) {
+				
+			syncService.clearSyncList();
+			backgroundSyncSubscribedFeeds();
+		}
+		
+	}	
 
+	public void checkMediaDownloadQueue() {
+		if (LOGGING) 
+			Log.v(LOGTAG, "checkMediaDownloadQueue");		
+		
+		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
+				settings.syncMode() != Settings.SyncMode.BitWise
+				&& syncService != null) {
+				
+			int numWaiting = syncService.getNumWaitingToSync();
+			
+			if (LOGGING) 
+				Log.v(LOGTAG, "Num Waiting TO Sync: " + numWaiting);
+			
+			if (numWaiting > 0) {
+				// Send a no-op to get any going that should be going
+				
+			} else {
+				
+				// Check database for new items to sync
+				if (databaseAdapter != null && databaseAdapter.databaseReady())
+				{
+					// Delete over limit media
+					int numDeleted = databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
+					Log.v(LOGTAG,"Deleted " + numDeleted + " over limit media items");
+					
+					long mediaFileSize = databaseAdapter.mediaFileSize();
+					Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
+					
+					if (mediaFileSize < mediaCacheSizeLimitInBytes) {
+						
+						ArrayList<Item> itemsToDownload = databaseAdapter.getItemsWithMediaNotDownloaded(MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION);
+	
+						for (Item item : itemsToDownload)
+						{
+							ArrayList<MediaContent> mc = item.getMediaContent();
+							for (MediaContent m : mc) {
+								
+								if (LOGGING)
+									Log.v(LOGTAG, "Adding to sync " + m.getUrl());
+								
+								syncService.addMediaContentSyncTask(m);
+							}
+						}
+					}
+				}	
+			}
+		}
+		
+	}
+	
 	public boolean manualSyncInProgress() {
 		return requestPending;
 	}
@@ -1019,24 +1097,71 @@ public class SocialReader implements ICacheWordSubscriber
 			Log.v(LOGTAG,"databaseAdapter initialized");
 	}
 
-	private java.io.File getNonVirtualFileSystemDir()
-	{
-		java.io.File filesDir;
+	private boolean testExternalStorage(java.io.File dirToTest) {
+		if (LOGGING) 
+			Log.v(LOGTAG, "testExternalStorage: " + dirToTest);
+		if (dirToTest.exists() && dirToTest.isDirectory()) {
+			try {
+				java.io.File.createTempFile("test", null, dirToTest);
+				
+				if (LOGGING) 
+					Log.v(LOGTAG, "testExternalStorage: " + dirToTest + " is good");
 
-		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
-		{
-			filesDir = new java.io.File(applicationContext.getExternalFilesDir(null), FILES_DIR_NAME + File.separator);
-			if (!filesDir.exists())
-			{
-				filesDir.mkdirs();
+				return true;
+			} catch (IOException ioe) {
+				
+				if (LOGGING) 
+					Log.v(LOGTAG, "testExternalStorage: " + dirToTest + " is NOT good");
+				
+				return false;
 			}
 		}
-		else
-		{
-			filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+		
+		if (LOGGING) 
+			Log.v(LOGTAG, "testExternalStorage: " + dirToTest + " is NOT good");
+		
+		return false;
+	}
+		
+	private java.io.File getNonVirtualFileSystemDir()
+	{
+		java.io.File filesDir = null;
+
+		boolean done = false;
+		for (int p = 0; p < EXTERNAL_STORAGE_POSSIBLE_LOCATIONS.length; p++) {
+			if (testExternalStorage(new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p]))) {
+				filesDir = new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p] + "/" + FILES_DIR_NAME);
+				if (!filesDir.exists())
+				{
+					filesDir.mkdirs();
+				}
+				done = true;
+				break;
+			}					
 		}
 		
-		filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+		if (!done) {
+			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+			{
+				if (LOGGING) 
+					Log.v(LOGTAG,"sdcard mounted");
+				
+				filesDir = applicationContext.getExternalFilesDir(null);
+				if (!filesDir.exists())
+				{
+					filesDir.mkdirs();
+				}
+				
+				if (LOGGING) 
+					Log.v(LOGTAG,"filesDir:" + filesDir.getAbsolutePath());
+
+			}
+			else
+			{
+				filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+			}
+		}
+	
 		return filesDir;
 	}
 	
@@ -1058,7 +1183,10 @@ public class SocialReader implements ICacheWordSubscriber
 
 		java.io.File filesDir = getNonVirtualFileSystemDir();
 
-		ioCipherFilePath = filesDir + IOCIPHER_FILE_NAME;
+		ioCipherFilePath = filesDir.getAbsolutePath() + "/" + IOCIPHER_FILE_NAME;
+		
+		if (LOGGING)
+			Log.v(LOGTAG, "Creating ioCipher at: " + ioCipherFilePath);
 		
 		IOCipherMountHelper ioHelper = new IOCipherMountHelper(cacheWord);
 		try {
@@ -1115,10 +1243,26 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 
 		// Delete all possible locations
+		
+		// This will use the removeable external if it is there
+		// otherwise it will return the external sd card
+		// otherwise it will do internal
+		java.io.File possibleDir = getNonVirtualFileSystemDir();
+		if (possibleDir.exists()) {
+			java.io.File[] possibleDirFiles = possibleDir.listFiles();
+			for (int i = 0; i < possibleDirFiles.length; i++)
+			{
+				possibleDirFiles[i].delete();
+			}
+			possibleDir.delete();	
+		}
+		
+		// This is a backup, just in case they have a removable sd card inserted but also have
+		// files on normal storage
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 		{
 			// getExternalFilesDir() These persist
-			java.io.File externalFilesDir = new java.io.File(applicationContext.getExternalFilesDir(null), FILES_DIR_NAME + "/");
+			java.io.File externalFilesDir = applicationContext.getExternalFilesDir(null);
 			if (externalFilesDir.exists())
 			{
 				java.io.File[] externalFiles = externalFilesDir.listFiles();
@@ -1130,6 +1274,7 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 		}
 
+		// Final backup, remove from internal storage
 		java.io.File internalDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
 		java.io.File[] internalFiles = internalDir.listFiles();
 		for (int i = 0; i < internalFiles.length; i++)
@@ -1271,6 +1416,42 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	public void addToItemViewCount(Item item) {
+		
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			// Pass in the item that will be marked as a favorite
+			// Take a boolean so we can "unmark" a favorite as well.
+			item.incrementViewCount();
+			setItemData(item);
+		}
+		else
+		{
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready: addToItemViewCount");
+		}		
+	}
+	
+	public void setMediaContentDownloaded(MediaContent mc) {
+		mc.setDownloaded(true);
+		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
+			databaseAdapter.updateItemMedia(mc);
+			//databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
+		}
+	}
+	
+	public void unsetMediaContentDownloaded(MediaContent mc) {
+		if (LOGGING)
+			Log.v(LOGTAG, "unsetMediaContentDownloaded");
+		mc.setDownloaded(false);
+		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
+			databaseAdapter.updateItemMedia(mc);
+		} else {
+			if (LOGGING)	
+				Log.v(LOGTAG, "Can't update database, not ready");
+		}
+	}
+	
 	public long setItemData(Item item)
 	{
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
@@ -1353,13 +1534,30 @@ public class SocialReader implements ICacheWordSubscriber
 
 	public void backgroundDownloadFeedItemMedia(Feed feed)
 	{
+		int count = 0;
 		feed = getFeed(feed);
 		for (Item item : feed.getItems())
 		{
-			backgroundDownloadItemMedia(item);
+			if (count >= MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION) {
+				
+				if (LOGGING)
+					Log.v(LOGTAG, "!!! " + count + " above limit of " + MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION);
+				
+				break;
+			}
+			
+//			} else {
+				
+				if (LOGGING)
+					Log.v(LOGTAG, "Adding " + count + " media item to background feed download");
+				
+				backgroundDownloadItemMedia(item);
+				count++;
+//			}
 		}
 	}
-
+	
+	
 	public void backgroundDownloadItemMedia(Item item)
 	{
 		if (settings.syncMode() != Settings.SyncMode.BitWise) {
@@ -1798,7 +1996,50 @@ public class SocialReader implements ICacheWordSubscriber
 			return false;
 		}
 	}
+	
+	public void deleteMediaContentFile(final int mediaContentDatabaseId) {
+		final File possibleFile = new File(getFileSystemDir(), MEDIA_CONTENT_FILE_PREFIX + mediaContentDatabaseId);
+		if (possibleFile.exists())
+		{
+			new Thread() {
+				public void run() {
+					if (possibleFile.delete()) {
 
+						if (LOGGING)
+							Log.v(LOGTAG, "Deleted: " + possibleFile.getAbsolutePath());
+
+						// Update the database
+						MediaContent mc = databaseAdapter.getMediaContentById(mediaContentDatabaseId);
+						unsetMediaContentDownloaded(mc);
+
+					} else {
+						if (LOGGING) 
+							Log.v(LOGTAG, "NOT DELETED " + possibleFile.getAbsolutePath());
+					}
+				}				
+			}.start();
+		}		
+	}
+
+	/*
+	public long sizeOfMediaContent() {
+		long totalSize = 0;
+		String[] possibleMediaFiles = getFileSystemDir().list();
+		for (int i = 0; i < possibleMediaFiles.length; i++) {
+			if (possibleMediaFiles[i].contains(MEDIA_CONTENT_FILE_PREFIX)) {
+				totalSize += new File(possibleMediaFiles[i]).length();
+			}
+		}
+		return totalSize;
+	}
+	
+	public void checkMediaContent() {
+		while (sizeOfMediaContent() > mediaCacheSize * 1024 * 1024) {
+			
+		}
+	}
+	*/
+	
 	public File vfsTempItemBundle() {
 		File tempContentFile = new File(getVFSSharingDir(), CONTENT_BUNDLE_FILE_PREFIX + System.currentTimeMillis() + Item.DEFAULT_DATABASE_ID + "." + SocialReader.CONTENT_SHARING_EXTENSION);
 		return tempContentFile;

@@ -29,6 +29,7 @@ public class Item extends FeedEntity implements Serializable
 	// Item fields for us
 	private boolean _favorite = false;
 	private boolean _shared = false;
+	private int _viewCount = 0;
 	private long _databaseId = DEFAULT_DATABASE_ID;
 	private long _feedId;
 	
@@ -504,5 +505,17 @@ public class Item extends FeedEntity implements Serializable
 	public String toString()
 	{
 		return (getTitle());
+	}
+	
+	public void setViewCount(int viewCount) {
+		_viewCount = viewCount;
+	}
+	
+	public void incrementViewCount() {
+		_viewCount++;
+	}
+	
+	public int getViewCount() {
+		return _viewCount;
 	}
 }

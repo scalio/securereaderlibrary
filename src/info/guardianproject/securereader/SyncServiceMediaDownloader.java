@@ -164,10 +164,16 @@ public class SyncServiceMediaDownloader implements Runnable
 							inputStream.close();
 							bos.close();
 							entity.consumeContent();
+							
+							mediaContent.setFileSize(size);
+							mediaContent.setDownloaded(true);
 						}
 					}
 				}
-				SocialReader.getInstance(syncService.getApplicationContext()).getStoreBitmapDimensions(mediaContent);
+				SocialReader sr = SocialReader.getInstance(syncService.getApplicationContext());
+				// Should make sure this an image before calling getStoreBitmapDimensions
+				sr.getStoreBitmapDimensions(mediaContent);
+				sr.setMediaContentDownloaded(mediaContent);
 			}
 			catch (ClientProtocolException e)
 			{
