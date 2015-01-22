@@ -188,7 +188,7 @@ public class OPMLParser {
 	        	currentOutline.text = atts.getValue(TEXT_ATTRIBUTE);
 	        	currentOutline.htmlUrl = atts.getValue(HTMLURL_ATTRIBUTE);
 	        	currentOutline.xmlUrl = atts.getValue(XMLURL_ATTRIBUTE);
-	        	if (atts.getValue(SUBSCRIBE_ATTRIBUTE) != null && atts.getValue(SUBSCRIBE_ATTRIBUTE).equals("true")) {
+	        	if (atts.getValue(SUBSCRIBE_ATTRIBUTE) == null || atts.getValue(SUBSCRIBE_ATTRIBUTE).equals("true")) {
 	        		currentOutline.subscribe = true;
 	        	}
 	        	
