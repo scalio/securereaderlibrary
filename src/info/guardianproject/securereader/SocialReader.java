@@ -1263,7 +1263,7 @@ public class SocialReader implements ICacheWordSubscriber
 		{
 			// getExternalFilesDir() These persist
 			java.io.File externalFilesDir = applicationContext.getExternalFilesDir(null);
-			if (externalFilesDir.exists())
+			if (externalFilesDir != null && externalFilesDir.exists())
 			{
 				java.io.File[] externalFiles = externalFilesDir.listFiles();
 				for (int i = 0; i < externalFiles.length; i++)
