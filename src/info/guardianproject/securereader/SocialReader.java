@@ -127,7 +127,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int opmlCheckFrequency;
 	public final String opmlUrl;
 	
-	public static final int TIMER_PERIOD = 60000;  // 1 minute 
+	public static final int TIMER_PERIOD = 30000;  // 30 seconds 
 	
 	public final int itemLimit;
 	public final int mediaCacheSize;
@@ -829,6 +829,9 @@ public class SocialReader implements ICacheWordSubscriber
 		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
 				settings.syncMode() != Settings.SyncMode.BitWise
 				&& syncService != null) {
+			
+			if (LOGGING) 
+				Log.v(LOGTAG, "In right state, definitely checkMediaDownloadQueue");
 				
 			int numWaiting = syncService.getNumWaitingToSync();
 			
@@ -836,7 +839,7 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "Num Waiting TO Sync: " + numWaiting);
 			
 			if (numWaiting > 0) {
-				// Send a no-op to get any going that should be going
+				// Send a no-op to get any going that should be going?
 				
 			} else {
 				
