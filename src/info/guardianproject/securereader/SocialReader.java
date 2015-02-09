@@ -127,7 +127,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int opmlCheckFrequency;
 	public final String opmlUrl;
 	
-	public static final int TIMER_PERIOD = 60000;  // 1 minute 
+	public static final int TIMER_PERIOD = 30000;  // 30 seconds 
 	
 	public final int itemLimit;
 	public final int mediaCacheSize;
@@ -497,6 +497,7 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG,"Not already loaded from network, attempting to check");
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
+						
 			if (lang == UiLanguage.Farsi) {
 				finalOpmlUrl = finalOpmlUrl + "fa_IR";
 			} else if (lang == UiLanguage.English) {
@@ -509,7 +510,15 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl = finalOpmlUrl + "ru_RU";
 			} else if (lang == UiLanguage.Ukrainian) {
 				finalOpmlUrl = finalOpmlUrl + "uk_UA";
-			} 
+			} else if (lang == UiLanguage.Spanish) {
+				finalOpmlUrl = finalOpmlUrl + "es";
+			} else if (lang == UiLanguage.Japanese) {
+				finalOpmlUrl = finalOpmlUrl + "ja";
+			} else if (lang == UiLanguage.Norwegian) {
+				finalOpmlUrl = finalOpmlUrl + "nb";
+			} else if (lang == UiLanguage.Turkish) {
+				finalOpmlUrl = finalOpmlUrl + "tr";
+			}
 			
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
@@ -820,6 +829,9 @@ public class SocialReader implements ICacheWordSubscriber
 		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
 				settings.syncMode() != Settings.SyncMode.BitWise
 				&& syncService != null) {
+			
+			if (LOGGING) 
+				Log.v(LOGTAG, "In right state, definitely checkMediaDownloadQueue");
 				
 			int numWaiting = syncService.getNumWaitingToSync();
 			
@@ -827,7 +839,7 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "Num Waiting TO Sync: " + numWaiting);
 			
 			if (numWaiting > 0) {
-				// Send a no-op to get any going that should be going
+				// Send a no-op to get any going that should be going?
 				
 			} else {
 				
@@ -1257,7 +1269,7 @@ public class SocialReader implements ICacheWordSubscriber
 		{
 			// getExternalFilesDir() These persist
 			java.io.File externalFilesDir = applicationContext.getExternalFilesDir(null);
-			if (externalFilesDir.exists())
+			if (externalFilesDir != null && externalFilesDir.exists())
 			{
 				java.io.File[] externalFiles = externalFilesDir.listFiles();
 				for (int i = 0; i < externalFiles.length; i++)

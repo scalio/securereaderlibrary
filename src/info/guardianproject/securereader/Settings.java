@@ -392,7 +392,8 @@ public class Settings
 
 	public enum UiLanguage
 	{
-		English, Farsi, Tibetan, Chinese, Ukrainian, Russian
+		English, Chinese, Japanese, Norwegian, Spanish, Tibetan, Turkish, Russian, Ukrainian, Farsi
+		//Italian, Swedish, Dutch, Arabic, German, Korean, Brazilian Portuguese
 	}
 
 	/**
@@ -409,10 +410,19 @@ public class Settings
 		
 		// Is default system language arabic?
 		String defaultLanguage = Locale.getDefault().getLanguage();
+		
 		if (defaultLanguage.equals("ar"))
 			return UiLanguage.Farsi;
 		else if (defaultLanguage.equals("bo"))
 			return UiLanguage.Tibetan;
+		else if (defaultLanguage.equals("es"))
+			return UiLanguage.Spanish;
+		else if (defaultLanguage.equals("ja"))
+			return UiLanguage.Japanese;
+		else if (defaultLanguage.equals("nb"))
+			return UiLanguage.Norwegian;
+		else if (defaultLanguage.equals("tr"))
+			return UiLanguage.Turkish;
 		else if (defaultLanguage.equals("zh"))
 			return UiLanguage.Chinese;
 		else if (defaultLanguage.equals("uk"))
