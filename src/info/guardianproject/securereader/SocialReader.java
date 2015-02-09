@@ -1149,6 +1149,9 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 			else
 			{
+				if (LOGGING) 
+					Log.v(LOGTAG,"on internal storage");
+				
 				filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
 			}
 		}
