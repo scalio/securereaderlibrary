@@ -176,6 +176,14 @@ public class SyncService extends Service {
     
     //public void addFeedSyncTask(Feed feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback) {
     public void addFeedSyncTask(Feed feed) {
+    	for (int i = 0; i < syncList.size(); i++) {
+    		Feed feedTask = syncList.get(i).feed;
+    		if (feedTask != null && feed.getDatabaseId() == feed.getDatabaseId()) {
+        		if (LOGGING)
+        			Log.v(LOGTAG,"Feed already in queue, ignoring");
+    			return;
+    		}
+    	}
     	//SyncTask newSyncTask = new SyncTask(feed,callback);
     	SyncTask newSyncTask = new SyncTask(feed);
     	syncList.add(newSyncTask);
@@ -190,6 +198,8 @@ public class SyncService extends Service {
     		syncList.remove(_syncTask);
     	} else if (_syncTask.status == SyncTask.ERROR) {
     		syncList.remove(_syncTask);
+    	} else if (_syncTask.status == SyncTask.CANCELLED) {
+      		syncList.remove(_syncTask);  		
     	}
     	
     	boolean startNewTask = true;
@@ -214,6 +224,14 @@ public class SyncService extends Service {
     }
     
     public void addMediaContentSyncTask(MediaContent mediaContent) {
+    	for (int i = 0; i < syncList.size(); i++) {
+    		MediaContent mediaTask = syncList.get(i).mediaContent;
+    		if (mediaTask != null && mediaTask.getDatabaseId() == mediaContent.getDatabaseId()) {
+        		if (LOGGING)
+        			Log.v(LOGTAG,"MediaContent already in queue, ignoring");
+    			return;
+    		}
+    	}
     	SyncTask newSyncTask = new SyncTask(mediaContent);
     	syncList.add(newSyncTask);
     	newSyncTask.updateStatus(SyncTask.QUEUED);
@@ -222,14 +240,31 @@ public class SyncService extends Service {
     }
     
     public void addMediaContentSyncTaskToFront(MediaContent mediaContent) {
-    	SyncTask newSyncTask = new SyncTask(mediaContent);
-    	newSyncTask.updateStatus(SyncTask.QUEUED);
-    	if (LOGGING) {
-    		Log.v(LOGTAG, "addMediaContentSyncTaskToFront " + mediaContent.getUrl());
+    	boolean addTask = true;
+    	for (int i = 0; i < syncList.size(); i++) {
+    		MediaContent mediaTask = syncList.get(i).mediaContent;
+    		if (mediaTask != null && mediaTask.getDatabaseId() == mediaContent.getDatabaseId()) {
+    			if (syncList.get(i).status == SyncTask.QUEUED)
+    				syncList.get(i).status = SyncTask.CANCELLED;
+    			else if (syncList.get(i).status == SyncTask.STARTED)
+    				addTask = false;
+        		if (LOGGING)
+        			Log.v(LOGTAG,"MediaContent already in queue");
+    			break;
+    		}
     	}
-    	syncList.add(0, newSyncTask);
+
+    	if (addTask)
+    	{
+    		SyncTask newSyncTask = new SyncTask(mediaContent);
+    		newSyncTask.updateStatus(SyncTask.QUEUED);
+    		if (LOGGING) {
+    			Log.v(LOGTAG, "addMediaContentSyncTaskToFront " + mediaContent.getUrl());
+    		}
+    		syncList.add(0, newSyncTask);
     	
-		syncServiceEvent(newSyncTask);    	
+    		syncServiceEvent(newSyncTask);    
+    	}
     }
     
     public void clearSyncList() {
