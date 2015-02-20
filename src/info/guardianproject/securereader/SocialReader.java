@@ -39,6 +39,8 @@ import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -51,10 +53,12 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.StatFs;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -1126,22 +1130,53 @@ public class SocialReader implements ICacheWordSubscriber
 		return false;
 	}
 		
+	@SuppressLint("NewApi")
 	private java.io.File getNonVirtualFileSystemDir()
 	{
 		java.io.File filesDir = null;
 
 		boolean done = false;
-		for (int p = 0; p < EXTERNAL_STORAGE_POSSIBLE_LOCATIONS.length; p++) {
-			if (testExternalStorage(new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p]))) {
-				filesDir = new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p] + "/" + FILES_DIR_NAME);
-				if (!filesDir.exists())
-				{
-					filesDir.mkdirs();
+	    
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			if (LOGGING) {
+				Log.v(LOGTAG, "Running on KITKAT or greater");
+			}
+			java.io.File[] possibleLocations = applicationContext.getExternalFilesDirs(null);
+			long largestSize = 0;
+			for (int l = 0; l < possibleLocations.length; l++) {
+				long curSize = new StatFs(possibleLocations[l].getAbsolutePath()).getTotalBytes();
+				if (LOGGING) {
+					Log.v(LOGTAG, "Checking " + possibleLocations[l].getAbsolutePath() + " size: " + curSize);
 				}
-				done = true;
-				break;
-			}					
-		}
+				if (curSize > largestSize) {
+					largestSize = curSize;
+					filesDir = possibleLocations[l];
+					done = true;
+					
+					if (LOGGING) {
+						Log.v(LOGTAG, "using it");
+					}
+				}
+			}
+		} else {
+			if (LOGGING) {
+				Log.v(LOGTAG, "Below kitkat, checking other SDCard Locations");
+			}
+			
+			for (int p = 0; p < EXTERNAL_STORAGE_POSSIBLE_LOCATIONS.length; p++) {
+				if (testExternalStorage(new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p]))) {
+					filesDir = new java.io.File(EXTERNAL_STORAGE_POSSIBLE_LOCATIONS[p] + "/" + FILES_DIR_NAME);
+					if (!filesDir.exists())
+					{
+						filesDir.mkdirs();
+					}
+					done = true;
+					break;
+				}					
+			}	    	
+	    }
+	    
+
 		
 		if (!done) {
 			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
