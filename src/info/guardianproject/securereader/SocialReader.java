@@ -1144,17 +1144,19 @@ public class SocialReader implements ICacheWordSubscriber
 			java.io.File[] possibleLocations = applicationContext.getExternalFilesDirs(null);
 			long largestSize = 0;
 			for (int l = 0; l < possibleLocations.length; l++) {
-				long curSize = new StatFs(possibleLocations[l].getAbsolutePath()).getTotalBytes();
-				if (LOGGING) {
-					Log.v(LOGTAG, "Checking " + possibleLocations[l].getAbsolutePath() + " size: " + curSize);
-				}
-				if (curSize > largestSize) {
-					largestSize = curSize;
-					filesDir = possibleLocations[l];
-					done = true;
-					
+				if (possibleLocations[l] != null && possibleLocations[l].getAbsolutePath() != null) {	
+					long curSize = new StatFs(possibleLocations[l].getAbsolutePath()).getTotalBytes();
 					if (LOGGING) {
-						Log.v(LOGTAG, "using it");
+						Log.v(LOGTAG, "Checking " + possibleLocations[l].getAbsolutePath() + " size: " + curSize);
+					}
+					if (curSize > largestSize) {
+						largestSize = curSize;
+						filesDir = possibleLocations[l];
+						done = true;
+						
+						if (LOGGING) {
+							Log.v(LOGTAG, "using it");
+						}
 					}
 				}
 			}
