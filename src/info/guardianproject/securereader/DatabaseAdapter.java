@@ -42,6 +42,7 @@ public class DatabaseAdapter
 		SQLiteDatabase.loadLibs(_context);
 		this.databaseHelper = new DatabaseHelper(cacheword, _context);
 		open();
+		//dumpDatabase();
 	}
 
 	public void close()
@@ -2145,20 +2146,13 @@ public class DatabaseAdapter
 		}
 		
 		ArrayList<Item> items = new ArrayList<Item>();
-		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), true, mediaMimeType, randomize, limit));
-		// If not enough downloaded songs, add more that are not loaded yet
-		if (items.size() < limit)
-			items.addAll(getFeedItemsWithMediaTagsInternal(feeds, requiredTags, ignoredTags, requiredTags.size(), false, mediaMimeType, randomize, limit - items.size()));
-		// Fallback - try to add a random downloaded song from ANY feed.
+		items.addAll(getFeedItemsWithMediaTagsInternal(feeds, ignoredTags, mediaMimeType));
 		if (items.size() == 0)
-			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, true, mediaMimeType, randomize, 1));
-		// Fallback 2 - try to add a random song from ANY feed.
-		if (items.size() == 0)
-			items.addAll(getFeedItemsWithMediaTagsInternal(null, null, ignoredTags, 0, false, mediaMimeType, randomize, 1));
+			items.addAll(getFallbackItems(feeds, ignoredTags, mediaMimeType));
 		return items;
 	}
 
-	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> tags, ArrayList<String> ignoredTags, int tagMatchCount, boolean downloaded, String mediaMimeType, boolean randomize, int limit) {
+	public ArrayList<Item> getFeedItemsWithMediaTagsInternal(ArrayList<Feed> feeds, ArrayList<String> ignoredTags, String mediaMimeType) {
 		ArrayList<Item> items = new ArrayList<Item>();
 		
 		Cursor queryCursor = null;
@@ -2177,21 +2171,6 @@ public class DatabaseAdapter
 				}
 			}
 			
-			String requiredTagsSubquery = "";
-			String requiredTagsSubqueryMatch = "";
-			if (tags != null && tags.size() > 0)
-			{
-				StringBuilder s = new StringBuilder();
-				for (int i = 0; i < tags.size(); i++) 
-				{
-					if (s.length() != 0)
-						s.append(",");
-					s.append("'" + tags.get(i) + "'");
-				}				
-				requiredTagsSubquery = " AND t.tag IN (" + s.toString() + ")";
-				requiredTagsSubqueryMatch = " HAVING COUNT(t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + ") >= " + tagMatchCount;
-			}
-		
 			String ignoredTagsSubquery = "";
 			if (ignoredTags != null && ignoredTags.size() > 0)
 			{
@@ -2202,41 +2181,28 @@ public class DatabaseAdapter
 						s.append(",");
 					s.append("'" + ignoredTags.get(i) + "'");
 				}				
-				ignoredTagsSubquery = " AND t.tag NOT IN (" + s.toString() + ")";
+				ignoredTagsSubquery = s.toString();
 			}
-			
-			String query = "SELECT *, RANDOM() AS 'rand' FROM (SELECT t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + " FROM "
-					+ DatabaseHelper.ITEM_TAGS_TABLE + " t,"
-					+ DatabaseHelper.ITEMS_TABLE + " i,"
-					+ DatabaseHelper.ITEM_MEDIA_TABLE + " m"
-					+ " WHERE "
-					+ ((feedsArray != null) ? (" i." + DatabaseHelper.ITEMS_TABLE_FEED_ID + " IN (" + feedsArray.toString() + ")") : "1=1")
-					+ requiredTagsSubquery
-					+ ignoredTagsSubquery
-					+ " AND t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
-					+ " AND m." + DatabaseHelper.ITEM_MEDIA_ITEM_ID + "=i." + DatabaseHelper.ITEMS_TABLE_COLUMN_ID
-					+ " AND m." + DatabaseHelper.ITEM_MEDIA_DOWNLOADED + " = ?"
-					+ " AND m." + DatabaseHelper.ITEM_MEDIA_TYPE + " LIKE ?"
-					+ " GROUP BY t." + DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID
-					+ requiredTagsSubqueryMatch
-					+ " ORDER BY i." + DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + " ASC";
-				
-			query = query + " limit " + limit + ")";
-			if (randomize) {
-				 query = query + " order by rand;";
-			}
-			else {
-				query = query + " order by "+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
-			}
-			
-			if (LOGGING)
-				Log.v(LOGTAG,query);
 			
 			if (databaseReady()) {
 				ArrayList<String> queryParams = new ArrayList<String>();
-				queryParams.add(downloaded ? "1" : "0");
-				queryParams.add("%"+mediaMimeType+"%");
-				queryCursor = db.rawQuery(query, queryParams.toArray(new String[0]));
+				
+				db.execSQL("CREATE TEMP TABLE IF NOT EXISTS filtered_items AS"
+						+ " SELECT * FROM items WHERE item_id NOT IN (SELECT item_id FROM item_tags WHERE tag IN ("+ ignoredTagsSubquery + "));");
+				db.execSQL(" CREATE TEMP TABLE IF NOT EXISTS playable_items AS"
+						+ " SELECT * FROM"
+						+ " (SELECT i.* FROM filtered_items i JOIN item_media m ON i.item_id = m.item_media_item_id WHERE"
+						+ " i.item_feed_id IN (" + feedsArray.toString() + ") AND" 
+						+ " m.item_media_downloaded = 1 AND"
+						+ " i.item_favorite = 0 AND"
+						+ " m.item_media_type LIKE \"%" + mediaMimeType + "%\" ORDER BY RANDOM())"
+						+ " ORDER BY item_viewcount ASC;");
+				db.execSQL(" CREATE TEMP TABLE IF NOT EXISTS playable_favs AS"
+						+ " SELECT * FROM items WHERE item_favorite = 1 ORDER BY RANDOM() LIMIT MAX(1, 1 + (SELECT COUNT(*) FROM playable_items) / 10);");
+				db.execSQL(" CREATE TEMP TABLE IF NOT EXISTS playlist AS"
+						+ " SELECT * FROM (SELECT *, 2 * rowid AS 'sorting' FROM playable_items) UNION SELECT * FROM (SELECT *, 1 + (2 * ABS(RANDOM() % (SELECT 1 + COUNT(*) FROM playable_items))) FROM playable_favs);");
+				
+				queryCursor = db.rawQuery("SELECT * FROM playlist ORDER BY sorting, RANDOM();", queryParams.toArray(new String[0]));
 				
 				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
 		
@@ -2257,6 +2223,11 @@ public class DatabaseAdapter
 				}
 			
 				queryCursor.close();
+				
+				db.execSQL("DROP TABLE IF EXISTS playlist");
+				db.execSQL("DROP TABLE IF EXISTS playable_favs");
+				db.execSQL("DROP TABLE IF EXISTS playable_items");
+				db.execSQL("DROP TABLE IF EXISTS filtered_items");
 			}
 		} catch (SQLException e) {
 			if (LOGGING) 
@@ -2275,6 +2246,115 @@ public class DatabaseAdapter
 		}
 		return items;		
 	}
+	
+	public ArrayList<Item> getFallbackItems(ArrayList<Feed> feeds, ArrayList<String> ignoredTags, String mediaMimeType) {
+		ArrayList<Item> items = new ArrayList<Item>();
+		
+		Cursor queryCursor = null;
+
+		try {
+
+			StringBuilder feedsArray = null;
+			if (feeds != null && feeds.size() > 0)
+			{
+				feedsArray = new StringBuilder();
+				for (int a = 0; a < feeds.size(); a++) 
+				{
+					if (feedsArray.length() != 0)
+						feedsArray.append(",");
+					feedsArray.append("'" + feeds.get(a).getDatabaseId() + "'");
+				}
+			}
+			
+			String ignoredTagsSubquery = "";
+			if (ignoredTags != null && ignoredTags.size() > 0)
+			{
+				StringBuilder s = new StringBuilder();
+				for (int i = 0; i < ignoredTags.size(); i++) 
+				{
+					if (s.length() != 0)
+						s.append(",");
+					s.append("'" + ignoredTags.get(i) + "'");
+				}				
+				ignoredTagsSubquery = s.toString();
+			}
+			
+			if (databaseReady()) {	
+				ArrayList<String> queryParams = new ArrayList<String>();
+				
+				db.execSQL("CREATE TEMP TABLE IF NOT EXISTS filtered_items AS"
+						+ " SELECT * FROM items WHERE item_id NOT IN (SELECT item_id FROM item_tags WHERE tag IN ("+ ignoredTagsSubquery + "));");
+				
+				queryCursor = db.rawQuery("SELECT * FROM"
+						+ " (SELECT i.*,m.item_media_downloaded AS 'sorting' FROM filtered_items i JOIN item_media m ON i.item_id = m.item_media_item_id WHERE"
+						+ " m.item_media_downloaded = 1 AND"
+						+ " m.item_media_type LIKE \"%" + mediaMimeType + "%\" ORDER BY RANDOM() LIMIT 1)"
+						+ " UNION"
+						+ " SELECT * FROM"
+						+ " (SELECT i.*, m.item_media_downloaded AS 'sorting' FROM filtered_items i JOIN item_media m ON i.item_id = m.item_media_item_id WHERE"
+						+ " i.item_feed_id IN ("+ feedsArray.toString() +") AND" 
+						+ " m.item_media_downloaded = 0 AND"
+						+ " m.item_media_type LIKE \"%" + mediaMimeType + "%\" ORDER BY RANDOM() LIMIT 1)"
+						+ " ORDER BY sorting DESC"
+						+ " LIMIT 1;", queryParams.toArray(new String[0]));
+				
+				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_TAGS_TABLE_ITEM_ID);
+		
+				if (LOGGING)
+					Log.v(LOGTAG,"Got " + queryCursor.getCount() + " items");
+				
+				if (queryCursor.moveToFirst())
+				{
+					do {
+						int itemId = queryCursor.getInt(itemIdColumn);
+						Item item = this.getItemById(itemId);
+						items.add(item);
+					} while (queryCursor.moveToNext());
+						
+				} else {
+					if (LOGGING)
+						Log.v(LOGTAG,"Couldn't move to first");
+				}
+			
+				queryCursor.close();
+				
+				db.execSQL("DROP TABLE IF EXISTS filtered_items");
+			}
+		} catch (SQLException e) {
+			if (LOGGING) 
+				e.printStackTrace();
+		} 		
+		finally
+		{
+			if (queryCursor != null)
+			{
+				try
+				{
+					queryCursor.close();					
+				}
+				catch(Exception e) {}
+			}
+		}
+		return items;		
+	}
+
+
+//	public void dumpDatabase()
+//	{
+//		try {
+//			if (databaseReady()) {
+//				db.rawExecSQL("ATTACH DATABASE '/mnt/sdcard/dump.sqlite' AS plaintext KEY '';");
+//				db.rawExecSQL("SELECT sqlcipher_export('plaintext');");
+//				db.rawExecSQL("DETACH DATABASE plaintext;");
+//			}
+//		} catch (SQLException e) {
+//			if (LOGGING) 
+//				e.printStackTrace();
+//		} 		
+//		finally
+//		{
+//		}
+//	}
 
 	public ArrayList<Item> getItemsWithMediaNotDownloaded(int limit) {
 		ArrayList<Item> items = new ArrayList<Item>();
