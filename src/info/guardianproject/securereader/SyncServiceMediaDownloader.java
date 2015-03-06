@@ -2,7 +2,6 @@ package info.guardianproject.securereader;
 
 import info.guardianproject.onionkit.trust.StrongHttpsClient;
 import info.guardianproject.securereader.SyncService.SyncTask;
-
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileInputStream;
 import info.guardianproject.iocipher.FileOutputStream;
@@ -11,15 +10,21 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
+import javax.net.ssl.HttpsURLConnection;
+
+import android.net.Proxy;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -27,9 +32,17 @@ import ch.boye.httpclientandroidlib.HttpStatus;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
+import ch.boye.httpclientandroidlib.config.Registry;
+import ch.boye.httpclientandroidlib.config.RegistryBuilder;
 import ch.boye.httpclientandroidlib.conn.params.ConnRoutePNames;
+import ch.boye.httpclientandroidlib.conn.socket.ConnectionSocketFactory;
+import ch.boye.httpclientandroidlib.conn.socket.PlainConnectionSocketFactory;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.client.config.RequestConfig;
 
 import com.tinymission.rss.MediaContent;
+
 
 public class SyncServiceMediaDownloader implements Runnable
 {
@@ -74,7 +87,6 @@ public class SyncServiceMediaDownloader implements Runnable
 		out.close();
 	}
 
-
 	@Override
 	public void run() 
 	{		
@@ -85,20 +97,46 @@ public class SyncServiceMediaDownloader implements Runnable
 		InputStream inputStream = null;
 
 		MediaContent mediaContent = syncTask.mediaContent;
-		StrongHttpsClient httpClient = new StrongHttpsClient(syncService.getApplicationContext());
 
+		//StrongHttpsClient httpClient = new StrongHttpsClient(syncService.getApplicationContext());
+
+		// Replacement
+		HttpURLConnection connection = null;
+
+		/*
 		if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
 		{
 			httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-
+			
 			if (LOGGING)
 				Log.v(LOGTAG, "MediaDownloader: USE_TOR");
 		}
-
+		*/
+		
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
 		{
 			try
 			{
+
+			// Replacement
+			if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
+			{
+				java.net.Proxy proxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8118));
+				if (mediaContent.getUrl().startsWith("https")) {
+					connection = (HttpsURLConnection) new URL(mediaContent.getUrl()).openConnection(proxy);
+				} else {
+					connection = (HttpURLConnection) new URL(mediaContent.getUrl()).openConnection(proxy);
+				}
+			}
+			else {
+				if (mediaContent.getUrl().startsWith("https")) {
+					connection = (HttpsURLConnection) new URL(mediaContent.getUrl()).openConnection();
+				} else {
+					connection = (HttpURLConnection) new URL(mediaContent.getUrl()).openConnection();
+				}
+			}
+			// Replacement
+			
 				File possibleFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
 				if (possibleFile.exists())
 				{
@@ -121,9 +159,12 @@ public class SyncServiceMediaDownloader implements Runnable
 				}
 				else 
 				{
-					HttpGet httpGet = new HttpGet(mediaContent.getUrl());
-					HttpResponse response = httpClient.execute(httpGet);
+					
+					//HttpGet httpGet = new HttpGet(mediaContent.getUrl());
+					//HttpResponse response = httpClient.execute(httpGet);
+					inputStream = connection.getInputStream();
 
+					/*
 					int statusCode = response.getStatusLine().getStatusCode();
 					if (statusCode != HttpStatus.SC_OK)
 					{
@@ -144,12 +185,12 @@ public class SyncServiceMediaDownloader implements Runnable
 								if (LOGGING)
 									Log.v(LOGTAG, "MediaDownloader: " + mediaContent.getType().toString());
 							}
-							
+					*/
 							savedFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
 
 							BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(savedFile));
-							inputStream = entity.getContent();
-							long size = entity.getContentLength();
+					//		inputStream = entity.getContent();
+					//		long size = entity.getContentLength();
 
 							byte data[] = new byte[1024];
 							int count;
@@ -163,12 +204,13 @@ public class SyncServiceMediaDownloader implements Runnable
 
 							inputStream.close();
 							bos.close();
-							entity.consumeContent();
+					//		entity.consumeContent();
 							
-							mediaContent.setFileSize(size);
+					//		mediaContent.setFileSize(size);
+							mediaContent.setFileSize(savedFile.length());
 							mediaContent.setDownloaded(true);
-						}
-					}
+					//	}
+					//}
 				}
 				SocialReader sr = SocialReader.getInstance(syncService.getApplicationContext());
 				// Should make sure this an image before calling getStoreBitmapDimensions
