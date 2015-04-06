@@ -12,7 +12,7 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	public static boolean LOGGING = false;
 
 	public static final String DATABASE_NAME = "bigbuffalo.db";
-	public static final int DATABASE_VERSION = 1;
+	public static final int DATABASE_VERSION = 2;
 
 	public static final int POSTS_FEED_ID = -99;
 	public static final int DRAFTS_FEED_ID = -98;
@@ -158,6 +158,31 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	@Override
 	public void onUpgrade(SQLiteDatabase _sqliteDatabase, int oldVersion, int newVersion)
 	{
+		if (newVersion >= oldVersion && newVersion >= 2) {
+			// Moving from 1 to 2
 
+			String ITEMS_TABLE_ALTER_SQL = "alter table " + ITEMS_TABLE + " add column " + ITEMS_TABLE_VIEWCOUNT +  " integer default 0";
+			_sqliteDatabase.execSQL(ITEMS_TABLE_ALTER_SQL);
+
+			String RENAME_ITEMS_MEDIA_TABLE = "alter table " + ITEM_MEDIA_TABLE + " rename to " + ITEM_MEDIA_TABLE + "_old";
+			_sqliteDatabase.execSQL(RENAME_ITEMS_MEDIA_TABLE);
+			
+			_sqliteDatabase.execSQL(ITEMS_MEDIA_TABLE_CREATE_SQL);
+			
+			String populateTable = "insert into " + ITEM_MEDIA_TABLE + "(" + ITEM_MEDIA_TABLE_COLUMN_ID + ", " + ITEM_MEDIA_URL + ", " + ITEM_MEDIA_TYPE + ", " 
+									+ ITEM_MEDIA_MEDIUM + ", " + ITEM_MEDIA_HEIGHT + ", " + ITEM_MEDIA_WIDTH + ", "
+									+ ITEM_MEDIA_FILESIZE + ", " + ITEM_MEDIA_DURATION + ", " + ITEM_MEDIA_DEFAULT + ", " 
+									+ ITEM_MEDIA_EXPRESSION + ", " + ITEM_MEDIA_BITRATE + ", " + ITEM_MEDIA_FRAMERATE + ", " + ITEM_MEDIA_LANG + ", "
+									+ ITEM_MEDIA_SAMPLE_RATE + ") " +  
+									"select " + ITEM_MEDIA_TABLE_COLUMN_ID + ", " + ITEM_MEDIA_URL + ", " + ITEM_MEDIA_TYPE + ", " 
+									+ ITEM_MEDIA_MEDIUM + ", " + ITEM_MEDIA_HEIGHT + ", " + ITEM_MEDIA_WIDTH + ", "
+									+ ITEM_MEDIA_FILESIZE + ", " + ITEM_MEDIA_DURATION + ", " + ITEM_MEDIA_DEFAULT + ", " 
+									+ ITEM_MEDIA_EXPRESSION + ", " + ITEM_MEDIA_BITRATE + ", " + ITEM_MEDIA_FRAMERATE + ", " + ITEM_MEDIA_LANG + ", "
+									+ ITEM_MEDIA_SAMPLE_RATE + " from " + ITEM_MEDIA_TABLE + "_old";
+			_sqliteDatabase.execSQL(populateTable);
+			
+			String dropTable = "drop table " + ITEM_MEDIA_TABLE + "_old";
+			_sqliteDatabase.execSQL(dropTable);
+		}
 	}
 }
