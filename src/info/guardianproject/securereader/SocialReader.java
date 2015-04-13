@@ -11,7 +11,6 @@ package info.guardianproject.securereader;
 
 //import info.guardianproject.bigbuffalo.adapters.DownloadsAdapter;
 import info.guardianproject.cacheword.CacheWordHandler;
-import info.guardianproject.cacheword.CacheWordSettings;
 import info.guardianproject.cacheword.Constants;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 import info.guardianproject.cacheword.IOCipherMountHelper;
@@ -75,7 +74,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -140,7 +139,6 @@ public class SocialReader implements ICacheWordSubscriber
 	public Context applicationContext;
 	DatabaseAdapter databaseAdapter;
 	CacheWordHandler cacheWord;
-	CacheWordSettings cacheWordSettings;
 	public SecureSettings ssettings;
 	Settings settings;
 	SyncServiceConnection syncServiceConnection;
@@ -167,8 +165,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		this.settings = new Settings(applicationContext);
 		
-		this.cacheWordSettings = new CacheWordSettings(applicationContext);
-		this.cacheWord = new CacheWordHandler(applicationContext, this, cacheWordSettings);
+		this.cacheWord = new CacheWordHandler(applicationContext, this);
 		cacheWord.connectToService();
 		
 		this.oc = new OrbotHelper(applicationContext);
@@ -575,7 +572,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void setCacheWordTimeout(int minutes)
 	{
-		cacheWordSettings.setTimeoutSeconds(minutes*60);
+		cacheWord.setTimeout(minutes*60);
 	}
 	
 	public boolean isTorOnline() 
@@ -1793,7 +1790,7 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		*/
 		
-		cacheWord.manuallyLock();
+		cacheWord.lock();
 		cacheWord.deinitialize();
 		
 		
