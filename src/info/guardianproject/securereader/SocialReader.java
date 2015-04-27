@@ -2281,6 +2281,9 @@ public class SocialReader implements ICacheWordSubscriber
     public void onCacheWordOpened() {
     	if (LOGGING)
     		Log.v(LOGTAG,"onCacheWordOpened");
+    	
+		socialReader.setCacheWordTimeout(settings.passphraseTimeout());
+
         initialize();
     }
     
