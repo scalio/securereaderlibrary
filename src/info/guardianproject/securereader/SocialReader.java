@@ -576,7 +576,7 @@ public class SocialReader implements ICacheWordSubscriber
 			cacheWord.setTimeout(minutes*60);
 		} catch (IllegalStateException e) {
 			if (LOGGING)
-				Log.e(LOGTAG, e.getMessage);	
+				Log.e(LOGTAG, e.getMessage());	
 		}
 	}
 	
