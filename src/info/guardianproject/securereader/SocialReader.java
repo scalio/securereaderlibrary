@@ -572,7 +572,12 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void setCacheWordTimeout(int minutes)
 	{
-		cacheWord.setTimeout(minutes*60);
+		try {
+			cacheWord.setTimeout(minutes*60);
+		} catch (IllegalStateException e) {
+			if (LOGGING)
+				Log.e(LOGTAG, e.getMessage);	
+		}
 	}
 	
 	public boolean isTorOnline() 
