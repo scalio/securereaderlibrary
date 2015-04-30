@@ -40,6 +40,9 @@ public class IOCipherMountHelper {
 
         try {
             mVFS = VirtualFileSystem.get();
+            if (!(new java.io.File(containerPath)).exists()) {
+            	mVFS.createNewContainer(containerPath, mHandler.getEncryptionKey());
+            }
             mVFS.mount(containerPath, mHandler.getEncryptionKey());
         } catch (Exception e) {
             Log.e(TAG, "mounting IOCipher failed at " + containerPath);

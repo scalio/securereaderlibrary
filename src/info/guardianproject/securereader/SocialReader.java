@@ -1154,7 +1154,21 @@ public class SocialReader implements ICacheWordSubscriber
 				filesDir = applicationContext.getExternalFilesDir(null);
 				if (!filesDir.exists())
 				{
+					if (LOGGING) 
+						Log.v(LOGTAG, "filesDir doesn't exist, making it");
+					
 					filesDir.mkdirs();
+					
+					if (LOGGING && !filesDir.exists())
+						Log.v(LOGTAG, "still doesn't exist, error!");		
+					
+					testExternalStorage(filesDir);
+				}
+				else 
+				{
+					if (LOGGING) 
+						Log.v(LOGTAG, "filesDir exists");
+
 				}
 				
 				if (LOGGING) 
