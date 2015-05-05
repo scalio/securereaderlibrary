@@ -584,10 +584,16 @@ public class SocialReader implements ICacheWordSubscriber
 	{
 		if (useTor() && oc.isOrbotInstalled() && oc.isOrbotRunning()) 
 		{
+			if (LOGGING) 
+				Log.v(LOGTAG, "Tor is running");
+			
 			return true;
 		} 
 		else 
 		{
+			if (LOGGING) 
+				Log.v(LOGTAG, "Tor isn't running");
+			
 			return false;
 		}		
 	}
