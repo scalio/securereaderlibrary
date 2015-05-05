@@ -265,7 +265,7 @@ public class Settings
 	 */
 	public ArticleExpiration articleExpiration()
 	{
-		return Enum.valueOf(ArticleExpiration.class, mPrefs.getString(KEY_ARTICLE_EXPIRATION, ArticleExpiration.Never.name()));
+		return Enum.valueOf(ArticleExpiration.class, mPrefs.getString(KEY_ARTICLE_EXPIRATION, context.getResources().getString(R.string.article_expiration_default)));
 	}
 	
 	public long articleExpirationMillis() {

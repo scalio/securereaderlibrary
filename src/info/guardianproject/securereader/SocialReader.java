@@ -1770,6 +1770,13 @@ public class SocialReader implements ICacheWordSubscriber
 		//applicationContext.finish();
 	}
 
+	public void lockApp()
+	{
+		if (LOGGING)
+			Log.v(LOGTAG, "Locking app");
+		cacheWord.lock();
+	}
+	
 	private void deleteApp()
 	{
 		Uri packageURI = Uri.parse("package:" + applicationContext.getPackageName());
