@@ -31,5 +31,5 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
     // project imports
-    compile project(':external:OnionKit:libnetcipher')
+    compile project(':external:NetCipher:libnetcipher')
 }
