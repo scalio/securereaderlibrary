@@ -22,5 +22,14 @@ local.properties
 *.java.bak
 .metadata
 .settings
-
 build.xml
+
+# Gradle
+.gradle
+
+# Android Studio
+*.idea
+*.iml
+
+# OSX
+.DS_Store
