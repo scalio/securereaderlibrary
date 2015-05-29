@@ -852,10 +852,14 @@ public class SocialReader implements ICacheWordSubscriber
 				{
 					// Delete over limit media
 					int numDeleted = databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
-					Log.v(LOGTAG,"Deleted " + numDeleted + " over limit media items");
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"Deleted " + numDeleted + " over limit media items");
 					
 					long mediaFileSize = databaseAdapter.mediaFileSize();
-					Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
 					
 					if (mediaFileSize < mediaCacheSizeLimitInBytes) {
 						
