@@ -151,7 +151,7 @@ public class SyncServiceMediaDownloader implements Runnable
 							inputStream = entity.getContent();
 							long size = entity.getContentLength();
 
-							byte data[] = new byte[1024];
+							byte data[] = new byte[8192];
 							int count;
 							long total = 0;
 							while ((count = inputStream.read(data)) != -1)

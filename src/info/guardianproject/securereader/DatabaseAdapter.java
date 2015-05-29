@@ -2159,10 +2159,9 @@ public class DatabaseAdapter
 
 		try {
 
-			StringBuilder feedsArray = null;
-			if (feeds != null && feeds.size() > 0)
+			StringBuilder feedsArray = new StringBuilder();
+			if (feeds != null)
 			{
-				feedsArray = new StringBuilder();
 				for (int a = 0; a < feeds.size(); a++) 
 				{
 					if (feedsArray.length() != 0)
@@ -2254,10 +2253,9 @@ public class DatabaseAdapter
 
 		try {
 
-			StringBuilder feedsArray = null;
-			if (feeds != null && feeds.size() > 0)
+			StringBuilder feedsArray = new StringBuilder();
+			if (feeds != null)
 			{
-				feedsArray = new StringBuilder();
 				for (int a = 0; a < feeds.size(); a++) 
 				{
 					if (feedsArray.length() != 0)

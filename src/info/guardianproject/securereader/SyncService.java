@@ -266,6 +266,58 @@ public class SyncService extends Service {
     		syncServiceEvent(newSyncTask);    
     	}
     }
+
+    public void addMediaContentSyncTasksToFront(ArrayList<MediaContent> mediaContents, boolean forceStart) {
+
+    	if (mediaContents != null)
+    	{
+    		for (int idxMediaContent = mediaContents.size() - 1; idxMediaContent >= 0; idxMediaContent--)
+    		{
+    			MediaContent mediaContent = mediaContents.get(idxMediaContent);
+    	    	for (int i = 0; i < syncList.size(); i++) {
+    	    		MediaContent mediaTask = syncList.get(i).mediaContent;
+    	    		if (mediaTask != null && mediaTask.getDatabaseId() == mediaContent.getDatabaseId()) {
+    	    			if (syncList.get(i).status == SyncTask.QUEUED)
+    	    				syncList.get(i).status = SyncTask.CANCELLED;
+    	    			else if (syncList.get(i).status == SyncTask.STARTED)
+    	    				mediaContents.remove(idxMediaContent); // Remove it!
+    	        		if (LOGGING)
+    	        			Log.v(LOGTAG,"MediaContent already in queue");
+    	    			break;
+    	    		}
+    	    	}    			
+    		}
+    		
+    		// All remaining should be added
+    		if (mediaContents.size() > 0)
+    		{
+    			ArrayList<SyncTask> newTasks = new ArrayList<SyncTask>();
+    			for (int idxMediaContent = 0; idxMediaContent < mediaContents.size(); idxMediaContent++)
+    			{
+    				MediaContent mediaContent = mediaContents.get(idxMediaContent);
+    				SyncTask newSyncTask = new SyncTask(mediaContent);
+    				if (LOGGING) {
+    					Log.v(LOGTAG, "addMediaContentSyncTaskToFrontIndex " + idxMediaContent + " "+ mediaContent.getUrl());
+    				}
+    				newTasks.add(newSyncTask);
+    				syncList.add(idxMediaContent, newSyncTask);
+    			}
+    			
+    			// Update them all to queued (which might start the first one of them, if nothing is currently running
+    			for (SyncTask task : newTasks)
+    			{
+    				if (forceStart)
+    				{
+    					task.start();
+    				}
+    				else
+    				{
+    					task.updateStatus(SyncTask.QUEUED);
+    				}
+    			}
+    		}
+    	}
+    }
     
     public void clearSyncList() {
     	for (int i = 0; i < syncList.size(); i++) {
