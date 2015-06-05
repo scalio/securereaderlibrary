@@ -105,6 +105,29 @@ public class SyncServiceMediaDownloader implements Runnable
 					if (LOGGING)
 						Log.v(LOGTAG, "Image already downloaded: " + possibleFile.getAbsolutePath());
 				}
+				else if (mediaContent.getUrl().startsWith("file:///android_asset/"))
+				{
+					BufferedOutputStream bos = null;
+					
+					savedFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
+					bos = new BufferedOutputStream(new FileOutputStream(savedFile));
+
+					inputStream = syncService.getApplicationContext().getResources().getAssets().open(mediaContent.getUrl().substring(22));
+
+					byte data[] = new byte[1024];
+					int count;
+					long total = 0;
+					while ((count = inputStream.read(data)) != -1)
+					{
+						total += count;
+						bos.write(data, 0, count);
+					}
+					inputStream.close();
+					bos.close();
+					
+					mediaContent.setFileSize(total);
+					mediaContent.setDownloaded(true);
+				}
 				else if (mediaContent.getUrl().startsWith("file:///"))
 				{
 					if (LOGGING)
@@ -164,6 +187,12 @@ public class SyncServiceMediaDownloader implements Runnable
 							inputStream.close();
 							bos.close();
 							entity.consumeContent();
+							
+							if (size != total)
+							{
+								if (LOGGING)
+									Log.e(LOGTAG, "File length mismatch!!!!!!!!!");
+							}
 							
 							mediaContent.setFileSize(size);
 							mediaContent.setDownloaded(true);
