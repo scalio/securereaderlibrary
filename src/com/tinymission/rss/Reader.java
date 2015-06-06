@@ -20,8 +20,9 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+import android.content.res.AssetManager;
+import android.net.Uri;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 
@@ -32,7 +33,7 @@ public class Reader
 {
 
 	public final static String LOGTAG = "TinyRSS Reader";
-	public final static boolean LOGGING = false;
+	public final static boolean LOGGING = true;
 
 	private Feed feed;
 
@@ -133,41 +134,65 @@ public class Reader
 			Handler handler = new Handler();
 			xr.setContentHandler(handler);
 
-			StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
-			if (socialReader.useTor())
-			{
-				httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-			}
+			final String PREFIX = "file:///android_asset/";
+			if (feed.getFeedURL().startsWith("file:///")) {
+				
+				if (LOGGING)
+					Log.v(LOGTAG,"Opening: " + feed.getFeedURL().substring(PREFIX.length()));
+				
+				AssetManager assetManager = socialReader.applicationContext.getAssets();
+				
+				InputStream is = assetManager.open(feed.getFeedURL().substring(PREFIX.length()));
+				
+				xr.parse(new InputSource(is));
+				
+				is.close();
 
-			if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))
-			{
-				HttpGet httpGet = new HttpGet(feed.getFeedURL());
-
-				HttpResponse response = httpClient.execute(httpGet);
-
-				if (response.getStatusLine().getStatusCode() == 200) {
-					if (LOGGING)
-						Log.v(LOGTAG,"Response Code is good");
-					
-					InputStream is = response.getEntity().getContent();
-					xr.parse(new InputSource(is));
-					
-					is.close();
-
-					Date currentDate = new Date();
-					feed.setNetworkPullDate(currentDate);
-					feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);
-					
-				} else {
-					Log.v(LOGTAG,"Response Code: " + response.getStatusLine().getStatusCode());
-					if (response.getStatusLine().getStatusCode() == 404) {
-						feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_404);
-					} else {
-						feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_UNKNOWN);
-					}
-				}
+				Date currentDate = new Date();
+				feed.setNetworkPullDate(currentDate);
+				feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);				
+				
 			} else {
-				feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_BAD_URL);
+			
+				StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
+				if (socialReader.useTor())
+				{
+					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+				}
+	
+				if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))
+				{
+					HttpGet httpGet = new HttpGet(feed.getFeedURL());
+	
+					HttpResponse response = httpClient.execute(httpGet);
+	
+					if (response.getStatusLine().getStatusCode() == 200) {
+						if (LOGGING)
+							Log.v(LOGTAG,"Response Code is good");
+						
+						InputStream is = response.getEntity().getContent();
+						xr.parse(new InputSource(is));
+						
+						is.close();
+	
+						Date currentDate = new Date();
+						feed.setNetworkPullDate(currentDate);
+						feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);
+						
+					} else {
+						Log.v(LOGTAG,"Response Code: " + response.getStatusLine().getStatusCode());
+						if (response.getStatusLine().getStatusCode() == 404) {
+							feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_404);
+						} else {
+							feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_UNKNOWN);
+						}
+					}
+				} else {
+					if (LOGGING) 
+						Log.e(LOGTAG, "Failed to sync feed, bad URL");
+					
+					feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_BAD_URL);
+				}
 			}
 		}
 		catch (ParserConfigurationException pce)

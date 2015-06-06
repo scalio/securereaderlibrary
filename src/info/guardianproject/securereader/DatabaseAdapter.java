@@ -187,6 +187,9 @@ public class DatabaseAdapter
 							returnValue = -1;
 						}
 					}
+					
+					if (LOGGING)
+						Log.v(LOGTAG, "returnValue: " + returnValue);
 
 					queryCursor.close();
 				}
@@ -533,6 +536,7 @@ public class DatabaseAdapter
 	public ArrayList<Feed> getSubscribedFeeds()
 	{
 		return getAllFeeds(true,true);
+		//return getAllFeeds();
 	}
 
 	public ArrayList<Feed> getUnSubscribedFeeds()

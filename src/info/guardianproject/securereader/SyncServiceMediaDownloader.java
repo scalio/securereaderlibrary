@@ -33,7 +33,7 @@ import com.tinymission.rss.MediaContent;
 
 public class SyncServiceMediaDownloader implements Runnable
 {
-	public final static boolean LOGGING = false;
+	public final static boolean LOGGING = true;
 	public final static String LOGTAG = "SyncServiceMediaDownloader";
 
 	SyncService syncService;
@@ -107,6 +107,9 @@ public class SyncServiceMediaDownloader implements Runnable
 				}
 				else if (mediaContent.getUrl().startsWith("file:///android_asset/"))
 				{
+					if (LOGGING)
+						Log.v(LOGTAG, "Downloading " + mediaContent.getUrl());
+					
 					BufferedOutputStream bos = null;
 					
 					savedFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());

@@ -413,7 +413,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		if (!settings.localOpmlLoaded()) {
 			if (LOGGING)
-				Log.v(LOGTAG, "OPML Not previously loaded, loading now");
+				Log.v(LOGTAG, "Local OPML Not previously loaded, loading now");
 			Resources res = applicationContext.getResources();
 			InputStream inputStream = res.openRawResource(R.raw.bigbuffalo_opml);
 			
@@ -422,12 +422,17 @@ public class SocialReader implements ICacheWordSubscriber
 						@Override
 						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
 							if (LOGGING)
-								Log.v(LOGTAG,"Finished Parsing OPML Feed");
+								Log.v(LOGTAG,"Finished Parsing OPML Feed");							
 							if (outlines != null) {
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
+										
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
 									newFeed.setSubscribed(outlineElement.subscribe);
+									
+									if (LOGGING)
+										Log.v(LOGTAG, "**New Feed: " + newFeed.isSubscribed());
+									
 									databaseAdapter.addOrUpdateFeed(newFeed);
 									if (LOGGING)
 										Log.v(LOGTAG,"May have added feed");
@@ -440,6 +445,7 @@ public class SocialReader implements ICacheWordSubscriber
 						}
 					}
 				);
+			manualSyncSubscribedFeeds(null);
 		}
 	}
 	
@@ -769,7 +775,7 @@ public class SocialReader implements ICacheWordSubscriber
 		FeedFetcher feedFetcher = new FeedFetcher(this);
 		feedFetcher.setFeedUpdatedCallback(callback);
 
-		if (isOnline() == ONLINE)
+		if (isOnline() == ONLINE || feed.getFeedURL().startsWith("file:///"))
 		{
 			if (LOGGING)
 				Log.v(LOGTAG, "Calling feedFetcher.execute: " + feed.getFeedURL());
@@ -934,7 +940,7 @@ public class SocialReader implements ICacheWordSubscriber
 							if (LOGGING)
 								Log.v(LOGTAG, "Feed Fetcher Done!");
 							requestPending = false;
-							if (appStatus == SocialReader.APP_IN_FOREGROUND) {
+							if (finalCallback != null && appStatus == SocialReader.APP_IN_FOREGROUND) {
 								finalCallback.feedFetched(compositeFeed);
 							}
 						}
@@ -949,7 +955,7 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "feeds.size is " + feeds.size());
 		}
 	}
-
+	
 	/*
 	 * This is to manually sync a specific feed. It takes a callback that will
 	 * be used to notify the listener that the network process is complete. This
