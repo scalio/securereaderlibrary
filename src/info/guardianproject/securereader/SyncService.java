@@ -106,6 +106,9 @@ public class SyncService extends Service {
     	public int status = CREATED;
     	public int type = 0;
     	
+    	public static final long MAXTIME = 3600000; // 60 * 60 * 1000 = 1 hour;  
+    	public long startTime = -1;
+    	
     	//SyncTask(Feed _feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback _callback) {
     	SyncTask(Feed _feed) {
     		feed = _feed;
@@ -143,6 +146,7 @@ public class SyncService extends Service {
     		syncThread = new Thread(ssMediaDownloader);
     		syncThread.start();
     		updateStatus(SyncTask.STARTED);
+    		startTime = System.currentTimeMillis();
     	}
     	    	
     	private void startFeedFetcher() {
@@ -158,6 +162,7 @@ public class SyncService extends Service {
     		syncThread = new Thread(feedFetcher);
     		syncThread.start();    	
     		updateStatus(SyncTask.STARTED);
+    		startTime = System.currentTimeMillis();
     	}
     	
     	void taskComplete(int status) {
@@ -174,14 +179,31 @@ public class SyncService extends Service {
     	}
     }
     
+    private boolean overTime(SyncTask syncTask) {
+    	if (syncTask.status == SyncTask.STARTED && 
+    			System.currentTimeMillis() - syncTask.startTime > SyncTask.MAXTIME) 
+    	{
+    			return true;
+    	}
+    	return false;
+    }
+    
     //public void addFeedSyncTask(Feed feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback) {
     public void addFeedSyncTask(Feed feed) {
     	for (int i = 0; i < syncList.size(); i++) {
     		Feed feedTask = syncList.get(i).feed;
     		if (feedTask != null && feed.getDatabaseId() == feed.getDatabaseId()) {
-        		if (LOGGING)
-        			Log.v(LOGTAG,"Feed already in queue, ignoring");
-    			return;
+    			if (overTime(syncList.get(i))) {
+    				syncList.get(i).status = SyncTask.ERROR;
+    	    		syncList.remove(syncList.get(i));
+    				if (LOGGING) 
+    					Log.v(LOGTAG, "Feed was already in queue but over time");
+    			}
+    			else {
+	        		if (LOGGING)
+	        			Log.v(LOGTAG,"Feed already in queue, ignoring");
+	    			return;
+    			}
     		}
     	}
     	//SyncTask newSyncTask = new SyncTask(feed,callback);
@@ -224,21 +246,44 @@ public class SyncService extends Service {
     }
     
     public void addMediaContentSyncTask(MediaContent mediaContent) {
+    	addMediaContentSyncTask(mediaContent, false);
+    }
+    
+    public void addMediaContentSyncTask(MediaContent mediaContent, boolean toFront) {
     	for (int i = 0; i < syncList.size(); i++) {
     		MediaContent mediaTask = syncList.get(i).mediaContent;
     		if (mediaTask != null && mediaTask.getDatabaseId() == mediaContent.getDatabaseId()) {
-        		if (LOGGING)
-        			Log.v(LOGTAG,"MediaContent already in queue, ignoring");
-    			return;
+    			if (overTime(syncList.get(i))) {
+    				syncList.get(i).status = SyncTask.ERROR;
+    	    		syncList.remove(syncList.get(i));
+    				if (LOGGING) 
+    					Log.v(LOGTAG, "MediaContent was already in queue but over time");
+    				break;
+    			}
+    			else 
+    			{
+    				if (LOGGING)
+    					Log.v(LOGTAG,"MediaContent already in queue, ignoring");
+    				return;
+    			}
     		}
     	}
     	SyncTask newSyncTask = new SyncTask(mediaContent);
-    	syncList.add(newSyncTask);
+    	if (toFront) {
+    		syncList.add(0, newSyncTask);
+    	} else {
+    		syncList.add(newSyncTask);
+    	}
     	newSyncTask.updateStatus(SyncTask.QUEUED);
     	
 		syncServiceEvent(newSyncTask);
     }
     
+    public void addMediaContentSyncTaskToFront(MediaContent mediaContent) {
+    	addMediaContentSyncTask(mediaContent, true);
+    }
+
+    /*
     public void addMediaContentSyncTaskToFront(MediaContent mediaContent) {
     	boolean addTask = true;
     	for (int i = 0; i < syncList.size(); i++) {
@@ -266,6 +311,7 @@ public class SyncService extends Service {
     		syncServiceEvent(newSyncTask);    
     	}
     }
+    */
 
     public void addMediaContentSyncTasksToFront(ArrayList<MediaContent> mediaContents, boolean forceStart) {
 
@@ -359,8 +405,16 @@ public class SyncService extends Service {
     			if (LOGGING)
     				Log.v(LOGTAG, "syncTask FINISHED");
     		} else if (syncList.get(i).status == SyncTask.STARTED) {
-    			if (LOGGING)
-    				Log.v(LOGTAG, "syncTask STARTED");
+    			if (overTime(syncList.get(i))) {
+    				syncList.get(i).status = SyncTask.ERROR;
+    	    		syncList.remove(syncList.get(i));
+    				if (LOGGING) 
+    					Log.v(LOGTAG, "syncTask STARTED but over time");
+    			} else {
+    				count++;
+    				if (LOGGING)
+    					Log.v(LOGTAG, "syncTask STARTED");
+    			}
     		} else if (syncList.get(i).status == SyncTask.CANCELLED) {
     			if (LOGGING)
     				Log.v(LOGTAG, "syncTask CANCELLED");
