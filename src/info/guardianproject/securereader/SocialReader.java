@@ -836,7 +836,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING) 
 			Log.v(LOGTAG, "checkMediaDownloadQueue");		
 		
-		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
+		if (!cacheWord.isLocked() && 
 				settings.syncMode() != Settings.SyncMode.BitWise
 				&& syncService != null) {
 			
@@ -1598,15 +1598,12 @@ public class SocialReader implements ICacheWordSubscriber
 				
 				break;
 			}
-			
-//			} else {
-				
+							
 				if (LOGGING)
 					Log.v(LOGTAG, "Adding " + count + " media item to background feed download");
 				
 				backgroundDownloadItemMedia(item);
 				count++;
-//			}
 		}
 	}
 	
