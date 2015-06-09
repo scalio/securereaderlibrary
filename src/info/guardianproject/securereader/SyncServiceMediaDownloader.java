@@ -33,7 +33,7 @@ import com.tinymission.rss.MediaContent;
 
 public class SyncServiceMediaDownloader implements Runnable
 {
-	public final static boolean LOGGING = true;
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "SyncServiceMediaDownloader";
 
 	SyncService syncService;
