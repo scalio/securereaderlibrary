@@ -64,6 +64,7 @@ public class StrongHttpsClient extends DefaultHttpClient {
             sFactory = new StrongSSLSocketFactory(context, mTrustManager, keyStore, TRUSTSTORE_PASSWORD);
             mRegistry.register(new Scheme("https", 443, sFactory));
         } catch (Exception e) {
+        	e.printStackTrace();
             throw new AssertionError(e);
         }
     }
@@ -98,6 +99,7 @@ public class StrongHttpsClient extends DefaultHttpClient {
             sFactory = new StrongSSLSocketFactory(context, mTrustManager, keystore, TRUSTSTORE_PASSWORD);
             mRegistry.register(new Scheme("https", 443, sFactory));
         } catch (Exception e) {
+        	e.printStackTrace();
             throw new AssertionError(e);
         }
     }

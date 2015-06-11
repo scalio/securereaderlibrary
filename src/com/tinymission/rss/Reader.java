@@ -1,6 +1,6 @@
 package com.tinymission.rss;
 
-import info.guardianproject.onionkit.trust.StrongHttpsClient;
+import info.guardianproject.securereader.StrongHttpsClient;
 import info.guardianproject.securereader.SocialReader;
 
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class Reader
 {
 
 	public final static String LOGTAG = "TinyRSS Reader";
-	public final static boolean LOGGING = false;
+	public final static boolean LOGGING = true;
 
 	private Feed feed;
 

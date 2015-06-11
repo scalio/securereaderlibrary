@@ -289,6 +289,7 @@ public class DatabaseAdapter
 		values.put(DatabaseHelper.FEEDS_TABLE_DESCRIPTION, feed.getDescription());
 		values.put(DatabaseHelper.FEEDS_TABLE_LINK, feed.getLink());
 		values.put(DatabaseHelper.FEEDS_TABLE_STATUS, feed.getStatus());
+		
 		if (feed.isSubscribed())
 		{
 			values.put(DatabaseHelper.FEEDS_TABLE_SUBSCRIBED, 1);
@@ -535,8 +536,8 @@ public class DatabaseAdapter
 
 	public ArrayList<Feed> getSubscribedFeeds()
 	{
-		return getAllFeeds(true,true);
-		//return getAllFeeds();
+		//return getAllFeeds(true,true);
+		return getAllFeeds();
 	}
 
 	public ArrayList<Feed> getUnSubscribedFeeds()

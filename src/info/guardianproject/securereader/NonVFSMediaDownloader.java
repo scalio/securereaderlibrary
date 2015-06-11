@@ -1,6 +1,6 @@
 package info.guardianproject.securereader;
 
-import info.guardianproject.onionkit.trust.StrongHttpsClient;
+import info.guardianproject.securereader.StrongHttpsClient;
 import info.guardianproject.securereader.MediaDownloader.MediaDownloaderCallback;
 
 import java.io.BufferedOutputStream;

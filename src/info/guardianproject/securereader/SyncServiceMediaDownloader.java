@@ -1,6 +1,6 @@
 package info.guardianproject.securereader;
 
-import info.guardianproject.onionkit.trust.StrongHttpsClient;
+import info.guardianproject.securereader.StrongHttpsClient;
 import info.guardianproject.securereader.SyncService.SyncTask;
 
 import info.guardianproject.iocipher.File;
@@ -33,7 +33,7 @@ import com.tinymission.rss.MediaContent;
 
 public class SyncServiceMediaDownloader implements Runnable
 {
-	public final static boolean LOGGING = false;
+	public final static boolean LOGGING = true;
 	public final static String LOGTAG = "SyncServiceMediaDownloader";
 
 	SyncService syncService;
