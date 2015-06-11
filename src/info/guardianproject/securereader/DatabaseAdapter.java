@@ -536,8 +536,8 @@ public class DatabaseAdapter
 
 	public ArrayList<Feed> getSubscribedFeeds()
 	{
-		//return getAllFeeds(true,true);
-		return getAllFeeds();
+		return getAllFeeds(true,true);
+		//return getAllFeeds();
 	}
 
 	public ArrayList<Feed> getUnSubscribedFeeds()
