@@ -85,15 +85,6 @@ public class SyncServiceMediaDownloader implements Runnable
 		InputStream inputStream = null;
 
 		MediaContent mediaContent = syncTask.mediaContent;
-		StrongHttpsClient httpClient = new StrongHttpsClient(syncService.getApplicationContext());
-
-		if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
-		{
-			httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-
-			if (LOGGING)
-				Log.v(LOGTAG, "MediaDownloader: USE_TOR");
-		}
 
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
 		{
@@ -147,6 +138,16 @@ public class SyncServiceMediaDownloader implements Runnable
 				}
 				else 
 				{
+					StrongHttpsClient httpClient = new StrongHttpsClient(syncService.getApplicationContext());
+
+					if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
+					{
+						httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+
+						if (LOGGING)
+							Log.v(LOGTAG, "MediaDownloader: USE_TOR");
+					}
+
 					HttpGet httpGet = new HttpGet(mediaContent.getUrl());
 					HttpResponse response = httpClient.execute(httpGet);
 
