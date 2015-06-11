@@ -79,7 +79,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -966,7 +966,7 @@ public class SocialReader implements ICacheWordSubscriber
 							if (LOGGING)
 								Log.v(LOGTAG, "Feed Fetcher Done!");
 							requestPending = false;
-							if (finalCallback != null && appStatus == SocialReader.APP_IN_FOREGROUND) {
+							if (finalCallback != null) {
 								finalCallback.feedFetched(compositeFeed);
 							}
 						}

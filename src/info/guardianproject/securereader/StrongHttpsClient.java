@@ -109,14 +109,14 @@ public class StrongHttpsClient extends DefaultHttpClient {
 
         if (proxyHost == null && proxyType == null)
         {
-            Log.d("StrongHTTPS", "not proxying");
+            //Log.d("StrongHTTPS", "not proxying");
 
             return new MyThreadSafeClientConnManager(getParams(), mRegistry);
 
         }
         else if (proxyHost != null && proxyType.equalsIgnoreCase("socks"))
         {
-            Log.d("StrongHTTPS", "proxying using: " + proxyType);
+            //Log.d("StrongHTTPS", "proxying using: " + proxyType);
 
             return new MyThreadSafeClientConnManager(getParams(), mRegistry)
             {
@@ -133,7 +133,7 @@ public class StrongHttpsClient extends DefaultHttpClient {
         }
         else
         {
-            Log.d("StrongHTTPS", "proxying with: " + proxyType);
+            //Log.d("StrongHTTPS", "proxying with: " + proxyType);
 
             return new MyThreadSafeClientConnManager(getParams(), mRegistry);
         }

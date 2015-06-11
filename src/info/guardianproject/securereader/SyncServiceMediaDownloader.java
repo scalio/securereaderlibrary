@@ -33,7 +33,7 @@ import com.tinymission.rss.MediaContent;
 
 public class SyncServiceMediaDownloader implements Runnable
 {
-	public final static boolean LOGGING = true;
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "SyncServiceMediaDownloader";
 
 	SyncService syncService;
@@ -149,6 +149,8 @@ public class SyncServiceMediaDownloader implements Runnable
 					}
 
 					HttpGet httpGet = new HttpGet(mediaContent.getUrl());
+					if (LOGGING) 
+						Log.v(LOGTAG,"Downloading: "+mediaContent.getUrl());
 					HttpResponse response = httpClient.execute(httpGet);
 
 					int statusCode = response.getStatusLine().getStatusCode();
