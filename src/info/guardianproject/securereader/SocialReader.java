@@ -440,19 +440,19 @@ public class SocialReader implements ICacheWordSubscriber
 									Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
 							settings.setLocalOpmlLoaded();
+							manualSyncSubscribedFeeds(
+									new FeedFetcher.FeedFetchedCallback()
+									{
+										@Override
+										public void feedFetched(Feed _feed)
+										{
+											checkMediaDownloadQueue();
+										}
+									}
+									);
 						}
 					}
 				);
-			manualSyncSubscribedFeeds(
-					new FeedFetcher.FeedFetchedCallback()
-					{
-						@Override
-						public void feedFetched(Feed _feed)
-						{
-							checkMediaDownloadQueue();
-						}
-					}
-					);
 		}
 	}
 	
