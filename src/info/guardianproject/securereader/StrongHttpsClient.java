@@ -74,7 +74,7 @@ public class StrongHttpsClient extends DefaultHttpClient {
 
         KeyStore trustStore = KeyStore.getInstance(TRUSTSTORE_TYPE);
         // load our bundled cacerts from raw assets
-        InputStream in = context.getResources().openRawResource(R.raw.modifiedcerts);
+        InputStream in = context.getResources().openRawResource(R.raw.debiancacerts);
         trustStore.load(in, TRUSTSTORE_PASSWORD.toCharArray());
 
         return trustStore;
