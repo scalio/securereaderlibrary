@@ -1,8 +1,10 @@
 package info.guardianproject.securereader;
 
 import info.guardianproject.securereader.StrongHttpsClient;
-import info.guardianproject.securereader.SyncService.SyncTask;
 
+import javax.net.ssl.HttpsURLConnection;
+
+import info.guardianproject.securereader.SyncService.SyncTask;
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileInputStream;
 import info.guardianproject.iocipher.FileOutputStream;
@@ -11,15 +13,17 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -138,6 +142,45 @@ public class SyncServiceMediaDownloader implements Runnable
 				}
 				else 
 				{
+					/*
+					// Replacement
+					HttpURLConnection connection = null;
+					if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
+					{
+						java.net.Proxy proxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8118));
+						if (mediaContent.getUrl().startsWith("https")) {
+							connection = (HttpsURLConnection) new URL(mediaContent.getUrl()).openConnection(proxy);
+						} else {
+							connection = (HttpURLConnection) new URL(mediaContent.getUrl()).openConnection(proxy);
+						}
+					}
+					else {
+						if (mediaContent.getUrl().startsWith("https")) {
+							connection = (HttpsURLConnection) new URL(mediaContent.getUrl()).openConnection();
+						} else {
+							connection = (HttpURLConnection) new URL(mediaContent.getUrl()).openConnection();
+						}
+					}		
+					
+					inputStream = connection.getInputStream();
+					savedFile = new File(SocialReader.getInstance(syncService.getApplicationContext()).getFileSystemDir(), SocialReader.MEDIA_CONTENT_FILE_PREFIX + mediaContent.getDatabaseId());
+					BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(savedFile));
+					byte data[] = new byte[1024];
+					int count;
+					long total = 0;
+					while ((count = inputStream.read(data)) != -1)
+					{
+						total += count;
+						bos.write(data, 0, count);
+						//publishProgress((int) (total / size * 100));
+					}
+
+					inputStream.close();
+					bos.close();
+					mediaContent.setFileSize(savedFile.length());
+					mediaContent.setDownloaded(true);
+					// End Replacement
+					*/
 					StrongHttpsClient httpClient = new StrongHttpsClient(syncService.getApplicationContext());
 
 					if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
@@ -203,8 +246,9 @@ public class SyncServiceMediaDownloader implements Runnable
 							mediaContent.setFileSize(size);
 							mediaContent.setDownloaded(true);
 						}
-					}
+					}					
 				}
+
 				SocialReader sr = SocialReader.getInstance(syncService.getApplicationContext());
 				// Should make sure this an image before calling getStoreBitmapDimensions
 				sr.getStoreBitmapDimensions(mediaContent);
