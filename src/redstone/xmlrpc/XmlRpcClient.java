@@ -16,7 +16,7 @@
 
 package redstone.xmlrpc;
 
-import info.guardianproject.onionkit.trust.StrongHttpsClient;
+import info.guardianproject.securereader.StrongHttpsClient;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

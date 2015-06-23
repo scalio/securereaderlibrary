@@ -1,6 +1,6 @@
 package info.guardianproject.securereader;
 
-import info.guardianproject.onionkit.trust.StrongHttpsClient;
+import info.guardianproject.securereader.StrongHttpsClient;
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileOutputStream;
 import info.guardianproject.iocipher.FileInputStream;

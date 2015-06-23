@@ -78,7 +78,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -410,7 +410,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		if (!settings.localOpmlLoaded()) {
 			if (LOGGING)
-				Log.v(LOGTAG, "OPML Not previously loaded, loading now");
+				Log.v(LOGTAG, "Local OPML Not previously loaded, loading now");
 			Resources res = applicationContext.getResources();
 			InputStream inputStream = res.openRawResource(R.raw.bigbuffalo_opml);
 			
@@ -420,11 +420,14 @@ public class SocialReader implements ICacheWordSubscriber
 						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
 							if (LOGGING)
 								Log.v(LOGTAG,"Finished Parsing OPML Feed");
+							
 							if (outlines != null) {
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
+										
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
 									newFeed.setSubscribed(outlineElement.subscribe);
+									
 									databaseAdapter.addOrUpdateFeed(newFeed);
 									if (LOGGING)
 										Log.v(LOGTAG,"May have added feed");
@@ -434,6 +437,16 @@ public class SocialReader implements ICacheWordSubscriber
 									Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
 							settings.setLocalOpmlLoaded();
+							manualSyncSubscribedFeeds(
+									new FeedFetcher.FeedFetchedCallback()
+									{
+										@Override
+										public void feedFetched(Feed _feed)
+										{
+											checkMediaDownloadQueue();
+										}
+									}
+									);
 						}
 					}
 				);
@@ -537,11 +550,17 @@ public class SocialReader implements ICacheWordSubscriber
 						public void opmlParsed(ArrayList<OPMLParser.OPMLOutline> outlines) {
 							if (LOGGING)
 								Log.v(LOGTAG,"Finished Parsing OPML Feed");
+									
 							if (outlines != null) {
 								for (int i = 0; i < outlines.size(); i++) {
 									OPMLParser.OPMLOutline outlineElement = outlines.get(i);
+									
 									Feed newFeed = new Feed(outlineElement.text, outlineElement.xmlUrl);
 									newFeed.setSubscribed(outlineElement.subscribe);
+
+									if (LOGGING)
+										Log.v(LOGTAG, "**New Feed: " + newFeed.getFeedURL() + " " + newFeed.isSubscribed());
+									
 									databaseAdapter.addOrUpdateFeed(newFeed);
 								}
 							} else {
@@ -549,6 +568,7 @@ public class SocialReader implements ICacheWordSubscriber
 									Log.e(LOGTAG,"Received null after OPML Parsed");
 							}
 							settings.setNetworkOpmlLoaded();
+							backgroundSyncSubscribedFeeds();
 						}
 					}
 				);
@@ -777,7 +797,7 @@ public class SocialReader implements ICacheWordSubscriber
 		FeedFetcher feedFetcher = new FeedFetcher(this);
 		feedFetcher.setFeedUpdatedCallback(callback);
 
-		if (isOnline() == ONLINE)
+		if (isOnline() == ONLINE || feed.getFeedURL().startsWith("file:///"))
 		{
 			if (LOGGING)
 				Log.v(LOGTAG, "Calling feedFetcher.execute: " + feed.getFeedURL());
@@ -798,9 +818,19 @@ public class SocialReader implements ICacheWordSubscriber
 
 		if (!cacheWord.isLocked()) {
 			final ArrayList<Feed> feeds = getSubscribedFeedsList();
+			
+			if (LOGGING) 
+				Log.v(LOGTAG,"Num Subscribed feeds:" + feeds.size());
+			
 			for (Feed feed : feeds)
 			{
-				if (shouldRefresh(feed) && isOnline() == ONLINE) {
+				if (LOGGING) 
+					Log.v(LOGTAG,"Checking: " + feed.getFeedURL());
+				
+				if (feed.isSubscribed() && shouldRefresh(feed) && isOnline() == ONLINE) {
+					if (LOGGING)
+						Log.v(LOGTAG,"It should be refreshed");
+
 					backgroundRequestFeedNetwork(feed, new SyncServiceFeedFetchedCallback() {
 						@Override
 						public void feedFetched(Feed _feed) {
@@ -838,7 +868,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING) 
 			Log.v(LOGTAG, "checkMediaDownloadQueue");		
 		
-		if (!cacheWord.isLocked() && isOnline() == ONLINE && 
+		if (!cacheWord.isLocked() && 
 				settings.syncMode() != Settings.SyncMode.BitWise
 				&& syncService != null) {
 			
@@ -860,15 +890,21 @@ public class SocialReader implements ICacheWordSubscriber
 				{
 					// Delete over limit media
 					int numDeleted = databaseAdapter.deleteOverLimitMedia(mediaCacheSizeLimitInBytes, this);
-					Log.v(LOGTAG,"Deleted " + numDeleted + " over limit media items");
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"Deleted " + numDeleted + " over limit media items");
 					
 					long mediaFileSize = databaseAdapter.mediaFileSize();
-					Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"Media File Size: " + mediaFileSize + " limit is " + mediaCacheSizeLimitInBytes);
 					
 					if (mediaFileSize < mediaCacheSizeLimitInBytes) {
 						
 						ArrayList<Item> itemsToDownload = databaseAdapter.getItemsWithMediaNotDownloaded(MEDIA_ITEM_DOWNLOAD_LIMIT_PER_FEED_PER_SESSION);
-	
+						if (LOGGING) 
+							Log.v(LOGTAG,"Got " + itemsToDownload.size() + " items to download from database");
+						
 						for (Item item : itemsToDownload)
 						{
 							ArrayList<MediaContent> mc = item.getMediaContent();
@@ -938,7 +974,7 @@ public class SocialReader implements ICacheWordSubscriber
 							if (LOGGING)
 								Log.v(LOGTAG, "Feed Fetcher Done!");
 							requestPending = false;
-							if (appStatus == SocialReader.APP_IN_FOREGROUND) {
+							if (finalCallback != null) {
 								finalCallback.feedFetched(compositeFeed);
 							}
 						}
@@ -953,7 +989,7 @@ public class SocialReader implements ICacheWordSubscriber
 				Log.v(LOGTAG, "feeds.size is " + feeds.size());
 		}
 	}
-
+	
 	/*
 	 * This is to manually sync a specific feed. It takes a callback that will
 	 * be used to notify the listener that the network process is complete. This
@@ -1610,15 +1646,12 @@ public class SocialReader implements ICacheWordSubscriber
 				
 				break;
 			}
-			
-//			} else {
-				
+							
 				if (LOGGING)
 					Log.v(LOGTAG, "Adding " + count + " media item to background feed download");
 				
 				backgroundDownloadItemMedia(item);
 				count++;
-//			}
 		}
 	}
 	
