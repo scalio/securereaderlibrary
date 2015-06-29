@@ -1744,7 +1744,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (isOnline == ONLINE) {
 			debugLog.append("Online\n");
 		} else if (isOnline == NOT_ONLINE_NO_TOR) {
-			debugLog.append("Not Online, No Tor\n");
+			debugLog.append("Not Online, No Proxy\n");
 		} else if (isOnline == NOT_ONLINE_NO_WIFI) {
 			debugLog.append("Not Online, No Wifi\n");
 		} else if (isOnline == NOT_ONLINE_NO_WIFI_OR_NETWORK) {
@@ -1754,7 +1754,6 @@ public class SocialReader implements ICacheWordSubscriber
 		ArrayList<Feed> subscribedFeeds = getSubscribedFeedsList();
 		for (Feed feed : subscribedFeeds) {
 			debugLog.append(feed.getDatabaseId() + ", " 
-					+ feed.getFeedURL() + ", "
 					+ feed.getItems().size() + ", "
 					+ feed.getStatus() + ", " +  "\n");
 		}
