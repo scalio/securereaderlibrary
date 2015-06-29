@@ -1726,6 +1726,55 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	public String getDebugLog()
+	{
+		StringBuffer debugLog = new StringBuffer();
+
+		java.util.Date date= new java.util.Date();
+		debugLog.append(date.getTime() + "\n");
+
+		debugLog.append("\n OS Version: " + System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")");
+		debugLog.append("\n OS API Level: " + android.os.Build.VERSION.SDK_INT);
+		debugLog.append("\n Device: " + android.os.Build.DEVICE);
+		debugLog.append("\n Model (and Product): " + android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")\n");
+		
+		debugLog.append(ioCipherFilePath + "\n");
+		
+		int isOnline = isOnline();
+		if (isOnline == ONLINE) {
+			debugLog.append("Online\n");
+		} else if (isOnline == NOT_ONLINE_NO_TOR) {
+			debugLog.append("Not Online, No Tor\n");
+		} else if (isOnline == NOT_ONLINE_NO_WIFI) {
+			debugLog.append("Not Online, No Wifi\n");
+		} else if (isOnline == NOT_ONLINE_NO_WIFI_OR_NETWORK) {
+			debugLog.append("Not Online, No Wifi or Netowrk\n");
+		}
+		
+		ArrayList<Feed> subscribedFeeds = getSubscribedFeedsList();
+		for (Feed feed : subscribedFeeds) {
+			debugLog.append(feed.getDatabaseId() + ", " 
+					+ feed.getFeedURL() + ", "
+					+ feed.getItems().size() + ", "
+					+ feed.getStatus() + ", " +  "\n");
+		}
+		
+
+		debugLog.append("\n");
+		return debugLog.toString();
+	}
+	
+	public Intent getDebugIntent()
+	{		
+		Intent sendIntent = new Intent();
+		sendIntent.setAction(Intent.ACTION_SEND);
+		sendIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Debugging");
+		sendIntent.putExtra(Intent.EXTRA_TEXT, getDebugLog());
+		sendIntent.setType("text/plain");
+
+		return sendIntent;
+	}	
+	
 	// Stub for Intent.. We don't start an activity here since we are doing a
 	// custom chooser in FragmentActivityWithMenu. We could though use a generic
 	// chooser
