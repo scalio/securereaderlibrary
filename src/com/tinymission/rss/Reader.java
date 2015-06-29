@@ -163,7 +163,8 @@ public class Reader
 				if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))
 				{
 					HttpGet httpGet = new HttpGet(feed.getFeedURL());
-	
+					httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
+
 					HttpResponse response = httpClient.execute(httpGet);
 	
 					if (response.getStatusLine().getStatusCode() == 200) {

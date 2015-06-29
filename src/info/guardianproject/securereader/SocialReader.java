@@ -100,6 +100,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public final static String PSIPHON_PROXY_TYPE = "SOCKS";
 	public final static int PSIPHON_PROXY_PORT = 1080;
 	
+	public final static String USERAGENT = "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19";
+	
 	//proxy type tor or psiphon
 
 	public final static boolean RESET_DATABASE = false;

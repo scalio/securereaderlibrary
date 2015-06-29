@@ -83,6 +83,8 @@ public class NonVFSMediaDownloader extends AsyncTask<MediaContent, Integer, File
 				Uri uriMedia = Uri.parse(mediaContent.getUrl());
 
 				HttpGet httpGet = new HttpGet(mediaContent.getUrl());
+				httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
+				
 				HttpResponse response = httpClient.execute(httpGet);
 
 				int statusCode = response.getStatusLine().getStatusCode();

@@ -45,6 +45,8 @@ public class StrongHttpsClient extends DefaultHttpClient {
     public StrongHttpsClient(Context context) {
         this.context = context;
 
+        
+        
         mRegistry = new SchemeRegistry();
         mRegistry.register(
                 new Scheme(TYPE_HTTP, 80, PlainSocketFactory.getSocketFactory()));
