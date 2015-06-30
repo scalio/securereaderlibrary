@@ -1731,15 +1731,16 @@ public class SocialReader implements ICacheWordSubscriber
 		StringBuffer debugLog = new StringBuffer();
 
 		java.util.Date date= new java.util.Date();
-		debugLog.append(date.getTime() + "\n");
+		debugLog.append("Timestamp: " + date.getTime() + "\n");
 
-		debugLog.append("\n OS Version: " + System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")");
-		debugLog.append("\n OS API Level: " + android.os.Build.VERSION.SDK_INT);
-		debugLog.append("\n Device: " + android.os.Build.DEVICE);
-		debugLog.append("\n Model (and Product): " + android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")\n");
+		debugLog.append("OS Version: " + System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")\n");
+		debugLog.append("OS API Level: " + android.os.Build.VERSION.SDK_INT + "\n");
+		debugLog.append("Device: " + android.os.Build.DEVICE + "\n");
+		debugLog.append("Model (and Product): " + android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")\n");
 		
-		debugLog.append(ioCipherFilePath + "\n");
+		debugLog.append("File Path: " + ioCipherFilePath + "\n");
 		
+		debugLog.append("Online: ");
 		int isOnline = isOnline();
 		if (isOnline == ONLINE) {
 			debugLog.append("Online\n");
@@ -1751,15 +1752,25 @@ public class SocialReader implements ICacheWordSubscriber
 			debugLog.append("Not Online, No Wifi or Netowrk\n");
 		}
 		
+		debugLog.append("Feed Info\n");
 		ArrayList<Feed> subscribedFeeds = getSubscribedFeedsList();
 		for (Feed feed : subscribedFeeds) {
 			debugLog.append(feed.getDatabaseId() + ", " 
-					+ feed.getItems().size() + ", "
+					+ databaseAdapter.getFeedItems(feed.getDatabaseId(), -1).size() + ", "
 					+ feed.getStatus() + ", " +  "\n");
 		}
-		
-
 		debugLog.append("\n");
+		
+		debugLog.append("Key:\n"
+				+ "STATUS_NOT_SYNCED = 0\n"
+				+ "STATUS_LAST_SYNC_GOOD = 1\n"
+				+ "STATUS_LAST_SYNC_FAILED_404 = 2\n"
+				+ "STATUS_LAST_SYNC_FAILED_UNKNOWN = 3\n"
+				+ "STATUS_LAST_SYNC_FAILED_BAD_URL = 4\n"
+				+ "STATUS_SYNC_IN_PROGRESS = 5\n"
+				+ "STATUS_LAST_SYNC_PARSE_ERROR = 6\n");
+		
+		
 		return debugLog.toString();
 	}
 	
@@ -1767,7 +1778,8 @@ public class SocialReader implements ICacheWordSubscriber
 	{		
 		Intent sendIntent = new Intent();
 		sendIntent.setAction(Intent.ACTION_SEND);
-		sendIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Debugging");
+		sendIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Debug Log");
+		sendIntent.putExtra(android.content.Intent.EXTRA_EMAIL, "debug@guardianproject.info");
 		sendIntent.putExtra(Intent.EXTRA_TEXT, getDebugLog());
 		sendIntent.setType("text/plain");
 
