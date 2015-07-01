@@ -31,6 +31,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -80,6 +82,8 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public static final String LOGTAG = "SocialReader";
 	public static final boolean LOGGING = true;
+	
+	public static final boolean REPORT_METRICS = true;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -541,6 +545,57 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
+			}
+			
+			if (REPORT_METRICS) {
+				ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+				NetworkInfo networkInfo;
+
+				int connectionType = -1;
+				// Check WiFi
+				networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+				if (networkInfo != null && networkInfo.isConnected())
+				{
+					connectionType = 1;
+				} 
+				else if (settings.syncNetwork() != Settings.SyncNetwork.WifiOnly) 
+				{
+					// Check any network type
+					networkInfo = connectivityManager.getActiveNetworkInfo();
+					if (networkInfo != null && networkInfo.isConnected())
+					{
+						connectionType = 2;
+					}
+				}
+				String connectionTypeParam = "&nct=" + connectionType;
+				finalOpmlUrl += connectionTypeParam;
+						
+				String torTypeParam = "&p=";
+				if (settings.requireTor()) {
+					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
+						torTypeParam += "1";
+					} else {
+						// But this shouldn't actually work
+						torTypeParam += "0";
+					}
+				} else {
+					torTypeParam += "0";
+				}				
+				finalOpmlUrl += torTypeParam;
+				
+				String apiLevelParam = "&a=" + android.os.Build.VERSION.SDK_INT;
+				finalOpmlUrl += apiLevelParam;
+				
+				try {
+					String deviceNameParam = "&dn=" + URLEncoder.encode(android.os.Build.MODEL, "UTF-8");
+					finalOpmlUrl += deviceNameParam;
+				} catch (UnsupportedEncodingException e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
+				
+				String numFeedsParam = "&nf=" + getSubscribedFeedsList().size();
+				finalOpmlUrl += numFeedsParam;
 			}
 			
 			if (TESTING) 
