@@ -81,7 +81,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	public static final boolean REPORT_METRICS = true;
 	
@@ -1834,7 +1834,7 @@ public class SocialReader implements ICacheWordSubscriber
 		Intent sendIntent = new Intent();
 		sendIntent.setAction(Intent.ACTION_SEND);
 		sendIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Debug Log");
-		sendIntent.putExtra(android.content.Intent.EXTRA_EMAIL, "debug@guardianproject.info");
+		sendIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"debug@guardianproject.info"});
 		sendIntent.putExtra(Intent.EXTRA_TEXT, getDebugLog());
 		sendIntent.setType("text/plain");
 
