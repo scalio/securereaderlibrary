@@ -543,6 +543,10 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl = finalOpmlUrl + "tr";
 			}
 			
+			if (!settings.networkOpmlLoaded()) {
+				finalOpmlUrl += "&first=true";
+			}
+			
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
 			}
@@ -587,7 +591,7 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl += apiLevelParam;
 				
 				try {
-					String deviceNameParam = "&dn=" + URLEncoder.encode(android.os.Build.MODEL, "UTF-8");
+					String deviceNameParam = "&dn=" + URLEncoder.encode(android.os.Build.DEVICE, "UTF-8");
 					finalOpmlUrl += deviceNameParam;
 				} catch (UnsupportedEncodingException e) {
 					if (LOGGING)
