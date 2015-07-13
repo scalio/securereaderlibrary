@@ -81,7 +81,9 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
+	
+	public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
 	public static final boolean REPORT_METRICS = true;
 	
@@ -515,9 +517,12 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG,"checkOPML");
 		logStatus();
-		if (!settings.networkOpmlLoaded() && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+		
+		if ((REPEATEDLY_LOAD_NETWORK_OPML || !settings.networkOpmlLoaded()) && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+			
 			if (LOGGING)
-				Log.v(LOGTAG,"Not already loaded from network, attempting to check");
+				Log.v(LOGTAG,"Checking network OPML");
+			
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
 						
