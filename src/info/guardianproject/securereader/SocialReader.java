@@ -81,9 +81,9 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
-	public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
+	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
 	public static final boolean REPORT_METRICS = true;
 	
@@ -137,6 +137,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int feedRefreshAge;
 	public final int expirationCheckFrequency;
 	public final int opmlCheckFrequency;
+	public final boolean repeatedlyLoadNetworkOPML;
 	public final String opmlUrl;
 	
 	public static final int TIMER_PERIOD = 30000;  // 30 seconds 
@@ -172,6 +173,7 @@ public class SocialReader implements ICacheWordSubscriber
 		expirationCheckFrequency = applicationContext.getResources().getInteger(R.integer.expiration_check_frequency);
 		opmlCheckFrequency = applicationContext.getResources().getInteger(R.integer.opml_check_frequency);
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
+		repeatedlyLoadNetworkOPML = applicationContext.getResources().getBoolean(R.bool.repeatedly_load_network_opml);
 		
 		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
 		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
@@ -518,7 +520,10 @@ public class SocialReader implements ICacheWordSubscriber
 			Log.v(LOGTAG,"checkOPML");
 		logStatus();
 		
-		if ((REPEATEDLY_LOAD_NETWORK_OPML || !settings.networkOpmlLoaded()) && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+		if (LOGGING) 
+			Log.v(LOGTAG, settings.lastOPMLCheckTime() + " < " +  System.currentTimeMillis() + " - " + opmlCheckFrequency);
+		
+		if ((repeatedlyLoadNetworkOPML || !settings.networkOpmlLoaded()) && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
 			
 			if (LOGGING)
 				Log.v(LOGTAG,"Checking network OPML");
