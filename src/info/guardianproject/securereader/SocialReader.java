@@ -527,7 +527,7 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			if (LOGGING)
 				Log.v(LOGTAG,"Checking network OPML");
-			
+
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
 						
@@ -617,6 +617,8 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			if (LOGGING)
 				Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
+			
+			settings.setLastOPMLCheckTime(System.currentTimeMillis());
 			
 				OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
 					new OPMLParser.OPMLParserListener() {
