@@ -150,6 +150,8 @@ public class MediaDownloader extends AsyncTask<MediaContent, Integer, File>
 				}
 
 				HttpGet httpGet = new HttpGet(mediaContent.getUrl());
+				httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
+				
 				HttpResponse response = httpClient.execute(httpGet);
 
 				int statusCode = response.getStatusLine().getStatusCode();

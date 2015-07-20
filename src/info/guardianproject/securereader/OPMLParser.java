@@ -21,7 +21,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.HttpClient;
@@ -79,6 +78,8 @@ public class OPMLParser {
 				}
 		
 				HttpGet httpGet = new HttpGet(urlToParse);
+				httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
+				
 				HttpResponse response;
 				try {
 					response = httpClient.execute(httpGet);

@@ -30,6 +30,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -78,7 +80,11 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
+	
+	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
+	
+	public static final boolean REPORT_METRICS = true;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -98,6 +104,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public final static String PSIPHON_PROXY_HOST = "127.0.0.1";
 	public final static String PSIPHON_PROXY_TYPE = "SOCKS";
 	public final static int PSIPHON_PROXY_PORT = 1080;
+	
+	public final static String USERAGENT = "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19";
 	
 	//proxy type tor or psiphon
 
@@ -128,6 +136,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int feedRefreshAge;
 	public final int expirationCheckFrequency;
 	public final int opmlCheckFrequency;
+	public final boolean repeatedlyLoadNetworkOPML;
 	public final String opmlUrl;
 	
 	public static final int TIMER_PERIOD = 30000;  // 30 seconds 
@@ -162,6 +171,7 @@ public class SocialReader implements ICacheWordSubscriber
 		expirationCheckFrequency = applicationContext.getResources().getInteger(R.integer.expiration_check_frequency);
 		opmlCheckFrequency = applicationContext.getResources().getInteger(R.integer.opml_check_frequency);
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
+		repeatedlyLoadNetworkOPML = applicationContext.getResources().getBoolean(R.bool.repeatedly_load_network_opml);
 		
 		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
 		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
@@ -506,9 +516,15 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG,"checkOPML");
 		logStatus();
-		if (!settings.networkOpmlLoaded() && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+		
+		if (LOGGING) 
+			Log.v(LOGTAG, settings.lastOPMLCheckTime() + " < " +  System.currentTimeMillis() + " - " + opmlCheckFrequency);
+		
+		if ((repeatedlyLoadNetworkOPML || !settings.networkOpmlLoaded()) && databaseAdapter != null && databaseAdapter.databaseReady() && !cacheWord.isLocked() && isOnline() == ONLINE && settings.lastOPMLCheckTime() < System.currentTimeMillis() - opmlCheckFrequency) {
+			
 			if (LOGGING)
-				Log.v(LOGTAG,"Not already loaded from network, attempting to check");
+				Log.v(LOGTAG,"Checking network OPML");
+
 			UiLanguage lang = settings.uiLanguage();
 			String finalOpmlUrl = opmlUrl + "?lang=";
 						
@@ -534,8 +550,63 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl = finalOpmlUrl + "tr";
 			}
 			
+			if (!settings.networkOpmlLoaded()) {
+				finalOpmlUrl += "&first=true";
+			}
+			
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
+			}
+			
+			if (REPORT_METRICS) {
+				ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+				NetworkInfo networkInfo;
+
+				int connectionType = -1;
+				// Check WiFi
+				networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+				if (networkInfo != null && networkInfo.isConnected())
+				{
+					connectionType = 1;
+				} 
+				else if (settings.syncNetwork() != Settings.SyncNetwork.WifiOnly) 
+				{
+					// Check any network type
+					networkInfo = connectivityManager.getActiveNetworkInfo();
+					if (networkInfo != null && networkInfo.isConnected())
+					{
+						connectionType = 2;
+					}
+				}
+				String connectionTypeParam = "&nct=" + connectionType;
+				finalOpmlUrl += connectionTypeParam;
+						
+				String torTypeParam = "&p=";
+				if (settings.requireTor()) {
+					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
+						torTypeParam += "1";
+					} else {
+						// But this shouldn't actually work
+						torTypeParam += "0";
+					}
+				} else {
+					torTypeParam += "0";
+				}				
+				finalOpmlUrl += torTypeParam;
+				
+				String apiLevelParam = "&a=" + android.os.Build.VERSION.SDK_INT;
+				finalOpmlUrl += apiLevelParam;
+				
+				try {
+					String deviceNameParam = "&dn=" + URLEncoder.encode(android.os.Build.DEVICE, "UTF-8");
+					finalOpmlUrl += deviceNameParam;
+				} catch (UnsupportedEncodingException e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
+				
+				String numFeedsParam = "&nf=" + getSubscribedFeedsList().size();
+				finalOpmlUrl += numFeedsParam;
 			}
 			
 			if (TESTING) 
@@ -543,6 +614,8 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			if (LOGGING)
 				Log.v(LOGTAG, "OPML Feed Url: " + finalOpmlUrl);
+			
+			settings.setLastOPMLCheckTime(System.currentTimeMillis());
 			
 				OPMLParser oParser = new OPMLParser(SocialReader.this, finalOpmlUrl,
 					new OPMLParser.OPMLParserListener() {
@@ -1746,6 +1819,66 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
+	public String getDebugLog()
+	{
+		StringBuffer debugLog = new StringBuffer();
+
+		java.util.Date date= new java.util.Date();
+		debugLog.append("Timestamp: " + date.getTime() + "\n");
+
+		debugLog.append("OS Version: " + System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")\n");
+		debugLog.append("OS API Level: " + android.os.Build.VERSION.SDK_INT + "\n");
+		debugLog.append("Device: " + android.os.Build.DEVICE + "\n");
+		debugLog.append("Model (and Product): " + android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")\n");
+		
+		debugLog.append("File Path: " + ioCipherFilePath + "\n");
+		
+		debugLog.append("Online: ");
+		int isOnline = isOnline();
+		if (isOnline == ONLINE) {
+			debugLog.append("Online\n");
+		} else if (isOnline == NOT_ONLINE_NO_TOR) {
+			debugLog.append("Not Online, No Proxy\n");
+		} else if (isOnline == NOT_ONLINE_NO_WIFI) {
+			debugLog.append("Not Online, No Wifi\n");
+		} else if (isOnline == NOT_ONLINE_NO_WIFI_OR_NETWORK) {
+			debugLog.append("Not Online, No Wifi or Netowrk\n");
+		}
+		
+		debugLog.append("Feed Info\n");
+		ArrayList<Feed> subscribedFeeds = getSubscribedFeedsList();
+		for (Feed feed : subscribedFeeds) {
+			debugLog.append(feed.getDatabaseId() + ", " 
+					+ databaseAdapter.getFeedItems(feed.getDatabaseId(), -1).size() + ", "
+					+ feed.getStatus() + ", " +  "\n");
+		}
+		debugLog.append("\n");
+		
+		debugLog.append("Key:\n"
+				+ "STATUS_NOT_SYNCED = 0\n"
+				+ "STATUS_LAST_SYNC_GOOD = 1\n"
+				+ "STATUS_LAST_SYNC_FAILED_404 = 2\n"
+				+ "STATUS_LAST_SYNC_FAILED_UNKNOWN = 3\n"
+				+ "STATUS_LAST_SYNC_FAILED_BAD_URL = 4\n"
+				+ "STATUS_SYNC_IN_PROGRESS = 5\n"
+				+ "STATUS_LAST_SYNC_PARSE_ERROR = 6\n");
+		
+		
+		return debugLog.toString();
+	}
+	
+	public Intent getDebugIntent()
+	{		
+		Intent sendIntent = new Intent();
+		sendIntent.setAction(Intent.ACTION_SEND);
+		sendIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Debug Log");
+		sendIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"debug@guardianproject.info"});
+		sendIntent.putExtra(Intent.EXTRA_TEXT, getDebugLog());
+		sendIntent.setType("text/plain");
+
+		return sendIntent;
+	}	
+	
 	// Stub for Intent.. We don't start an activity here since we are doing a
 	// custom chooser in FragmentActivityWithMenu. We could though use a generic
 	// chooser

@@ -192,6 +192,8 @@ public class SyncServiceMediaDownloader implements Runnable
 					}
 
 					HttpGet httpGet = new HttpGet(mediaContent.getUrl());
+					httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
+					
 					if (LOGGING) 
 						Log.v(LOGTAG,"Downloading: "+mediaContent.getUrl());
 					HttpResponse response = httpClient.execute(httpGet);

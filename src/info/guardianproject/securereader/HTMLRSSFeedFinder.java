@@ -21,7 +21,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 
@@ -96,6 +95,8 @@ public class HTMLRSSFeedFinder {
 				}
 		
 				HttpGet httpGet = new HttpGet(urlToParse);
+				httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
+				
 				HttpResponse response;
 				try {
 					response = httpClient.execute(httpGet);
