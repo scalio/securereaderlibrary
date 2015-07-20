@@ -11,7 +11,6 @@ package info.guardianproject.securereader;
 
 //import info.guardianproject.bigbuffalo.adapters.DownloadsAdapter;
 import info.guardianproject.cacheword.CacheWordHandler;
-import info.guardianproject.cacheword.CacheWordSettings;
 import info.guardianproject.cacheword.Constants;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 import info.guardianproject.cacheword.IOCipherMountHelper;
@@ -154,7 +153,6 @@ public class SocialReader implements ICacheWordSubscriber
 	public Context applicationContext;
 	DatabaseAdapter databaseAdapter;
 	CacheWordHandler cacheWord;
-	CacheWordSettings cacheWordSettings;
 	public SecureSettings ssettings;
 	Settings settings;
 	SyncServiceConnection syncServiceConnection;
@@ -182,8 +180,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		this.settings = new Settings(applicationContext);
 		
-		this.cacheWordSettings = new CacheWordSettings(applicationContext);
-		this.cacheWord = new CacheWordHandler(applicationContext, this, cacheWordSettings);
+		this.cacheWord = new CacheWordHandler(applicationContext, this);
 		cacheWord.connectToService();
 		
 		this.oc = new OrbotHelper(applicationContext);
@@ -673,17 +670,28 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void setCacheWordTimeout(int minutes)
 	{
-		cacheWordSettings.setTimeoutSeconds(minutes*60);
+		try {
+			cacheWord.setTimeout(minutes*60);
+		} catch (IllegalStateException e) {
+			if (LOGGING)
+				Log.e(LOGTAG, e.getMessage());	
+		}
 	}
 	
 	public boolean isTorOnline() 
 	{
 		if (useTor() && oc.isOrbotInstalled() && oc.isOrbotRunning()) 
 		{
+			if (LOGGING) 
+				Log.v(LOGTAG, "Tor is running");
+			
 			return true;
 		} 
 		else 
 		{
+			if (LOGGING) 
+				Log.v(LOGTAG, "Tor isn't running");
+			
 			return false;
 		}		
 	}
@@ -1299,7 +1307,21 @@ public class SocialReader implements ICacheWordSubscriber
 				filesDir = applicationContext.getExternalFilesDir(null);
 				if (!filesDir.exists())
 				{
+					if (LOGGING) 
+						Log.v(LOGTAG, "filesDir doesn't exist, making it");
+					
 					filesDir.mkdirs();
+					
+					if (LOGGING && !filesDir.exists())
+						Log.v(LOGTAG, "still doesn't exist, error!");		
+					
+					testExternalStorage(filesDir);
+				}
+				else 
+				{
+					if (LOGGING) 
+						Log.v(LOGTAG, "filesDir exists");
+
 				}
 				
 				if (LOGGING) 
@@ -1955,6 +1977,13 @@ public class SocialReader implements ICacheWordSubscriber
 		//applicationContext.finish();
 	}
 
+	public void lockApp()
+	{
+		if (LOGGING)
+			Log.v(LOGTAG, "Locking app");
+		cacheWord.lock();
+	}
+	
 	private void deleteApp()
 	{
 		Uri packageURI = Uri.parse("package:" + applicationContext.getPackageName());
@@ -2000,7 +2029,7 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		*/
 		
-		cacheWord.manuallyLock();
+		cacheWord.lock();
 		cacheWord.deinitialize();
 		
 		
@@ -2491,6 +2520,9 @@ public class SocialReader implements ICacheWordSubscriber
     public void onCacheWordOpened() {
     	if (LOGGING)
     		Log.v(LOGTAG,"onCacheWordOpened");
+    	
+		socialReader.setCacheWordTimeout(settings.passphraseTimeout());
+
         initialize();
     }
     
