@@ -40,7 +40,6 @@ public class Item extends FeedEntity implements Serializable
 	private Date _pubDate;
 	private String _guid;
 	private String _author;
-	private String _commentsUrl;
 	private String _source;
 	//private String _category;
 	private String _contentEncoded;
@@ -49,6 +48,9 @@ public class Item extends FeedEntity implements Serializable
 	private ArrayList<MediaContent> _mediaContent;
 	// Should this be here??
 	private MediaThumbnail _mediaThumbnail;
+	
+	private ArrayList<Comment> comments = new ArrayList<Comment>();
+	private String _commentsUrl;
 
 	
 	static SimpleDateFormat[] dateFormats = { new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
