@@ -225,6 +225,39 @@ public class DatabaseAdapter
 		return returnValue;
 	}
 
+	public boolean isFeedUnfollowed(String feedUrl)
+	{
+		boolean returnValue = false;
+
+		try
+		{
+			String query = "select " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " from " + DatabaseHelper.FEEDS_TABLE + " where " + DatabaseHelper.FEEDS_TABLE_FEED_URL + " = ?;";
+
+			if (LOGGING) 
+				Log.v(LOGTAG, query);
+
+			if (databaseReady()) {
+				Cursor queryCursor = db.rawQuery(query, new String[] {feedUrl});
+	
+				if (queryCursor.getCount() > 0)
+				{
+					queryCursor.moveToFirst();
+					if (queryCursor.getInt(queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_SUBSCRIBED)) == 0)
+						returnValue = true;
+				}
+	
+				queryCursor.close();
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return returnValue;
+
+	}
+	
 	public long addFeedIfNotExisting(String title, String feedUrl)
 	{
 		long returnValue = -1;
