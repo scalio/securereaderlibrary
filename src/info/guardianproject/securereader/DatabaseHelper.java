@@ -1,5 +1,7 @@
 package info.guardianproject.securereader;
 
+import java.util.Date;
+
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.SQLCipherOpenHelper;
 import net.sqlcipher.database.SQLiteDatabase;
@@ -12,7 +14,7 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	public static boolean LOGGING = false;
 
 	public static final String DATABASE_NAME = "bigbuffalo.db";
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	public static final int POSTS_FEED_ID = -99;
 	public static final int DRAFTS_FEED_ID = -98;
@@ -124,7 +126,34 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	
 	public static final String ITEM_TAGS_TABLE_CREATE_SQL =  "create table " + ITEM_TAGS_TABLE + " (" + ITEM_TAGS_TABLE_ID + " integer primary key autoincrement, "
 			+ ITEM_TAG + " text not null, " + ITEM_TAGS_TABLE_ITEM_ID + " integer not null);";
+
+	public static final String COMMENTS_TABLE = "comments";
+	public static final String COMMENTS_TABLE_COLUMN_ID = "comment_id";
+	public static final String COMMENTS_TABLE_ITEM_ID = "comment_item_id";
+	public static final String COMMENTS_TABLE_TITLE = "comment_title";
+	public static final String COMMENTS_TABLE_LINK = "comment_link";
+	public static final String COMMENTS_TABLE_AUTHOR = "comment_author";
+	public static final String COMMENTS_TABLE_DESCRIPTION = "comment_description";
+	public static final String COMMENTS_TABLE_CONTENT_ENCODED = "comment_content_encoded";
+	public static final String COMMENTS_TABLE_GUID = "comment_guid";
+	public static final String COMMENTS_TABLE_PUBLISH_DATE = "comment_publish_date";
 	
+	public static final String COMMENTS_TABLE_CREATE_SQL = "create table " + COMMENTS_TABLE + " (" + COMMENTS_TABLE_COLUMN_ID + " integer primary key autoincrement, "
+			+ COMMENTS_TABLE_ITEM_ID + " integer not null, " + COMMENTS_TABLE_TITLE + " text null, " + COMMENTS_TABLE_LINK + " text null, " + COMMENTS_TABLE_DESCRIPTION
+			+ " text null, " + COMMENTS_TABLE_CONTENT_ENCODED + " text null, " + COMMENTS_TABLE_PUBLISH_DATE + " text null, " + COMMENTS_TABLE_GUID + " text null, "
+			+ COMMENTS_TABLE_AUTHOR + " text null);";
+		
+	/*
+	private long _databaseId;
+	private long _itemId;
+	private String _title;
+	private String _link;
+	private String _author;  // dc:creator
+	private String _guid;
+	private Date _pubDate;
+	private String _description;
+	private String _contentEncoded;
+	*/
 	
 	private SQLiteDatabase sqliteDatabase;
 
@@ -156,20 +185,19 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 			Log.v(LOGTAG, "SQL: " + SETTINGS_TABLE_CREATE_SQL);
 		_sqliteDatabase.execSQL(SETTINGS_TABLE_CREATE_SQL);
 		
-		/*
-		 * if (LOGGING)
-			Log.v(LOGTAG, "SQL: " + TAGS_TABLE_CREATE_SQL);
-		_sqliteDatabase.execSQL(TAGS_TABLE_CREATE_SQL);
-		*/
 		if (LOGGING)
 			Log.v(LOGTAG, "SQL: " + ITEM_TAGS_TABLE_CREATE_SQL);
-		_sqliteDatabase.execSQL(ITEM_TAGS_TABLE_CREATE_SQL);		
+		_sqliteDatabase.execSQL(ITEM_TAGS_TABLE_CREATE_SQL);	
+		
+		if (LOGGING)
+			Log.v(LOGTAG, "SQL: " + COMMENTS_TABLE_CREATE_SQL);
+		_sqliteDatabase.execSQL(COMMENTS_TABLE_CREATE_SQL);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase _sqliteDatabase, int oldVersion, int newVersion)
 	{
-		if (newVersion >= oldVersion && newVersion >= 2) {
+		if (newVersion > oldVersion && oldVersion < 2 && newVersion >= 2) {
 			// Moving from 1 to 2
 
 			String ITEMS_TABLE_ALTER_SQL = "alter table " + ITEMS_TABLE + " add column " + ITEMS_TABLE_VIEWCOUNT +  " integer default 0";
@@ -214,11 +242,15 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 										+ ITEM_MEDIA_URL + " != null and " 
 										+ ITEM_MEDIA_ITEM_ID + " != null";
 			
-			
 			_sqliteDatabase.execSQL(populateTable);
 			
 			String dropTable = "drop table " + ITEM_MEDIA_TABLE + "_old";
 			_sqliteDatabase.execSQL(dropTable);
+			
+		} else 	if (newVersion > oldVersion && oldVersion < 3 && newVersion >= 3) {
+
+			_sqliteDatabase.execSQL(COMMENTS_TABLE_CREATE_SQL);
+
 		}
 	}
 }

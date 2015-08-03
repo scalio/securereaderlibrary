@@ -19,6 +19,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.tinymission.rss.Comment;
 import com.tinymission.rss.Feed;
 import com.tinymission.rss.Item;
 import com.tinymission.rss.MediaContent;
@@ -792,6 +793,7 @@ public class DatabaseAdapter
 	{
 		deleteItemMedia(itemDatabaseId);
 		deleteItemTags(itemDatabaseId);
+		deleteItemComments(itemDatabaseId);
 		
 		boolean returnValue = false;
 
@@ -1957,7 +1959,8 @@ public class DatabaseAdapter
 					}
 					catch (SQLException e)
 					{
-						e.printStackTrace();
+						if (LOGGING)
+							e.printStackTrace();
 					}
 				} else {
 					// else, it is already in the database, let's update the database id
@@ -1989,6 +1992,132 @@ public class DatabaseAdapter
 		}
 		return returnValue;
 	}
+
+	public void addOrUpdateItemComments(Item item, ArrayList<Comment> itemCommentList)
+	{
+		if (LOGGING)
+			Log.v(LOGTAG,"addOrUpdateItemMedia");
+		
+		for (Comment itemComment : itemCommentList)
+		{
+			addOrUpdateItemComment(item, itemComment);
+			if (LOGGING)
+				Log.v(LOGTAG,"itemMedia added or updated: " + itemComment.getDatabaseId());
+		}
+	}
+
+	public long addOrUpdateItemComment(Item item, Comment itemComment)
+	{
+		long returnValue = -1;
+		if (itemComment.getDatabaseId() == Comment.DEFAULT_DATABASE_ID)
+		{
+			String query = "select " + DatabaseHelper.COMMENTS_TABLE_COLUMN_ID + ", "
+					+ DatabaseHelper.COMMENTS_TABLE_ITEM_ID + " from " + DatabaseHelper.COMMENTS_TABLE + " where " + DatabaseHelper.COMMENTS_TABLE_GUID + " =?;";
+
+			if (LOGGING)
+				Log.v(LOGTAG, query);
+
+			if (databaseReady()) {
+				Cursor queryCursor = db.rawQuery(query, new String[] {itemComment.getGuid()});
+	
+				if (queryCursor.getCount() == 0)
+				{
+					queryCursor.close();
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"Default database id and nothing related there so creating new");
+				
+					ContentValues values = new ContentValues();
+					values.put(DatabaseHelper.COMMENTS_TABLE_ITEM_ID, item.getDatabaseId());
+					values.put(DatabaseHelper.COMMENTS_TABLE_TITLE, item.getTitle());
+					values.put(DatabaseHelper.COMMENTS_TABLE_LINK, itemComment.getLink());
+					values.put(DatabaseHelper.COMMENTS_TABLE_AUTHOR, itemComment.getAuthor());
+					values.put(DatabaseHelper.COMMENTS_TABLE_DESCRIPTION, itemComment.getDescription());
+					values.put(DatabaseHelper.COMMENTS_TABLE_CONTENT_ENCODED, itemComment.getContentEncoded());
+					values.put(DatabaseHelper.COMMENTS_TABLE_GUID, itemComment.getGuid());
+					
+					if (item.getPubDate() != null)
+					{
+						values.put(DatabaseHelper.COMMENTS_TABLE_PUBLISH_DATE, dateFormat.format(itemComment.getPubDate()));
+					}					
+					
+					try
+					{
+						returnValue = db.insert(DatabaseHelper.COMMENTS_TABLE, null, values);
+						itemComment.setDatabaseId(returnValue);
+						if (LOGGING)
+							Log.v(LOGTAG,"Created comments: " + itemComment.getDatabaseId());
+			
+					}
+					catch (SQLException e)
+					{
+						if (LOGGING)
+							e.printStackTrace();
+					}
+				} else {
+					// else, it is already in the database, let's update the database id
+	
+					int databaseIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID);
+			
+					if (queryCursor.moveToFirst())
+					{
+						long databaseId = queryCursor.getLong(databaseIdColumn);					
+						itemComment.setDatabaseId(databaseId);
+						returnValue = databaseId;
+						
+					} else {
+						if (LOGGING) 
+							Log.e(LOGTAG,"Couldn't move to first row");
+					}
+	
+					queryCursor.close();
+					
+				}
+			}
+			
+		} else {
+			int columnsUpdated = updateItemComment(item, itemComment);
+			if (columnsUpdated == 1)
+			{
+				returnValue = itemComment.getDatabaseId();
+			}		
+		}
+		return returnValue;
+	}	
+	
+	public int updateItemComment(Item item, Comment itemComment)
+	{
+		int returnValue = -1;
+		
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.COMMENTS_TABLE_ITEM_ID, item.getDatabaseId());
+		values.put(DatabaseHelper.COMMENTS_TABLE_TITLE, item.getTitle());
+		values.put(DatabaseHelper.COMMENTS_TABLE_LINK, itemComment.getLink());
+		values.put(DatabaseHelper.COMMENTS_TABLE_AUTHOR, itemComment.getAuthor());
+		values.put(DatabaseHelper.COMMENTS_TABLE_DESCRIPTION, itemComment.getDescription());
+		values.put(DatabaseHelper.COMMENTS_TABLE_CONTENT_ENCODED, itemComment.getContentEncoded());
+		values.put(DatabaseHelper.COMMENTS_TABLE_GUID, itemComment.getGuid());
+
+		if (item.getPubDate() != null)
+		{
+			values.put(DatabaseHelper.COMMENTS_TABLE_PUBLISH_DATE, dateFormat.format(itemComment.getPubDate()));
+		}					
+
+		
+		if (databaseReady()) {
+			try
+			{
+				returnValue = db.update(DatabaseHelper.COMMENTS_TABLE, values, DatabaseHelper.COMMENTS_TABLE_COLUMN_ID + "=?", new String[] { String.valueOf(itemComment.getDatabaseId()) });
+				if (LOGGING)
+					Log.v(LOGTAG, "updateItemComment database query returnValue: " + returnValue);
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}		
+		}
+		return returnValue;
+	}	
 	
 	public long addOrUpdateSetting(String key, String value) {
 		int returnValue = -1;
@@ -2024,6 +2153,92 @@ public class DatabaseAdapter
 		
 		return returnValue;		
 	}
+	
+	public ArrayList<Comment> getItemComments(Item item)
+	{
+		ArrayList<Comment> itemComments = new ArrayList<Comment>();
+		
+		if (LOGGING)
+			Log.v(LOGTAG,"getItemComments");
+				
+		String query = "select " + DatabaseHelper.COMMENTS_TABLE_COLUMN_ID + ", " + DatabaseHelper.COMMENTS_TABLE_ITEM_ID + ", "
+				+ DatabaseHelper.COMMENTS_TABLE_TITLE + ", " + DatabaseHelper.COMMENTS_TABLE_LINK + ", " + DatabaseHelper.COMMENTS_TABLE_AUTHOR + ", "
+				+ DatabaseHelper.COMMENTS_TABLE_DESCRIPTION + ", " + DatabaseHelper.COMMENTS_TABLE_CONTENT_ENCODED + ", " + DatabaseHelper.COMMENTS_TABLE_GUID + ", "
+				+ DatabaseHelper.COMMENTS_TABLE_PUBLISH_DATE
+				+ " from " + DatabaseHelper.COMMENTS_TABLE + " where " + DatabaseHelper.COMMENTS_TABLE_ITEM_ID + " = "
+				+ "?;";
+
+		if (LOGGING)
+			Log.v(LOGTAG, query);
+
+		Cursor queryCursor = null;
+		
+		if (databaseReady()) {
+			
+			try
+			{
+				queryCursor = db.rawQuery(query, new String[] {String.valueOf(item.getDatabaseId())});
+					
+				int idColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_COLUMN_ID);
+				int itemIdColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_ITEM_ID);
+				int titleColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_TITLE);
+				int linkColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_LINK);
+				int authorColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_AUTHOR);
+				int descriptionColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_DESCRIPTION);
+				int contentEncodedColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_CONTENT_ENCODED);
+				int guidColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_GUID);
+				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_PUBLISH_DATE);
+				
+				if (queryCursor.moveToFirst())
+				{
+					do {
+						long id = queryCursor.getLong(idColumn);
+						long itemId = queryCursor.getLong(itemIdColumn);
+						String title = queryCursor.getString(titleColumn);
+						String link =  queryCursor.getString(linkColumn);
+						String author =  queryCursor.getString(authorColumn);
+						String description =  queryCursor.getString(descriptionColumn);
+						String contentEncoded = queryCursor.getString(contentEncodedColumn);
+						String guid = queryCursor.getString(guidColumn);
+						String publishDate = queryCursor.getString(publishDateColumn);
+						
+						if (LOGGING)
+							Log.v(LOGTAG,"new Item Comment");
+
+						Comment c = new Comment(guid, title, publishDate, description, itemId);
+						c.setDatabaseId(id);
+						c.setLink(link);
+						c.setAuthor(author);
+						c.setContentEncoded(contentEncoded);
+
+						itemComments.add(c);
+						
+					} while (queryCursor.moveToNext());
+				}
+	
+				queryCursor.close();
+	
+				if (LOGGING)
+					Log.v(LOGTAG, "There are " + itemComments.size() + " comments for the item");
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+			{
+				if (queryCursor != null)
+				{
+					try
+					{
+						queryCursor.close();					
+					}
+					catch(Exception e) {}
+				}
+			}
+		}
+		return itemComments;
+	}	
 	
 	public String getSettingValue(String key) {
 		
@@ -2639,6 +2854,20 @@ public class DatabaseAdapter
 		}
 	}
 
+	public void deleteItemComments(Item item) {
+		deleteItemComments(item.getDatabaseId());
+	}
+	
+	public void deleteItemComments(long itemId) {
+		if (databaseReady()) {
+			try {
+				long returnValue = db.delete(DatabaseHelper.COMMENTS_TABLE, DatabaseHelper.COMMENTS_TABLE_ITEM_ID + "=?", new String[] { String.valueOf(itemId) });
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	/*
 	public ArrayList<String> getItemMediaFiles(long itemId) {
 		if (databaseReady()) {
@@ -2864,6 +3093,7 @@ public class DatabaseAdapter
 				db.delete(DatabaseHelper.ITEM_MEDIA_TABLE, "1", null);
 				db.delete(DatabaseHelper.SETTINGS_TABLE, "1", null);
 				db.delete(DatabaseHelper.ITEM_TAGS_TABLE, "1", null);
+				db.delete(DatabaseHelper.COMMENTS_TABLE, "1", null);
 				//db.delete(DatabaseHelper.TAGS_TABLE, "1", null);
 			}
 		}

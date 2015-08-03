@@ -18,6 +18,8 @@ public class Comment extends FeedEntity implements Serializable
 
 	public static final String LOGTAG = "rss.comment";
 	public static final boolean LOGGGING = true;
+	
+	public static final int DEFAULT_DATABASE_ID = -1;
 
 /*
  * <item>
@@ -92,22 +94,22 @@ http://ny5y5j76ljc2dcpr.onion/wordpress/?p=1#comment-11
 		}
 	}
 
-	public Comment(String guid, String title, String publicationTime, String source, String content, long itemId)
+	public Comment(String guid, String title, String publicationTime, String description, long itemId)
 	{
 		this();
 		_guid = guid;
 		_title = title;
-		_description = content;
+		_description = description;
 		_itemId = itemId;
 		setPubDate(publicationTime);
 	}
 
-	public Comment(String guid, String title, Date publicationTime, String source, String content, long itemId)
+	public Comment(String guid, String title, Date publicationTime, String description, long itemId)
 	{
 		this();
 		_guid = guid;
 		_title = title;
-		_description = content;
+		_description = description;
 		_itemId = itemId;
 		setPubDate(publicationTime);
 	}
