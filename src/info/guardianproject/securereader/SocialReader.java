@@ -2556,20 +2556,33 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	public void addCommentToItem(Item item, Comment comment) {
 		
-		// Add to database
+		// Add to database?????		
+		
+		// Push to XML-RPC
+		
 		
 	}
 	
 	public ArrayList<Comment> getItemComments(Item item) {
-		ArrayList<Comment> comments = new ArrayList<Comment>();
+		ArrayList<Comment> itemComments = new ArrayList<Comment>();
 		
 		// Get from database;
-		
-		return comments;
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			itemComments = databaseAdapter.getItemComments(item);
+			return itemComments;
+		}
+		else
+		{
+			if (LOGGING)
+				Log.e(LOGTAG, "Database not ready: getItemComments");
+		}
+		return itemComments;		
 	}
 	
 	// Do this periodically, need to decide when and which
 	public void networkCheckCommentFeeds() {
 		// Loop through items that we should check and save updates to database
+		
 	}
 }

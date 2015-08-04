@@ -55,12 +55,14 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 																		// 0
 	public static final String ITEMS_TABLE_SHARED = "item_shared"; // boolean default 0
 	public static final String ITEMS_TABLE_VIEWCOUNT = "item_viewcount"; 
+	public static final String ITEMS_TABLE_REMOTE_POST_ID = "item_remote_post_id";
 
 	public static final String ITEMS_TABLE_CREATE_SQL = "create table " + ITEMS_TABLE + " (" + ITEMS_TABLE_COLUMN_ID + " integer primary key autoincrement, "
 			+ ITEMS_TABLE_FEED_ID + " integer not null, " + ITEMS_TABLE_TITLE + " text null, " + ITEMS_TABLE_LINK + " text null, " + ITEMS_TABLE_DESCRIPTION
 			+ " text null, " + ITEMS_TABLE_CONTENT_ENCODED + " text null, " + ITEMS_TABLE_PUBLISH_DATE + " text null, " + ITEMS_TABLE_GUID + " text null, "
 			+ ITEMS_TABLE_AUTHOR + " text null, " + ITEMS_TABLE_COMMENTS_URL + " text null, " + ITEMS_TABLE_SOURCE + " text null, " + ITEMS_TABLE_CATEGORY
-			+ " text null, " + ITEMS_TABLE_FAVORITE + " boolean default 0, " + ITEMS_TABLE_SHARED + " boolean default 0, " + ITEMS_TABLE_VIEWCOUNT + " integer default 0);";
+			+ " text null, " + ITEMS_TABLE_FAVORITE + " boolean default 0, " + ITEMS_TABLE_SHARED + " boolean default 0, " + ITEMS_TABLE_VIEWCOUNT + " integer default 0, "
+			+ ITEMS_TABLE_REMOTE_POST_ID + " text default -1"	+ ");";
 	
 	public static final String ITEMS_TABLE_CREATE_INDEX = "create index item_publish_date_index on " + ITEMS_TABLE + " (" + ITEMS_TABLE_PUBLISH_DATE + ");";
 
@@ -249,6 +251,10 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 			
 		} else 	if (newVersion > oldVersion && oldVersion < 3 && newVersion >= 3) {
 
+			// Add ITEMS_TABLE_REMOTE_POST_ID 
+			String ITEMS_TABLE_ALTER_SQL = "alter table " + ITEMS_TABLE + " add column " + ITEMS_TABLE_REMOTE_POST_ID +  " text default -1";
+			_sqliteDatabase.execSQL(ITEMS_TABLE_ALTER_SQL);
+			
 			_sqliteDatabase.execSQL(COMMENTS_TABLE_CREATE_SQL);
 
 		}

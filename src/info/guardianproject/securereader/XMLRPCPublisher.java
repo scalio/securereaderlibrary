@@ -28,7 +28,7 @@ import com.tinymission.rss.MediaContent;
  */
 public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 {
-	public final static boolean LOGGING = false;
+	public final static boolean LOGGING = true;
 	public final static String LOGTAG = "XMLRPC PUBLISHER";
 
 	SocialReporter socialReporter;

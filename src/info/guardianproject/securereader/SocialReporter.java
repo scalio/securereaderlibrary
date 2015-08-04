@@ -4,9 +4,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.tinymission.rss.Comment;
 import com.tinymission.rss.Item;
 
+import info.guardianproject.securereader.XMLRPCPublisher;
 import info.guardianproject.securereader.XMLRPCPublisher.XMLRPCPublisherCallback;
+import info.guardianproject.securereader.XMLRPCCommentPublisher;
+import info.guardianproject.securereader.XMLRPCCommentPublisher.XMLRPCCommentPublisherCallback;
 
 import net.bican.wordpress.Wordpress;
 
@@ -157,6 +161,23 @@ public class SocialReporter
 	
 			story.setFeedId(DatabaseHelper.POSTS_FEED_ID);
 			socialReader.databaseAdapter.addOrUpdateItem(story, -1);
+		} else {
+			if (LOGGING)
+				Log.e(LOGTAG,"Database not ready");
+		}
+	}
+	
+	public void postComment(Comment comment, XMLRPCCommentPublisherCallback callback)
+	{
+		if (LOGGING)
+			Log.v(LOGTAG, "postComment");
+		
+		if (socialReader.databaseAdapter != null && socialReader.databaseAdapter.databaseReady())
+		{
+			// Do the actual publishing in a background thread
+			XMLRPCCommentPublisher publisher = new XMLRPCCommentPublisher(this);
+			publisher.setXMLRPCCommentPublisherCallback(callback);
+			publisher.execute(comment);
 		} else {
 			if (LOGGING)
 				Log.e(LOGTAG,"Database not ready");

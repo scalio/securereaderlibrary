@@ -45,7 +45,7 @@ public class Reader
 	 * 
 	 */
 	public final static String[] CONTENT_TAGS = { "title", "link", "language", "pubDate", "lastBuildDate", "docs", "generator", "managingEditor", "webMaster",
-			"guid", "author", "category", "content:encoded", "description", "url" };
+			"guid", "author", "category", "content:encoded", "description", "url", "paik:id" };
 
 	/**
 	 * The tags that should be parsed into separate entities, not just
@@ -339,6 +339,10 @@ public class Reader
 				if (qName.equalsIgnoreCase("content:encoded"))
 				{
 					qName = "contentEncoded";
+				}
+				else if (qName.equalsIgnoreCase("paik:id"))
+				{
+					qName = "remotePostId";
 				}
 				_entityStack.lastElement().setProperty(qName, content);
 			}
