@@ -2554,15 +2554,6 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
-	public void addCommentToItem(Item item, Comment comment) {
-		
-		// Add to database?????		
-		
-		// Push to XML-RPC
-		
-		
-	}
-	
 	public ArrayList<Comment> getItemComments(Item item) {
 		ArrayList<Comment> itemComments = new ArrayList<Comment>();
 		
