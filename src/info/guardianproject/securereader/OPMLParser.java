@@ -34,6 +34,7 @@ public class OPMLParser {
 	public static final String HTMLURL_ATTRIBUTE = "htmlUrl";
 	public static final String XMLURL_ATTRIBUTE = "xmlUrl";
 	public static final String SUBSCRIBE_ATTRIBUTE = "subscribe";
+	public static final String DESCRIPTION_ATTRIBUTE = "description";
 	
 	private static final String LOGTAG = "OPMLPARSER";
 	public static final boolean LOGGING = false;
@@ -43,6 +44,7 @@ public class OPMLParser {
 		public String htmlUrl = "";
 		public String xmlUrl = "";
 		public boolean subscribe = false;
+		public String description = "";
 	}
 	
 	ArrayList<OPMLOutline> outlines;
@@ -189,6 +191,7 @@ public class OPMLParser {
 	        	currentOutline.text = atts.getValue(TEXT_ATTRIBUTE);
 	        	currentOutline.htmlUrl = atts.getValue(HTMLURL_ATTRIBUTE);
 	        	currentOutline.xmlUrl = atts.getValue(XMLURL_ATTRIBUTE);
+	        	currentOutline.description = atts.getValue(DESCRIPTION_ATTRIBUTE);
 	        	if (atts.getValue(SUBSCRIBE_ATTRIBUTE) == null || atts.getValue(SUBSCRIBE_ATTRIBUTE).equals("true")) {
 	        		currentOutline.subscribe = true;
 	        	}
