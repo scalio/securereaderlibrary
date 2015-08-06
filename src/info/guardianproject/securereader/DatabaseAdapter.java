@@ -882,7 +882,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where "
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID 
+					+ " from " + DatabaseHelper.ITEMS_TABLE + " where "
 					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
@@ -1090,7 +1091,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where "
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID 
+					+ " from " + DatabaseHelper.ITEMS_TABLE + " where "
 					+ DatabaseHelper.ITEMS_TABLE_SHARED + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
@@ -1198,7 +1200,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID 
+					+ " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
 					+ " and " + DatabaseHelper.ITEMS_TABLE_SHARED + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
@@ -1430,8 +1433,9 @@ public class DatabaseAdapter
 						+ DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED + ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " 
 						+ DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_GUID
 						+ ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", "
-						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE + ", "
+						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE 
 						+ DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID
+						+ " from " + DatabaseHelper.ITEMS_TABLE + ", "
 						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ? order by "
 						+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC LIMIT " + numItems + ";";
 			}
@@ -1442,8 +1446,9 @@ public class DatabaseAdapter
 						+ DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED + ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " 
 						+ DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_GUID
 						+ ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", "
-						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " from " + DatabaseHelper.ITEMS_TABLE + ", "
+						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE 
 						+ DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID
+						+ " from " + DatabaseHelper.ITEMS_TABLE + ", "
 						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ? order by "
 						+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
 			}
