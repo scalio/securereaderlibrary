@@ -9,60 +9,56 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.bican.wordpress.MediaObject;
-import net.bican.wordpress.Page;
 import net.bican.wordpress.Wordpress;
 import redstone.xmlrpc.XmlRpcClient;
 import redstone.xmlrpc.XmlRpcStruct;
 import android.os.AsyncTask;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.client.HttpClient;
 
-import com.tinymission.rss.Item;
-import com.tinymission.rss.MediaContent;
+import com.tinymission.rss.Comment;
 
 /**
  * Class for fetching the feed content in the background.
  * 
  */
-public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
+public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 {
 	public final static boolean LOGGING = true;
 	public final static String LOGTAG = "XMLRPC PUBLISHER";
 
 	SocialReporter socialReporter;
 
-	XMLRPCPublisherCallback itemPublishedCallback;
+	XMLRPCCommentPublisherCallback commentPublishedCallback;
 
-	public void setXMLRPCPublisherCallback(XMLRPCPublisherCallback _itemPublishedCallback)
+	public void setXMLRPCCommentPublisherCallback(XMLRPCCommentPublisherCallback _commentPublishedCallback)
 	{
-		itemPublishedCallback = _itemPublishedCallback;
+		commentPublishedCallback = _commentPublishedCallback;
 	}
 
-	public interface XMLRPCPublisherCallback
+	public interface XMLRPCCommentPublisherCallback
 	{
-		public void itemPublished(Item _item);
+		public void commentPublished(Comment _comment);
 	}
 
-	public XMLRPCPublisher(SocialReporter _socialReporter)
+	public XMLRPCCommentPublisher(SocialReporter _socialReporter)
 	{
 		super();
 		socialReporter = _socialReporter;
 	}
 
 	@Override
-	protected Item doInBackground(Item... params)
+	protected Comment doInBackground(Comment... params)
 	{
-		Item item = new Item();
+		Comment comment = new Comment();
 		if (params.length == 0)
 		{
 			if (LOGGING)
-				Log.v(LOGTAG, "doInBackground params length is 0");
+				Log.v(LOGTAG, "doInBackground params length is 0, no comment to publish ");
 		}
 		else
 		{
-			item = params[0];
+			comment = params[0];
 
 			try
 			{
@@ -84,7 +80,7 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 					
 					String nickname = socialReporter.socialReader.ssettings.nickname();
 					if (nickname == null) {
-						nickname = "";
+						nickname = xmlRPCUsername;
 					}
 					
 					// acxu.createUser
@@ -111,77 +107,49 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 						Log.v(LOGTAG, "Logging into XMLRPC Interface: " + xmlRPCUsername + '@' + socialReporter.xmlrpcEndpoint);
 					Wordpress wordpress = new Wordpress(xmlRPCUsername, xmlRPCPassword, socialReporter.xmlrpcEndpoint);
 	
-					Page page = new Page();
-					page.setTitle(item.getTitle());
-	
-					StringBuffer sbBody = new StringBuffer();
-					sbBody.append(item.getDescription());
-	
-					ArrayList<MediaContent> mediaContent = item.getMediaContent();
-					for (MediaContent mc : mediaContent)
-					{
-						//String filePath = mc.getFilePathFromLocalUri(socialReporter.applicationContext);
-						//String filePath = mc.getUrl();
-						URI fileUri = new URI(mc.getUrl());
-						if (LOGGING)
-							Log.v(LOGTAG,"filePath: "+fileUri.getPath());
-						if (fileUri != null)
-						{
-							File f = new File(fileUri.getPath());
-							MediaObject mObj = wordpress.newMediaObject("image/jpeg", f, false);
-	
-							if (mObj != null)
-							{
-		
-								sbBody.append("\n\n<a href=\"" + mObj.getUrl() + "\">" + mObj.getUrl() + "</a>");
-	
-								// This should
-								XmlRpcStruct enclosureStruct = new XmlRpcStruct();
-								enclosureStruct.put("url", mObj.getUrl());
-								enclosureStruct.put("length", f.length());
-								enclosureStruct.put("type", mObj.getType());
-								page.setEnclosure(enclosureStruct);
-	
-							}
-						}
+					String nickname = socialReporter.socialReader.ssettings.nickname();
+					if (nickname == null) {
+						nickname = xmlRPCUsername;
 					}
-	
-					page.setDescription(sbBody.toString());
-					boolean publish = true;
-	
-					String postId = wordpress.newPost(page, publish);
+					
+					Integer comment_parent = Integer.valueOf(-1);
+					String content = comment.getDescription();
+					String author = nickname;
+					String author_url = "";
+					String author_email = "";
+					Integer post_id = Integer.valueOf(socialReporter.socialReader.getItemFromId(comment.getItemId()).getRemotePostId());
+					
+					Integer commentId = wordpress.newComment(post_id, comment_parent, content, author, author_url, author_email);
+					
 					if (LOGGING)
-						Log.v(LOGTAG, "Posted: " + postId);
+						Log.v(LOGTAG, "Posted: " + commentId);
 				} else {
 					if (LOGGING)
 						Log.e(LOGTAG,"Can't publish, no username/password");
 				}
 
-				// return postId;
+			
 			}
 			catch (MalformedURLException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
-			/*
-			 * catch (XmlRpcFault e) { // TODO Auto-generated catch block
-			 * e.printStackTrace(); }
-			 */
 			catch (Exception e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
 		}
-		return item;
+		return comment;
 	}
 
 	@Override
-	protected void onPostExecute(Item item)
+	protected void onPostExecute(Comment comment)
 	{
-		if (itemPublishedCallback != null)
+		if (commentPublishedCallback != null)
 		{
-			itemPublishedCallback.itemPublished(item);
+			commentPublishedCallback.commentPublished(comment);
 		}
 	}
 }

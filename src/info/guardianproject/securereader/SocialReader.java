@@ -67,6 +67,7 @@ import com.tinymission.rss.Feed;
 import com.tinymission.rss.Item;
 import com.tinymission.rss.MediaContent;
 import com.tinymission.rss.MediaContent.MediaContentType;
+import com.tinymission.rss.Comment;
 
 public class SocialReader implements ICacheWordSubscriber
 {
@@ -84,7 +85,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
-	public static final boolean REPORT_METRICS = true;
+	public static final boolean REPORT_METRICS = false;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -2551,5 +2552,28 @@ public class SocialReader implements ICacheWordSubscriber
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	public ArrayList<Comment> getItemComments(Item item) {
+		ArrayList<Comment> itemComments = new ArrayList<Comment>();
+		
+		// Get from database;
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			itemComments = databaseAdapter.getItemComments(item);
+			return itemComments;
+		}
+		else
+		{
+			if (LOGGING)
+				Log.e(LOGTAG, "Database not ready: getItemComments");
+		}
+		return itemComments;		
+	}
+	
+	// Do this periodically, need to decide when and which
+	public void networkCheckCommentFeeds() {
+		// Loop through items that we should check and save updates to database
+		
 	}
 }
