@@ -69,15 +69,16 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 			{
 				XmlRpcClient.setContext(socialReporter.applicationContext);
 
-				if (socialReporter.useTor() && socialReporter.socialReader.isTorOnline())
-				{
-					XmlRpcClient.setProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
-				}
-				else if (socialReporter.useTor() && !socialReporter.socialReader.isTorOnline()) {
-					// Indicate failure somehow
-					return comment;
-				}
-				else
+				//TODO - PROXY WORK
+//				if (socialReporter.useTor() && socialReporter.socialReader.isTorOnline())
+//				{
+//					XmlRpcClient.setProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+//				}
+//				else if (socialReporter.useTor() && !socialReporter.socialReader.isTorOnline()) {
+//					// Indicate failure somehow
+//					return comment;
+//				}
+//				else
 				{
 					XmlRpcClient.setProxy(false, null, null, -1);
 				}

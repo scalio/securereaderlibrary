@@ -587,14 +587,16 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl += connectionTypeParam;
 						
 				String torTypeParam = "&p=";
-				if (settings.requireTor()) {
-					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
-						torTypeParam += "1";
-					} else {
-						// But this shouldn't actually work
-						torTypeParam += "0";
-					}
-				} else {
+				//TODO - PROXY WORK
+//				if (settings.requireTor()) {
+//					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
+//						torTypeParam += "1";
+//					} else {
+//						// But this shouldn't actually work
+//						torTypeParam += "0";
+//					}
+//				} else 
+				{
 					torTypeParam += "0";
 				}				
 				finalOpmlUrl += torTypeParam;
