@@ -38,7 +38,12 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 
 	public interface XMLRPCCommentPublisherCallback
 	{
+		public static final int FAILURE_REASON_NO_PRIVACY_PROXY = 1;
+		public static final int FAILURE_REASON_NO_CONNECTION = 2;
+		
+		
 		public void commentPublished(Comment _comment);
+		public void commentPublishFailure(int reason);
 	}
 
 	public XMLRPCCommentPublisher(SocialReporter _socialReporter)
@@ -64,9 +69,13 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 			{
 				XmlRpcClient.setContext(socialReporter.applicationContext);
 
-				if (socialReporter.useTor())
+				if (socialReporter.useTor() && socialReporter.socialReader.isTorOnline())
 				{
 					XmlRpcClient.setProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+				}
+				else if (socialReporter.useTor() && !socialReporter.socialReader.isTorOnline()) {
+					// Indicate failure somehow
+					return comment;
 				}
 				else
 				{
