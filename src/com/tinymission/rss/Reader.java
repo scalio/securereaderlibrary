@@ -324,7 +324,7 @@ public class Reader
 				else
 				{
 					throw new RuntimeException("Don't know how to create an entity from tag " + qName);
-				}
+				}				
 			}
 		}
 

@@ -380,5 +380,60 @@ public class Feed extends FeedEntity
 	{
 		return _items.get(position);
 	}
+	
+	// For feeds of comments (which are essentially items)
+	
+	private final ArrayList<Comment> _comments = new ArrayList<Comment>();
 
+	public void clearComments()
+	{
+		_comments.clear();
+	}
+
+	/**
+	 * @return the items in the feed
+	 */
+	public ArrayList<Comment> getComments()
+	{
+		return _comments;
+	}
+
+	/**
+	 * @param item
+	 *            an item to add to the feed
+	 */
+	public void addComment(Comment comment)
+	{
+		_comments.add(comment);
+	}
+
+	/**
+	 * @param items
+	 *            add arraylist of items to a feed
+	 */
+	public void addComments(ArrayList<Comment> comments)
+	{
+		for (int i = 0; i < comments.size(); i++)
+		{
+			_comments.add(comments.get(i));
+		}
+	}
+
+	/**
+	 * @return the number of items in the feed.
+	 */
+	public int getCommentCount()
+	{
+		return _comments.size();
+	}
+
+	/**
+	 * @param position
+	 *            the item index you wish to retrieve
+	 * @return the item at position
+	 */
+	public Comment getComment(int position)
+	{
+		return _comments.get(position);
+	}
 }

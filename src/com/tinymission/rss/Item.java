@@ -54,6 +54,24 @@ public class Item extends FeedEntity implements Serializable
 	private ArrayList<Comment> comments = new ArrayList<Comment>();
 	private String _commentsUrl;
 
+	// This all relates to comment fetching
+	public static int STATUS_NOT_SYNCED = 0;
+	public static int STATUS_LAST_SYNC_GOOD = 1;
+	public static int STATUS_LAST_SYNC_FAILED_404 = 2;
+	public static int STATUS_LAST_SYNC_FAILED_UNKNOWN = 3;
+	public static int STATUS_LAST_SYNC_FAILED_BAD_URL = 4;
+	public static int STATUS_SYNC_IN_PROGRESS = 5;
+	public static int STATUS_LAST_SYNC_PARSE_ERROR = 6;
+	private int _status = 0;
+
+	public int getStatus() {
+		return _status;
+	}
+	
+	public void setStatus(int _status) {
+		this._status = _status;
+	}
+
 	
 	static SimpleDateFormat[] dateFormats = { new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
 			new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH), 

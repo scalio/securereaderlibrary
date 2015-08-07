@@ -3,6 +3,7 @@ package info.guardianproject.securereader;
 import java.util.ArrayList;
 
 import com.tinymission.rss.Feed;
+import com.tinymission.rss.Item;
 import com.tinymission.rss.MediaContent;
 
 import android.app.Service;
@@ -91,6 +92,7 @@ public class SyncService extends Service {
     public class SyncTask {
     	public static final int TYPE_FEED = 0;
     	public static final int TYPE_MEDIA = 1;
+    	public static final int TYPE_COMMENTS = 2;
     	
     	public static final int ERROR = -1;
     	public static final int CREATED = 0;
@@ -101,6 +103,7 @@ public class SyncService extends Service {
     	
     	public Feed feed;
     	public MediaContent mediaContent;
+    	public Item item;
     	
     	//SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback;
     	public int status = CREATED;
@@ -121,6 +124,11 @@ public class SyncService extends Service {
     		type = TYPE_MEDIA;
     	}
     	
+    	SyncTask(Item _item) {
+    		item = _item;
+    		type = TYPE_COMMENTS;
+    	}
+    	
     	void updateStatus(int newStatus) {
     		status = newStatus;
     		syncServiceEvent(this);
@@ -135,6 +143,8 @@ public class SyncService extends Service {
     			startFeedFetcher();
     		} else if (type == TYPE_MEDIA) {
     			startMediaDownloader();
+    		} else if (type == TYPE_COMMENTS) {
+    			startCommentsFeedFetcher();
     		}
     	}
     	
@@ -164,6 +174,19 @@ public class SyncService extends Service {
     		updateStatus(SyncTask.STARTED);
     		startTime = System.currentTimeMillis();
     	}
+    	
+    	private void startCommentsFeedFetcher() {    		
+    		if (LOGGING)
+    			Log.v(LOGTAG,"Create SyncServiceFeedFetcher");
+    		SyncServiceCommentsFeedFetcher commentsFeedFetcher = new SyncServiceCommentsFeedFetcher(SyncService.this,this);
+    		
+    		if (LOGGING)
+    			Log.v(LOGTAG,"Create and start fetcherThread ");
+    		syncThread = new Thread(commentsFeedFetcher);
+    		syncThread.start();    	
+    		updateStatus(SyncTask.STARTED);
+    		startTime = System.currentTimeMillis();
+    	}    	
     	
     	void taskComplete(int status) {
     		if (status == FINISHED) {
@@ -213,6 +236,30 @@ public class SyncService extends Service {
     	
 		syncServiceEvent(newSyncTask);
     }
+    
+    public void addCommentsSyncTask(Item item) {
+    	for (int i = 0; i < syncList.size(); i++) {
+    		Item itemTask = syncList.get(i).item;
+    		if (itemTask != null && item.getDatabaseId() == item.getDatabaseId()) {
+    			if (overTime(syncList.get(i))) {
+    				syncList.get(i).status = SyncTask.ERROR;
+    	    		syncList.remove(syncList.get(i));
+    				if (LOGGING) 
+    					Log.v(LOGTAG, "Item was already in queue but over time");
+    			}
+    			else {
+	        		if (LOGGING)
+	        			Log.v(LOGTAG,"Item already in queue, ignoring");
+	    			return;
+    			}
+    		}
+    	}
+    	SyncTask newSyncTask = new SyncTask(item);
+    	syncList.add(newSyncTask);
+    	newSyncTask.updateStatus(SyncTask.QUEUED);
+    	
+		syncServiceEvent(newSyncTask);
+    }    
     
     void syncServiceEvent(SyncTask _syncTask) {
     	

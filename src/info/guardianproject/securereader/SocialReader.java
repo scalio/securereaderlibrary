@@ -34,6 +34,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -139,6 +140,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int opmlCheckFrequency;
 	public final boolean repeatedlyLoadNetworkOPML;
 	public final String opmlUrl;
+	public String[] feedsWithComments;
 	
 	public static final int TIMER_PERIOD = 30000;  // 30 seconds 
 	
@@ -908,6 +910,9 @@ public class SocialReader implements ICacheWordSubscriber
 					backgroundRequestFeedNetwork(feed, new SyncServiceFeedFetchedCallback() {
 						@Override
 						public void feedFetched(Feed _feed) {
+							if (Arrays.asList(feedsWithComments).contains(_feed.getFeedURL())) {
+								networkCheckCommentFeeds(_feed);
+							}
 						}
 					});
 				} else if (isOnline() != ONLINE) {
@@ -1203,6 +1208,8 @@ public class SocialReader implements ICacheWordSubscriber
 			// You can, sort of: http://stackoverflow.com/questions/4326037/android-resource-array-of-arrays
 			String[] builtInFeedNames = applicationContext.getResources().getStringArray(R.array.built_in_feed_names);
 			String[] builtInFeedUrls = applicationContext.getResources().getStringArray(R.array.built_in_feed_urls);
+			
+			feedsWithComments = applicationContext.getResources().getStringArray(R.array.feed_urls_with_comments);
 			
 			if (builtInFeedNames.length == builtInFeedUrls.length) {
 				for (int i = 0; i < builtInFeedNames.length; i++) {
@@ -2572,9 +2579,45 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	// Do this periodically, need to decide when and which
-	public void networkCheckCommentFeeds() {
+	public void networkCheckCommentFeeds(Feed _feed) {
 		// Loop through items that we should check and save updates to database
-		
+		if (LOGGING)
+			Log.v(LOGTAG,"networkCheckCommentFeeds");
+
+		if (syncService != null) {
+			if (LOGGING)
+				Log.v(LOGTAG,"syncService != null");
+
+			// Get from database;
+			if (databaseAdapter != null && databaseAdapter.databaseReady())
+			{
+				Feed dbFeed = databaseAdapter.getFeedItems(_feed, DEFAULT_NUM_FEED_ITEMS);			
+				for (Item item : dbFeed.getItems()) {
+					syncService.addCommentsSyncTask(item);
+				}
+			}
+			else
+			{
+				if (LOGGING)
+					Log.e(LOGTAG, "Database not ready: networkCheckCommentFeeds");
+			}
+
+		} else {
+			if (LOGGING)
+				Log.v(LOGTAG,"syncService is null!");
+		}
+	}
+	
+	public void setItemComments(Item item, ArrayList<Comment> comments) {
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			databaseAdapter.addOrUpdateItemComments(item, comments);
+		}
+		else
+		{
+			if (LOGGING)
+				Log.e(LOGTAG, "Database not ready: setComment");
+		}
 	}
 	
 	// Do this
