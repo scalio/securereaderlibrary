@@ -2576,4 +2576,10 @@ public class SocialReader implements ICacheWordSubscriber
 		// Loop through items that we should check and save updates to database
 		
 	}
+	
+	// Do this
+	public Item getTalkItem() {
+		Item returnItem = new Item();
+		return returnItem;
+	}
 }

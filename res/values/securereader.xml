@@ -23,7 +23,8 @@
         <item>http://securereader.guardianproject.info/opds/opds.php</item>
     </string-array>
 
-
+	<string name="talk_item_guid">https://talk.to.me</string>
+	
 	<!-- FEED_REFRESH_AGE = 300000; // 5 minutes -->
 	<integer name="feed_refresh_age">300000</integer>
 	
