@@ -33,7 +33,7 @@ public class Reader
 {
 
 	public final static String LOGTAG = "TinyRSS Reader";
-	public final static boolean LOGGING = false;
+	public final static boolean LOGGING = true;
 
 	private Feed feed;
 
@@ -259,7 +259,7 @@ public class Reader
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException
 		{
-			if (isContentTag(localName))
+			if (isContentTag(localName) || isContentTag(qName))
 			{
 				_contentBuilder = new StringBuilder();
 			}
@@ -331,6 +331,7 @@ public class Reader
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException
 		{
+			Log.v(LOGTAG,"endElement " + localName + ":" + qName + ":" +  _contentBuilder.toString().trim());
 			// get the latest parsed content, if there is any
 			String content = "";
 			if (isContentTag(qName))
@@ -342,6 +343,8 @@ public class Reader
 				}
 				else if (qName.equalsIgnoreCase("paik:id"))
 				{
+					if (LOGGING)
+						Log.v(LOGTAG,"Got a remotePostId:" + content);
 					qName = "remotePostId";
 				}
 				_entityStack.lastElement().setProperty(qName, content);

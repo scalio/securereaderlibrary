@@ -22,10 +22,10 @@ public class Item extends FeedEntity implements Serializable
 	public static final long serialVersionUID = 133702L;
 
 	public static final String LOGTAG = "rss.item";
-	public static final boolean LOGGGING = false;
+	public static final boolean LOGGGING = true;
 
 	public static final int DEFAULT_DATABASE_ID = -1;
-	public static final String DEFAULT_REMOTE_POST_ID = "-1";
+	public static final int DEFAULT_REMOTE_POST_ID = -1;
 
 	// Item fields for us
 	private boolean _favorite = false;
@@ -33,7 +33,7 @@ public class Item extends FeedEntity implements Serializable
 	private int _viewCount = 0;
 	private long _databaseId = DEFAULT_DATABASE_ID;
 	private long _feedId;
-	private String _remotePostId = DEFAULT_REMOTE_POST_ID;  // <paik:id>365</paik:id>
+	private int _remotePostId = DEFAULT_REMOTE_POST_ID;  // <paik:id>365</paik:id>
 	
 	// Item elements part of RSS
 	private String _title;
@@ -145,12 +145,24 @@ public class Item extends FeedEntity implements Serializable
 		this._feedId = _feedId;
 	}
 	
-	public String getRemotePostId() {
+	public int getRemotePostId() {
 		return this._remotePostId;
 	}
 	
 	public void setRemotePostId(String _postId)
 	{
+		if (LOGGING) 
+			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
+		this._remotePostId = Integer.valueOf(_postId);
+
+		if (LOGGING) 
+			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
+	}
+
+	public void setRemotePostId(int _postId)
+	{
+		if (LOGGING) 
+			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
 		this._remotePostId = _postId;
 	}
 

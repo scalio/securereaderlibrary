@@ -643,7 +643,7 @@ public class DatabaseAdapter
 						String link = queryCursor.getString(linkColumn);
 						
 						String feedTitle = queryCursor.getString(feedTableFeedTitle);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
 	
 						Item item = new Item(guid, title, publishDate, feedTitle, description, feedId);
 						item.setDatabaseId(id);
@@ -957,8 +957,8 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						
 						Item item = new Item(guid, title, publishDate, getFeedTitle(feedId), description, feedId);
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -1064,8 +1064,8 @@ public class DatabaseAdapter
 						String category = queryCursor.getString(categoryColumn);
 						int favorite = queryCursor.getInt(favoriteColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -1166,7 +1166,7 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
 						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
@@ -1275,8 +1275,8 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -1400,8 +1400,8 @@ public class DatabaseAdapter
 					String source = queryCursor.getString(sourceColumn);
 					String link = queryCursor.getString(linkColumn);
 					
-					String remotePostId = queryCursor.getString(remotePostIdColumn);
-		
+					int remotePostId = queryCursor.getInt(remotePostIdColumn);
+					
 					returnItem = new Item(guid, title, publishDate, source, description, feedId);
 					returnItem.setDatabaseId(id);
 					returnItem.setAuthor(author);
@@ -1525,8 +1525,8 @@ public class DatabaseAdapter
 						int shared = queryCursor.getInt(sharedColumn);
 	
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
 						item.setAuthor(author);

@@ -15,7 +15,7 @@ public class FeedEntity implements Serializable
 {
 	public static final long serialVersionUID = 133701L;
 	public static final String LOGTAG = "rss.FeedEntity";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	public FeedEntity(Attributes attributes)
 	{
