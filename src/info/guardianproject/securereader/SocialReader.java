@@ -2056,7 +2056,6 @@ public class SocialReader implements ICacheWordSubscriber
 		try {
 			cacheWord.setPassphrase(p);
 		} catch (GeneralSecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		*/
@@ -2137,7 +2136,6 @@ public class SocialReader implements ICacheWordSubscriber
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -2417,7 +2415,6 @@ public class SocialReader implements ICacheWordSubscriber
 				if (LOGGING)
 					Log.e(LOGTAG,"Can't write package file, not found");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				if (LOGGING)
 					e.printStackTrace();
 
@@ -2605,7 +2602,6 @@ public class SocialReader implements ICacheWordSubscriber
 		return itemComments;		
 	}
 	
-	// Do this periodically, need to decide when and which
 	public void networkCheckCommentFeeds(Feed _feed) {
 		// Loop through items that we should check and save updates to database
 		if (LOGGING)
@@ -2653,7 +2649,6 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
-	// Do this
 	public Item getTalkItem() {
 		return talkItem;
 	}
