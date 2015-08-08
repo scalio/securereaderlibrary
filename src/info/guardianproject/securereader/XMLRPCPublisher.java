@@ -66,11 +66,11 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 
 			try
 			{
-				XmlRpcClient.setContext(socialReporter.applicationContext);
-
-				if (socialReporter.useTor())
+				XmlRpcClient.setContext(socialReporter.applicationContext);		
+				
+				if (socialReporter.useProxy())
 				{
-					XmlRpcClient.setProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+					XmlRpcClient.setProxy(true, socialReporter.socialReader.getProxyType(), socialReporter.socialReader.getProxyHost(), socialReporter.socialReader.getProxyPort());
 				}
 				else
 				{

@@ -89,7 +89,7 @@ public class SyncServiceMediaDownloader implements Runnable
 		InputStream inputStream = null;
 
 		MediaContent mediaContent = syncTask.mediaContent;
-
+		
 		if (mediaContent.getUrl() != null && !(mediaContent.getUrl().isEmpty()))
 		{
 			try
@@ -183,9 +183,10 @@ public class SyncServiceMediaDownloader implements Runnable
 					*/
 					StrongHttpsClient httpClient = new StrongHttpsClient(syncService.getApplicationContext());
 
-					if (SocialReader.getInstance(syncService.getApplicationContext()).useTor())
+					SocialReader socialReader = SocialReader.getInstance(syncService.getApplicationContext());
+					if (socialReader.useProxy())
 					{
-						httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+						httpClient.useProxy(true, socialReader.getProxyType(), socialReader.getProxyHost(), socialReader.getProxyPort());
 
 						if (LOGGING)
 							Log.v(LOGTAG, "MediaDownloader: USE_TOR");

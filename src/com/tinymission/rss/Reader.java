@@ -155,9 +155,9 @@ public class Reader
 			} else {
 			
 				StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
-				if (socialReader.useTor())
+				if (socialReader.useProxy())
 				{
-					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+				    httpClient.useProxy(true, socialReader.getProxyType(), socialReader.getProxyHost(), socialReader.getProxyPort());
 				}
 	
 				if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))

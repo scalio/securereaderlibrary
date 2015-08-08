@@ -86,14 +86,15 @@ public class HTMLRSSFeedFinder {
 			protected Void doInBackground(Void... params)
 			{
 				StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
-				if (socialReader.useTor())
+				
+				if (socialReader.useProxy())
 				{
 					if (LOGGING)
-						Log.v(LOGTAG,"Using Tor for HTML Retrieval");
-					
-					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
+						Log.v(LOGTAG,"Using Proxy for HTML Retrieval");
+
+					httpClient.useProxy(true, socialReader.getProxyType(), socialReader.getProxyHost(), socialReader.getProxyPort());
 				}
-		
+						
 				HttpGet httpGet = new HttpGet(urlToParse);
 				httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
 				

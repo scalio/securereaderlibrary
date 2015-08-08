@@ -27,7 +27,7 @@ import java.util.Date;
 public class SocialReporter
 {
 	public static final String LOGTAG = "SocialReporter";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	SocialReader socialReader;
 	Context applicationContext;
@@ -44,9 +44,9 @@ public class SocialReporter
 		xmlrpcEndpoint = applicationContext.getResources().getString(R.string.xmlrpc_endpoint);
 	}
 
-	public boolean useTor() 
+	public boolean useProxy() 
 	{
-		return true;
+		return socialReader.useProxy();
 	}
 
 	public ArrayList<Item> getPosts()

@@ -19,8 +19,10 @@ import info.guardianproject.iocipher.FileInputStream;
 import info.guardianproject.iocipher.FileOutputStream;
 import info.guardianproject.iocipher.VirtualFileSystem;
 import info.guardianproject.onionkit.ui.OrbotHelper;
+import info.guardianproject.onionkit.ui.TorServiceUtils;
 import info.guardianproject.securereader.HTMLRSSFeedFinder.RSSFeed;
 import info.guardianproject.securereader.MediaDownloader.MediaDownloaderCallback;
+import info.guardianproject.securereader.Settings.ProxyType;
 import info.guardianproject.securereader.Settings.UiLanguage;
 import info.guardianproject.securereader.SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback;
 
@@ -50,6 +52,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
@@ -99,13 +102,14 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final int FULL_APP_WIPE = 100;
 	public static final int DATA_WIPE = 101;
 
-	public final static String PROXY_TYPE = "SOCKS";
-	public final static String PROXY_HOST = "127.0.0.1";
-	public final static int PROXY_PORT = 9050; // default for SOCKS Orbot/Tor
+	public final static String TOR_PROXY_TYPE = "SOCKS";
+	public final static String TOR_PROXY_HOST = "127.0.0.1";
+	public final static int TOR_PROXY_PORT = 9050; // default for SOCKS Orbot/Tor
 	
 	public final static String PSIPHON_PROXY_HOST = "127.0.0.1";
 	public final static String PSIPHON_PROXY_TYPE = "SOCKS";
 	public final static int PSIPHON_PROXY_PORT = 1080;
+	public final static String PSIPHON_PACKAGE_NAME = "com.psiphon3";
 	
 	public final static String USERAGENT = "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19";
 	
@@ -587,14 +591,16 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl += connectionTypeParam;
 						
 				String torTypeParam = "&p=";
-				if (settings.requireTor()) {
-					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
-						torTypeParam += "1";
-					} else {
-						// But this shouldn't actually work
-						torTypeParam += "0";
-					}
-				} else {
+				//TODO - PROXY WORK
+//				if (settings.requireTor()) {
+//					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
+//						torTypeParam += "1";
+//					} else {
+//						// But this shouldn't actually work
+//						torTypeParam += "0";
+//					}
+//				} else 
+				{
 					torTypeParam += "0";
 				}				
 				finalOpmlUrl += torTypeParam;
@@ -682,22 +688,23 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
-	public boolean isTorOnline() 
+	public boolean isProxyOnline() 
 	{
-		if (useTor() && oc.isOrbotInstalled() && oc.isOrbotRunning()) 
+		if (useProxy() && settings.proxyType() == ProxyType.Tor 
+				&& oc.isOrbotInstalled() && oc.isOrbotRunning()) 
 		{
 			if (LOGGING) 
 				Log.v(LOGTAG, "Tor is running");
 			
 			return true;
 		} 
-		else 
+		else if (useProxy() && settings.proxyType() == ProxyType.Psiphon && isPsiphonInstalled() && isPsiphonRunning())
 		{
-			if (LOGGING) 
-				Log.v(LOGTAG, "Tor isn't running");
-			
+			return true;
+		}
+		else {
 			return false;
-		}		
+		}
 	}
 	
 	private void logStatus() {
@@ -721,7 +728,7 @@ public class SocialReader implements ICacheWordSubscriber
 
 	// This public method will indicate whether or not the application is online
 	// it takes into account whether or not the application should be online (connectionMode)
-	// as well as the physical network connection and tor status
+	// as well as the physical network connection and proxy status
 	public int isOnline()
 	{
 		ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -734,14 +741,28 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 
 		if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
-			if (settings.requireTor()) {
-				if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
-					// Network is connected
-					// Tor is running we are good
-					return ONLINE;
+			if (settings.requireProxy()) {
+				if (settings.proxyType() == ProxyType.Tor) {
+					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
+						// Network is connected
+						// Tor is running we are good
+						return ONLINE;
+					} else {
+						// Tor not running or not installed
+						return NOT_ONLINE_NO_TOR;
+					}
+				} else if (settings.proxyType() == ProxyType.Psiphon) {
+					if (isPsiphonInstalled() && isPsiphonRunning()) {
+						// Network is connected
+						// Tor is running we are good
+						return ONLINE;
+					} else {
+						// Tor not running or not installed
+						return NOT_ONLINE_NO_TOR;
+					}
 				} else {
-					// Tor not running or not installed
-					return NOT_ONLINE_NO_TOR;
+					// This shouldn't happen
+					return ONLINE;
 				}
 			} else {
 				// Network is connected and we don't have to use Tor
@@ -758,40 +779,101 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
-	// Working hand in hand with isOnline this tells other classes whether or not they should use Tor when connecting
-	public boolean useTor() {
-		//if (settings.requireTor() || oc.isOrbotRunning()) {
-		if (settings.requireTor()) {
+	// Working hand in hand with isOnline this tells other classes whether or not they should use a proxy when connecting
+	public boolean useProxy() {
+		if (settings.requireProxy()) {
 			if (LOGGING)
-				Log.v(LOGTAG, "USE TOR");
+				Log.v(LOGTAG, "USE Proxy");
 			return true;
 		} else {
 			if (LOGGING)
-				Log.v(LOGTAG, "DON'T USE TOR");
+				Log.v(LOGTAG, "DON'T USE Proxy");
 			return false;
 		}
 	}
 
-	public boolean connectTor(Activity _activity)
+	// SOCKS
+	public String getProxyType() {
+		if (settings.proxyType() == ProxyType.Psiphon) {
+			return PSIPHON_PROXY_TYPE;
+		} else {
+			return TOR_PROXY_TYPE;
+		}			
+	}
+	
+	public String getProxyHost() {
+		if (settings.proxyType() == ProxyType.Psiphon) {
+			return PSIPHON_PROXY_HOST;
+		} else {
+			return TOR_PROXY_HOST;
+		}	
+	}
+	
+	public int getProxyPort() {
+		if (settings.proxyType() == ProxyType.Psiphon) {
+			return PSIPHON_PROXY_PORT;
+		} else {
+			return TOR_PROXY_PORT;
+		}
+	}
+
+	private boolean isPsiphonInstalled()
+	{
+		return PackageHelper.isAppInstalled(applicationContext, PSIPHON_PACKAGE_NAME);
+	}
+	
+	private boolean isPsiphonRunning()
+	{
+        int procId = TorServiceUtils.findProcessId(PSIPHON_PACKAGE_NAME);
+        return (procId != -1);
+	}
+	
+	public boolean connectProxy(Activity _activity)
 	{
 		if (LOGGING) {
-			Log.v(LOGTAG, "Checking Tor");
-			Log.v(LOGTAG, "isOrbotInstalled: " + oc.isOrbotInstalled());
+			Log.v(LOGTAG, "Checking Proxy");
+			
+			if (settings.requireProxy()) {
+				Log.v(LOGTAG, "Require Proxy is True");
+			} else {
+				Log.v(LOGTAG, "Require Proxy is False");
+			}
+			
+			if (settings.proxyType() == ProxyType.Tor) {
+				Log.v(LOGTAG, "Proxy Type Tor is selected");
+				Log.v(LOGTAG, "isOrbotInstalled: " + oc.isOrbotInstalled());
+			} else if (settings.proxyType() == ProxyType.Psiphon) {
+				Log.v(LOGTAG, "Proxy Type Psiphon is selected");
+			}
+		}
 
-			// This is returning the wrong value oc.isOrbotRunning, even if Orbot isn't installed
-			Log.v(LOGTAG, "isOrbotRunning: " + oc.isOrbotRunning());
-		}
-		
-		if (!oc.isOrbotInstalled())
-		{
-			// This is getting intercepted by the lock screen at the moment
-			oc.promptToInstall(_activity);
-		}
-		else if (!oc.isOrbotRunning())
-		{
-			// This seems to be working ok
-			oc.requestOrbotStart(_activity);
-		}
+		if (settings.proxyType() == ProxyType.Tor) {
+			
+			if (!oc.isOrbotInstalled())
+			{
+				// This is getting intercepted by the lock screen at the moment
+				oc.promptToInstall(_activity);
+			}
+			else if (!oc.isOrbotRunning())
+			{
+				// This seems to be working ok
+				oc.requestOrbotStart(_activity);
+			}				
+			
+		} else if (settings.proxyType() == ProxyType.Psiphon) {
+			if (!isPsiphonInstalled())
+			{
+				// This is getting intercepted by the lock screen at the moment
+				PackageHelper.showDownloadDialog(_activity, R.string.psiphon_install_title, R.string.psiphon_install_prompt, R.string.psiphon_install_ok, R.string.psiphon_install_cancel, _activity.getString(R.string.psiphon_install_uri));
+			}
+			else if (!isPsiphonRunning())
+			{
+				Intent intentStart = _activity.getPackageManager().getLaunchIntentForPackage(PSIPHON_PACKAGE_NAME);
+				intentStart.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				_activity.startActivity(intentStart);
+			}				
+			
+		}		
 
 		return true;
 	}
