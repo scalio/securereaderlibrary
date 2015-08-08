@@ -28,7 +28,7 @@
         <item>https://securereader.guardianproject.info/opds/opds.php</item>
     </string-array>
 
-	<string name="talk_item_remote_id">-1</string>
+	<integer name="talk_item_remote_id">-1</integer>
 	<string name="talk_item_feed_url">https://talk.to.me</string>
 	<string name="talk_item_xmlrpc_url">https://someserver.something/xmlrpc.php</string>
 	

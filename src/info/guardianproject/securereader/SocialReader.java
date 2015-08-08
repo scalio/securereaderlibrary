@@ -165,6 +165,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final int NOT_ONLINE_NO_TOR = -1;
 	public static final int NOT_ONLINE_NO_WIFI = -2;
 	public static final int NOT_ONLINE_NO_WIFI_OR_NETWORK = -3;
+	
+	Item talkItem = null;
 
 	private SocialReader(Context _context) {
 		
@@ -928,6 +930,12 @@ public class SocialReader implements ICacheWordSubscriber
 						Log.v(LOGTAG,"doesn't need refreshing");
 				}
 			}
+			
+			// Check Talk Feed
+			if (isOnline() == ONLINE && syncService != null && talkItem != null) {
+				syncService.addCommentsSyncTask(talkItem);
+			}
+			
 		} else {
 			if (LOGGING)
 				Log.v(LOGTAG, "Can't sync feeds, cacheword locked");
@@ -1223,7 +1231,19 @@ public class SocialReader implements ICacheWordSubscriber
 					databaseAdapter.addOrUpdateFeed(newFeed);
 				}
 			}
-						
+			
+			// Create talk item
+			talkItem = new Item();
+			talkItem.setFavorite(true); // So it doesn't delete
+			talkItem.setTitle("Example Favorite");
+			talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
+			talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
+			talkItem.setCommentsUrl(applicationContext.getResources().getString(R.string.talk_item_feed_url));
+			this.databaseAdapter.addItem(talkItem);
+			if (LOGGING)
+				Log.v(LOGTAG,"talkItem has database ID " + talkItem.getDatabaseId());
+			
+			
 			loadOPMLFile();
 		} else {
 			if (LOGGING)
@@ -2635,7 +2655,6 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	// Do this
 	public Item getTalkItem() {
-		Item returnItem = new Item();
-		return returnItem;
+		return talkItem;
 	}
 }
