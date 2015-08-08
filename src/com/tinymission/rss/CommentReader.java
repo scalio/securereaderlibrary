@@ -172,7 +172,7 @@ public class CommentReader
 					}
 				} else {
 					if (LOGGING) 
-						Log.e(LOGTAG, "Failed to sync feed, bad URL");
+						Log.e(LOGTAG, "Failed to sync feed, bad URL " + item.getCommentsUrl());
 					
 					item.setStatus(Feed.STATUS_LAST_SYNC_FAILED_BAD_URL);
 				}

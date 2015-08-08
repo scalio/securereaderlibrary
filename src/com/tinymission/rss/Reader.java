@@ -33,7 +33,7 @@ public class Reader
 {
 
 	public final static String LOGTAG = "TinyRSS Reader";
-	public final static boolean LOGGING = true;
+	public final static boolean LOGGING = false;
 
 	private Feed feed;
 
@@ -181,7 +181,8 @@ public class Reader
 						feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);
 						
 					} else {
-						Log.v(LOGTAG,"Response Code: " + response.getStatusLine().getStatusCode());
+						if (LOGGING)
+							Log.v(LOGTAG,"Response Code: " + response.getStatusLine().getStatusCode());
 						if (response.getStatusLine().getStatusCode() == 404) {
 							feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_404);
 						} else {
@@ -331,7 +332,8 @@ public class Reader
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException
 		{
-			Log.v(LOGTAG,"endElement " + localName + ":" + qName + ":" +  _contentBuilder.toString().trim());
+			if (LOGGING)
+				Log.v(LOGTAG,"endElement " + localName + ":" + qName + ":" +  _contentBuilder.toString().trim());
 			// get the latest parsed content, if there is any
 			String content = "";
 			if (isContentTag(qName))

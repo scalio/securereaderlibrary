@@ -15,7 +15,7 @@ import android.util.Log;
 public class SyncService extends Service {
 
 	public static final String LOGTAG = "SyncService";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	// ArrayList of SyncTask objects, basically a queue of work to be done
 	ArrayList<SyncTask> syncList = new ArrayList<SyncTask>();
@@ -105,18 +105,17 @@ public class SyncService extends Service {
     	public MediaContent mediaContent;
     	public Item item;
     	
-    	//SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback;
+    	SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback;
     	public int status = CREATED;
     	public int type = 0;
     	
     	public static final long MAXTIME = 3600000; // 60 * 60 * 1000 = 1 hour;  
     	public long startTime = -1;
     	
-    	//SyncTask(Feed _feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback _callback) {
-    	SyncTask(Feed _feed) {
+    	SyncTask(Feed _feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback _callback) {
     		feed = _feed;
     		type = TYPE_FEED;
-    		//callback = _callback;
+    		callback = _callback;
     	}
     	
     	SyncTask(MediaContent _mediaContent) {
@@ -194,9 +193,9 @@ public class SyncService extends Service {
     				//((App) getApplicationContext()).socialReader.setFeedAndItemData(feed);
     				//SocialReader.getInstance(getApplicationContext()).backgroundDownloadFeedItemMedia(feed);
     			}
-    			//if (callback != null) {
-    			//	callback.feedFetched(feed);
-    			//}
+    			if (callback != null && type == TYPE_FEED) {
+    				callback.feedFetched(feed);
+    			}
         		updateStatus(status);
     		}
     	}
@@ -211,8 +210,11 @@ public class SyncService extends Service {
     	return false;
     }
     
-    //public void addFeedSyncTask(Feed feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback) {
     public void addFeedSyncTask(Feed feed) {
+    	addFeedSyncTask(feed, null);
+    }
+    
+    public void addFeedSyncTask(Feed feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback) {
     	for (int i = 0; i < syncList.size(); i++) {
     		Feed feedTask = syncList.get(i).feed;
     		if (feedTask != null && feed.getDatabaseId() == feed.getDatabaseId()) {
@@ -229,8 +231,8 @@ public class SyncService extends Service {
     			}
     		}
     	}
-    	//SyncTask newSyncTask = new SyncTask(feed,callback);
-    	SyncTask newSyncTask = new SyncTask(feed);
+    	SyncTask newSyncTask = new SyncTask(feed,callback);
+    	
     	syncList.add(newSyncTask);
     	newSyncTask.updateStatus(SyncTask.QUEUED);
     	
@@ -238,6 +240,8 @@ public class SyncService extends Service {
     }
     
     public void addCommentsSyncTask(Item item) {
+    	if (LOGGING)
+    		Log.v(LOGTAG,"addCommentSyncTask " + item.getCommentsUrl());
     	for (int i = 0; i < syncList.size(); i++) {
     		Item itemTask = syncList.get(i).item;
     		if (itemTask != null && item.getDatabaseId() == item.getDatabaseId()) {

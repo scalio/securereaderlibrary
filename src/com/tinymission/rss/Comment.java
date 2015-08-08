@@ -17,7 +17,7 @@ public class Comment extends FeedEntity implements Serializable
 	public static final long serialVersionUID = 133702L;
 
 	public static final String LOGTAG = "rss.comment";
-	public static final boolean LOGGGING = true;
+	public static final boolean LOGGING = true;
 	
 	public static final int DEFAULT_DATABASE_ID = -1;
 
