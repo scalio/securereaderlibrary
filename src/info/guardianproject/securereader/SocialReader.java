@@ -36,6 +36,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -84,7 +85,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
@@ -143,6 +144,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int opmlCheckFrequency;
 	public final boolean repeatedlyLoadNetworkOPML;
 	public final String opmlUrl;
+	public String[] feedsWithComments;
 	
 	public static final int TIMER_PERIOD = 30000;  // 30 seconds 
 	
@@ -167,6 +169,8 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final int NOT_ONLINE_NO_TOR = -1;
 	public static final int NOT_ONLINE_NO_WIFI = -2;
 	public static final int NOT_ONLINE_NO_WIFI_OR_NETWORK = -3;
+	
+	Item talkItem = null;
 
 	private SocialReader(Context _context) {
 		
@@ -937,7 +941,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (syncService != null) {
 			if (LOGGING)
 				Log.v(LOGTAG,"syncService != null");
-			syncService.addFeedSyncTask(feed);
+			syncService.addFeedSyncTask(feed, callback);
 		} else {
 			if (LOGGING)
 				Log.v(LOGTAG,"syncService is null!");
@@ -990,6 +994,14 @@ public class SocialReader implements ICacheWordSubscriber
 					backgroundRequestFeedNetwork(feed, new SyncServiceFeedFetchedCallback() {
 						@Override
 						public void feedFetched(Feed _feed) {
+							if (LOGGING) 
+								Log.v(LOGTAG,"Does " + _feed.getFeedURL() + " = " + feedsWithComments[0]);
+							
+							if (Arrays.asList(feedsWithComments).contains(_feed.getFeedURL())) {
+								if (LOGGING)
+									Log.v(LOGTAG, "Checking Comments on " + _feed.getDatabaseId());
+								networkCheckCommentFeeds(_feed);
+							}
 						}
 					});
 				} else if (isOnline() != ONLINE) {
@@ -1000,6 +1012,12 @@ public class SocialReader implements ICacheWordSubscriber
 						Log.v(LOGTAG,"doesn't need refreshing");
 				}
 			}
+			
+			// Check Talk Feed
+			if (isOnline() == ONLINE && syncService != null && talkItem != null) {
+				syncService.addCommentsSyncTask(talkItem);
+			}
+			
 		} else {
 			if (LOGGING)
 				Log.v(LOGTAG, "Can't sync feeds, cacheword locked");
@@ -1286,6 +1304,8 @@ public class SocialReader implements ICacheWordSubscriber
 			String[] builtInFeedNames = applicationContext.getResources().getStringArray(R.array.built_in_feed_names);
 			String[] builtInFeedUrls = applicationContext.getResources().getStringArray(R.array.built_in_feed_urls);
 			
+			feedsWithComments = applicationContext.getResources().getStringArray(R.array.feed_urls_with_comments);
+			
 			if (builtInFeedNames.length == builtInFeedUrls.length) {
 				for (int i = 0; i < builtInFeedNames.length; i++) {
 					Feed newFeed = new Feed(builtInFeedNames[i], builtInFeedUrls[i]);
@@ -1293,7 +1313,19 @@ public class SocialReader implements ICacheWordSubscriber
 					databaseAdapter.addOrUpdateFeed(newFeed);
 				}
 			}
-						
+			
+			// Create talk item
+			talkItem = new Item();
+			talkItem.setFavorite(true); // So it doesn't delete
+			talkItem.setTitle("Example Favorite");
+			talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
+			talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
+			talkItem.setCommentsUrl(applicationContext.getResources().getString(R.string.talk_item_feed_url));
+			this.databaseAdapter.addItem(talkItem);
+			if (LOGGING)
+				Log.v(LOGTAG,"talkItem has database ID " + talkItem.getDatabaseId());
+			
+			
 			loadOPMLFile();
 		} else {
 			if (LOGGING)
@@ -2106,7 +2138,6 @@ public class SocialReader implements ICacheWordSubscriber
 		try {
 			cacheWord.setPassphrase(p);
 		} catch (GeneralSecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		*/
@@ -2187,7 +2218,6 @@ public class SocialReader implements ICacheWordSubscriber
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -2467,7 +2497,6 @@ public class SocialReader implements ICacheWordSubscriber
 				if (LOGGING)
 					Log.e(LOGTAG,"Can't write package file, not found");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				if (LOGGING)
 					e.printStackTrace();
 
@@ -2643,6 +2672,8 @@ public class SocialReader implements ICacheWordSubscriber
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
 			itemComments = databaseAdapter.getItemComments(item);
+			if (LOGGING)
+				Log.v(LOGTAG,"Got item comments: " + item.getTitle() + " " + itemComments.size());
 			return itemComments;
 		}
 		else
@@ -2653,15 +2684,54 @@ public class SocialReader implements ICacheWordSubscriber
 		return itemComments;		
 	}
 	
-	// Do this periodically, need to decide when and which
-	public void networkCheckCommentFeeds() {
+	public void networkCheckCommentFeeds(Feed _feed) {
 		// Loop through items that we should check and save updates to database
-		
+		if (LOGGING)
+			Log.v(LOGTAG,"networkCheckCommentFeeds");
+
+		if (syncService != null) {
+			if (LOGGING)
+				Log.v(LOGTAG,"syncService != null");
+
+			// Get from database;
+			if (databaseAdapter != null && databaseAdapter.databaseReady())
+			{
+				Feed dbFeed = databaseAdapter.getFeedItems(_feed, DEFAULT_NUM_FEED_ITEMS);			
+				for (Item item : dbFeed.getItems()) {
+					syncService.addCommentsSyncTask(item);
+				}
+			}
+			else
+			{
+				if (LOGGING)
+					Log.e(LOGTAG, "Database not ready: networkCheckCommentFeeds");
+			}
+
+		} else {
+			if (LOGGING)
+				Log.v(LOGTAG,"syncService is null!");
+		}
 	}
 	
-	// Do this
+	public void setItemComments(Item item, ArrayList<Comment> comments) {
+		if (LOGGING)
+			Log.v(LOGTAG, "setItemComments");
+		
+		if (databaseAdapter != null && databaseAdapter.databaseReady())
+		{
+			databaseAdapter.addOrUpdateItemComments(item, comments);
+			
+			if (LOGGING)
+				Log.v(LOGTAG, "Database has: " + getItemComments(item).size() + " comments for this item");
+		}
+		else
+		{
+			if (LOGGING)
+				Log.e(LOGTAG, "Database not ready: setComment");
+		}
+	}
+	
 	public Item getTalkItem() {
-		Item returnItem = new Item();
-		return returnItem;
+		return talkItem;
 	}
 }

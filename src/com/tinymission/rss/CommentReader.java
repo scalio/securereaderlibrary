@@ -5,6 +5,7 @@ import info.guardianproject.securereader.SocialReader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Stack;
 
@@ -29,13 +30,15 @@ import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 /**
  * Reads an RSS feed and creates and RssFeed object.
  */
-public class Reader
+public class CommentReader
 {
 
-	public final static String LOGTAG = "TinyRSS Reader";
-	public final static boolean LOGGING = false;
+	public final static String LOGTAG = "TinyRSS Comment Reader";
+	public final static boolean LOGGING = true;
 
-	private Feed feed;
+	private Feed feed = new Feed(); // for the parsing
+	
+	private Item item;
 
 	private SocialReader socialReader;
 
@@ -45,7 +48,7 @@ public class Reader
 	 * 
 	 */
 	public final static String[] CONTENT_TAGS = { "title", "link", "language", "pubDate", "lastBuildDate", "docs", "generator", "managingEditor", "webMaster",
-			"guid", "author", "category", "content:encoded", "description", "url", "paik:id", "wfw:commentRss" };
+			"guid", "author", "category", "content:encoded", "description", "url", "paik:id" };
 
 	/**
 	 * The tags that should be parsed into separate entities, not just
@@ -85,20 +88,20 @@ public class Reader
 	}
 
 	// In this case, we preserve the feed object?
-	public Reader(SocialReader _socialReader, Feed _feed)
+	public CommentReader(SocialReader _socialReader, Item _item)
 	{
 		socialReader = _socialReader;
-		_feed.setStatus(Feed.STATUS_SYNC_IN_PROGRESS);
-		feed = _feed;
+		_item.setStatus(Item.STATUS_SYNC_IN_PROGRESS);
+		item = _item;
 	}
 
 	/**
 	 * Actually grabs the feed from the URL and parses it into java objects.
 	 * 
-	 * @return The feed object containing all the feed data.
+	 * @return An array of Items with the comments
 	 */
-	public Feed fetchFeed()
-	{
+	public Feed fetchCommentFeed()
+	{		
 		try
 		{
 			SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -134,35 +137,15 @@ public class Reader
 			Handler handler = new Handler();
 			xr.setContentHandler(handler);
 
-			final String PREFIX = "file:///android_asset/";
-			if (feed.getFeedURL().startsWith("file:///")) {
-				
-				if (LOGGING)
-					Log.v(LOGTAG,"Opening: " + feed.getFeedURL().substring(PREFIX.length()));
-				
-				AssetManager assetManager = socialReader.applicationContext.getAssets();
-				
-				InputStream is = assetManager.open(feed.getFeedURL().substring(PREFIX.length()));
-				
-				xr.parse(new InputSource(is));
-				
-				is.close();
-
-				Date currentDate = new Date();
-				feed.setNetworkPullDate(currentDate);
-				feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);				
-				
-			} else {
-			
 				StrongHttpsClient httpClient = new StrongHttpsClient(socialReader.applicationContext);
-				if (socialReader.useProxy())
+				if (socialReader.useTor())
 				{
-				    httpClient.useProxy(true, socialReader.getProxyType(), socialReader.getProxyHost(), socialReader.getProxyPort());
+					httpClient.useProxy(true, SocialReader.PROXY_TYPE, SocialReader.PROXY_HOST, SocialReader.PROXY_PORT);
 				}
 	
-				if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))
+				if (item.getCommentsUrl() != null && !(item.getCommentsUrl().isEmpty()))
 				{
-					HttpGet httpGet = new HttpGet(feed.getFeedURL());
+					HttpGet httpGet = new HttpGet(item.getCommentsUrl());
 					httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
 
 					HttpResponse response = httpClient.execute(httpGet);
@@ -177,52 +160,49 @@ public class Reader
 						is.close();
 	
 						Date currentDate = new Date();
-						feed.setNetworkPullDate(currentDate);
-						feed.setStatus(Feed.STATUS_LAST_SYNC_GOOD);
+						item.setStatus(Feed.STATUS_LAST_SYNC_GOOD);
 						
 					} else {
-						if (LOGGING)
-							Log.v(LOGTAG,"Response Code: " + response.getStatusLine().getStatusCode());
+						Log.v(LOGTAG,"Response Code: " + response.getStatusLine().getStatusCode());
 						if (response.getStatusLine().getStatusCode() == 404) {
-							feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_404);
+							item.setStatus(Feed.STATUS_LAST_SYNC_FAILED_404);
 						} else {
-							feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_UNKNOWN);
+							item.setStatus(Feed.STATUS_LAST_SYNC_FAILED_UNKNOWN);
 						}
 					}
 				} else {
 					if (LOGGING) 
-						Log.e(LOGTAG, "Failed to sync feed, bad URL");
+						Log.e(LOGTAG, "Failed to sync feed, bad URL " + item.getCommentsUrl());
 					
-					feed.setStatus(Feed.STATUS_LAST_SYNC_FAILED_BAD_URL);
+					item.setStatus(Feed.STATUS_LAST_SYNC_FAILED_BAD_URL);
 				}
-			}
 		}
 		catch (ParserConfigurationException pce)
 		{
 			if (LOGGING) 
 				Log.e("SAX XML", "sax parse error", pce);
-			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
+			item.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 
 		}
 		catch (SAXException se)
 		{
 			if (LOGGING)
 				Log.e("SAX XML", "sax error", se);
-			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
+			item.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 
 		}
 		catch (IOException ioe)
 		{
 			if (LOGGING) 
 				Log.e("SAX XML", "sax parse io error", ioe);
-			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
+			item.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 
 		}
 		catch (IllegalStateException ise)
 		{
 			if (LOGGING)
 				ise.printStackTrace();
-			feed.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
+			item.setStatus(Feed.STATUS_LAST_SYNC_PARSE_ERROR);
 		}
 		return feed;
 	}
@@ -268,72 +248,26 @@ public class Reader
 			{
 				if (qName.equals("item"))
 				{
-					Item item = new Item(attributes);
-					_entityStack.add(item);
-					feed.addItem(item);
-				}
-				else if (qName.equals("enclosure"))
-				{
-					MediaContent mediaContent = new MediaContent(attributes);
-					FeedEntity lastEntity = _entityStack.lastElement();
-					if (lastEntity.getClass() == Item.class)
-					{
-						((Item) lastEntity).setMediaContent(mediaContent);
-					}
-					_entityStack.add(mediaContent);
-				}
-				else if (qName.equals("media:content"))
-				{
-					MediaContent mediaContent = new MediaContent(attributes);
-					FeedEntity lastEntity = _entityStack.lastElement();
-					if (lastEntity.getClass() == Item.class)
-					{
-						((Item) lastEntity).setMediaContent(mediaContent);
-					}
-					_entityStack.add(mediaContent);
-				}
-				else if (qName.equals("media:thumbnail"))
-				{
-					MediaThumbnail mediaThumbnail = new MediaThumbnail(attributes);
-					FeedEntity lastEntity = _entityStack.lastElement();
-					if (lastEntity.getClass() == Item.class)
-					{
-						Item item = (Item) lastEntity;
-						MediaThumbnail existingMt = item.getMediaThumbnail();
-						if (existingMt == null)
-						{
-							item.setMediaThumbnail(mediaThumbnail);
-						}
-					}
-					_entityStack.add(mediaThumbnail);
+					Comment comment = new Comment(attributes);
+					_entityStack.add(comment);
+					feed.addComment(comment);
 				}
 				else if (qName.equals("channel"))
 				{
 					// this is just the start of the feed
 				}
-				else if (qName.equals("image"))
-				{
-					MediaContent mediaContent = new MediaContent(attributes);
-										
-					FeedEntity lastEntity = _entityStack.lastElement();
-					if (lastEntity.getClass() == Feed.class)
-					{						
-						((Feed) lastEntity).setMediaContent(mediaContent);
-					}					
-					_entityStack.add(mediaContent);
-				}
 				else
 				{
-					throw new RuntimeException("Don't know how to create an entity from tag " + qName);
-				}				
+					if (LOGGING)
+						Log.v(LOGTAG,"Don't know how to create an entity from tag " + qName);
+						//throw new RuntimeException("Don't know how to create an entity from tag " + qName);
+				}
 			}
 		}
 
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException
 		{
-			if (LOGGING)
-				Log.v(LOGTAG,"endElement " + localName + ":" + qName + ":" +  _contentBuilder.toString().trim());
 			// get the latest parsed content, if there is any
 			String content = "";
 			if (isContentTag(qName))
@@ -345,15 +279,7 @@ public class Reader
 				}
 				else if (qName.equalsIgnoreCase("paik:id"))
 				{
-					if (LOGGING)
-						Log.v(LOGTAG,"Got a remotePostId:" + content);
 					qName = "remotePostId";
-				} 
-				else if (qName.equalsIgnoreCase("wfw:commentRss")) 
-				{
-					if (LOGGING)
-						Log.v(LOGTAG,"Got a wfw:commentRss: " + content);
-					qName = "commentsUrl";
 				}
 				_entityStack.lastElement().setProperty(qName, content);
 			}

@@ -127,6 +127,7 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 					String author = nickname;
 					String author_url = "";
 					String author_email = "";
+					Log.v(LOGTAG, "Remote Post ID: " + socialReporter.socialReader.getItemFromId(comment.getItemId()).getRemotePostId());
 					Integer post_id = Integer.valueOf(socialReporter.socialReader.getItemFromId(comment.getItemId()).getRemotePostId());
 					
 					Integer commentId = wordpress.newComment(post_id, comment_parent, content, author, author_url, author_email);

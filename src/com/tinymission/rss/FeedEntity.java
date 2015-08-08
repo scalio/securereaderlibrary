@@ -94,6 +94,9 @@ public class FeedEntity implements Serializable
 					m.invoke(this, intVal);
 					if (LOGGING)
 						Log.v(logTag, "Assigned property " + name + " int value: " + Integer.toString(intVal));
+				} else {
+					if (LOGGING) 
+						Log.v(logTag, "Didn't find method with right params");
 				}
 				return;
 			}

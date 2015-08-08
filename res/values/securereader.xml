@@ -4,7 +4,7 @@
     <string name="app_name">Secure Reader Library</string>
     
     <!-- Network OPML service -->
-    <string name="opml_url">http://securereader.guardianproject.info/opml/opml.php</string>
+    <string name="opml_url">https://securereader.guardianproject.info/opml/opml.php</string>
 	
     <bool name="repeatedly_load_network_opml">false</bool>
     
@@ -17,13 +17,20 @@
         <item>EPubs</item>
     </string-array>
     
+	<string-array name="feed_urls_with_comments">
+	    <item>https://bigbuffalo.com/feed/</item>
+	</string-array>
+    
+    
 	<string-array name="built_in_feed_urls">
-	    <item>http://bigbuffalo.com/feed/</item>
-        <item>http://securereader.guardianproject.info/swfeed/swfeed.php</item>
-        <item>http://securereader.guardianproject.info/opds/opds.php</item>
+	    <item>https://bigbuffalo.com/feed/</item>
+        <item>https://securereader.guardianproject.info/swfeed/swfeed.php</item>
+        <item>https://securereader.guardianproject.info/opds/opds.php</item>
     </string-array>
 
-	<string name="talk_item_guid">https://talk.to.me</string>
+	<integer name="talk_item_remote_id">-1</integer>
+	<string name="talk_item_feed_url">https://talk.to.me</string>
+	<string name="talk_item_xmlrpc_url">https://someserver.something/xmlrpc.php</string>
 	
 	<!-- FEED_REFRESH_AGE = 300000; // 5 minutes -->
 	<integer name="feed_refresh_age">300000</integer>
@@ -35,7 +42,7 @@
 	<integer name="expiration_check_frequency">43200000</integer>
 	
 	<!-- XMLRPC_ENDPOINT -->
-	<string name="xmlrpc_endpoint">http://securereader.guardianproject.info/xmlrpc.php</string>
+	<string name="xmlrpc_endpoint">https://securereader.guardianproject.info/xmlrpc.php</string>
 	
 	<!-- Default values that should be referenced in Settings.java -->
 	<bool name="require_proxy_default">true</bool>

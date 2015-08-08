@@ -26,7 +26,7 @@ import com.tinymission.rss.MediaContent;
 
 public class DatabaseAdapter
 {
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	public static final String LOGTAG = "DatabaseAdapter";
 	
 	private final DatabaseHelper databaseHelper;
@@ -591,7 +591,8 @@ public class DatabaseAdapter
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
 					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", "
-					+ DatabaseHelper.FEEDS_TABLE_TITLE + ", " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID
+					+ DatabaseHelper.FEEDS_TABLE_TITLE + ", " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", "
+					+ DatabaseHelper.ITEMS_TABLE_COMMENTS_URL
 					+ " from " + DatabaseHelper.ITEMS_TABLE + ", " + DatabaseHelper.FEEDS_TABLE
 					+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = " + DatabaseHelper.FEEDS_TABLE_COLUMN_ID
 					+ " and " + DatabaseHelper.FEEDS_TABLE_SUBSCRIBED + " = ?"
@@ -618,6 +619,7 @@ public class DatabaseAdapter
 				int feedIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
 				
 				int feedTableFeedIdColumn = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_COLUMN_ID);
 				int feedTableFeedTitle = queryCursor.getColumnIndex(DatabaseHelper.FEEDS_TABLE_TITLE);
@@ -641,16 +643,18 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
+						String commentsUrl = queryCursor.getString(commentsUrlColumn);
 						
 						String feedTitle = queryCursor.getString(feedTableFeedTitle);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
 	
 						Item item = new Item(guid, title, publishDate, feedTitle, description, feedId);
 						item.setDatabaseId(id);
 						item.setAuthor(author);
 						item.setCategory(category);
 						item.setContentEncoded(contentEncoded);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
+						item.setCommentsUrl(commentsUrl);
 						if (favorite == 1)
 						{
 							item.setFavorite(true);
@@ -882,6 +886,7 @@ public class DatabaseAdapter
 			values.put(DatabaseHelper.ITEMS_TABLE_TITLE, item.getTitle());
 			values.put(DatabaseHelper.ITEMS_TABLE_FEED_ID, item.getFeedId());
 			values.put(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID, item.getRemotePostId());
+			values.put(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL, item.getCommentsUrl());
 
 			if (item.getPubDate() != null)
 			{
@@ -915,7 +920,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID 
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", "
+					+ DatabaseHelper.ITEMS_TABLE_COMMENTS_URL
 					+ " from " + DatabaseHelper.ITEMS_TABLE + " where "
 					+ DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
@@ -939,6 +945,7 @@ public class DatabaseAdapter
 				int feedIdColunn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
 				
 				if (queryCursor.moveToFirst())
 				{
@@ -957,8 +964,9 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						String commentsUrl = queryCursor.getString(commentsUrlColumn);
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						
 						Item item = new Item(guid, title, publishDate, getFeedTitle(feedId), description, feedId);
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -980,8 +988,9 @@ public class DatabaseAdapter
 						
 						item.setGuid(guid);
 						item.setLink(link);
+						item.setCommentsUrl(commentsUrl);
 						
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 	
 						feed.addItem(item);
 					}
@@ -1025,7 +1034,9 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", "
+					+ DatabaseHelper.ITEMS_TABLE_COMMENTS_URL + 
+					" from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
 					+ " and " + DatabaseHelper.ITEMS_TABLE_FAVORITE + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
 			if (LOGGING)
@@ -1047,7 +1058,8 @@ public class DatabaseAdapter
 				int feedIdColunn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
-	
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
+				
 				if (queryCursor.moveToFirst())
 				{
 					do
@@ -1064,8 +1076,9 @@ public class DatabaseAdapter
 						String category = queryCursor.getString(categoryColumn);
 						int favorite = queryCursor.getInt(favoriteColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						String commentsUrl = queryCursor.getString(commentsUrlColumn);
+						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -1081,7 +1094,8 @@ public class DatabaseAdapter
 						}
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
+						item.setCommentsUrl(commentsUrl);
 	
 						feed.addItem(item);
 					}
@@ -1124,7 +1138,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID 
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", " 
+					+ DatabaseHelper.ITEMS_TABLE_COMMENTS_URL 
 					+ " from " + DatabaseHelper.ITEMS_TABLE + " where "
 					+ DatabaseHelper.ITEMS_TABLE_SHARED + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
@@ -1148,7 +1163,8 @@ public class DatabaseAdapter
 				int feedIdColunn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
-	
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
+				
 				if (queryCursor.moveToFirst())
 				{
 					do
@@ -1166,7 +1182,8 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						String commentsUrl = queryCursor.getString(commentsUrlColumn);
 						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
@@ -1189,7 +1206,8 @@ public class DatabaseAdapter
 						
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
+						item.setCommentsUrl(commentsUrl);
 						
 						feed.addItem(item);
 					}
@@ -1233,7 +1251,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CATEGORY + ", " + DatabaseHelper.ITEMS_TABLE_DESCRIPTION + ", " + DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED
 					+ ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", "
 					+ DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", "
-					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID 
+					+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", "
+					+ DatabaseHelper.ITEMS_TABLE_COMMENTS_URL 
 					+ " from " + DatabaseHelper.ITEMS_TABLE + " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ?"
 					+ " and " + DatabaseHelper.ITEMS_TABLE_SHARED + " = ? order by " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ";";
 
@@ -1257,7 +1276,9 @@ public class DatabaseAdapter
 				int feedIdColunn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
-	
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
+				
+				
 				if (queryCursor.moveToFirst())
 				{
 					do
@@ -1275,8 +1296,9 @@ public class DatabaseAdapter
 						int favorite = queryCursor.getInt(favoriteColumn);
 						int shared = queryCursor.getInt(sharedColumn);
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						String commentsUrl = queryCursor.getString(commentsUrlColumn);
+						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -1298,7 +1320,8 @@ public class DatabaseAdapter
 						
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
+						item.setCommentsUrl(commentsUrl);
 						
 						feed.addItem(item);
 					}
@@ -1355,7 +1378,8 @@ public class DatabaseAdapter
 					+ DatabaseHelper.ITEMS_TABLE_CONTENT_ENCODED + ", " + DatabaseHelper.ITEMS_TABLE_FAVORITE + ", " + DatabaseHelper.ITEMS_TABLE_SHARED + ", " 
 					+ DatabaseHelper.ITEMS_TABLE_GUID + ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " 
 					+ DatabaseHelper.ITEMS_TABLE_TITLE + ", " + DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", "
-					+ DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID
+					+ DatabaseHelper.ITEMS_TABLE_VIEWCOUNT + ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", "
+					+ DatabaseHelper.ITEMS_TABLE_COMMENTS_URL
 					+ " from " + DatabaseHelper.ITEMS_TABLE
 					+ " where " + DatabaseHelper.ITEMS_TABLE_COLUMN_ID + " = ?;";
 			
@@ -1380,6 +1404,7 @@ public class DatabaseAdapter
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int viewCountColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_VIEWCOUNT);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
 				
 				if (queryCursor.moveToFirst())
 				{
@@ -1399,9 +1424,10 @@ public class DatabaseAdapter
 					
 					String source = queryCursor.getString(sourceColumn);
 					String link = queryCursor.getString(linkColumn);
+					String commentsUrl = queryCursor.getString(commentsUrlColumn);
 					
-					String remotePostId = queryCursor.getString(remotePostIdColumn);
-		
+					int remotePostId = queryCursor.getInt(remotePostIdColumn);
+					
 					returnItem = new Item(guid, title, publishDate, source, description, feedId);
 					returnItem.setDatabaseId(id);
 					returnItem.setAuthor(author);
@@ -1424,7 +1450,8 @@ public class DatabaseAdapter
 					returnItem.setViewCount(viewCount);
 					returnItem.setGuid(guid);
 					returnItem.setLink(link);
-					returnItem.setRemotePostId(remotePostId);
+					returnItem.setCommentsUrl(commentsUrl);
+					returnItem.dbsetRemotePostId(remotePostId);
 
 					returnItem.setMediaContent(this.getItemMedia(returnItem));
 					returnItem.setCategories(getItemTags(returnItem));
@@ -1467,7 +1494,7 @@ public class DatabaseAdapter
 						+ DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_GUID
 						+ ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", "
 						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + ", "
-						+ DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID
+						+ DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", " + DatabaseHelper.ITEMS_TABLE_COMMENTS_URL
 						+ " from " + DatabaseHelper.ITEMS_TABLE
 						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ? order by "
 						+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC LIMIT " + numItems + ";";
@@ -1480,7 +1507,7 @@ public class DatabaseAdapter
 						+ DatabaseHelper.ITEMS_TABLE_SHARED + ", " + DatabaseHelper.ITEMS_TABLE_GUID
 						+ ", " + DatabaseHelper.ITEMS_TABLE_LINK + ", " + DatabaseHelper.ITEMS_TABLE_SOURCE + ", " + DatabaseHelper.ITEMS_TABLE_TITLE + ", "
 						+ DatabaseHelper.ITEMS_TABLE_FEED_ID + ", " + DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE 
-						+ ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID
+						+ ", " + DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID + ", " + DatabaseHelper.ITEMS_TABLE_COMMENTS_URL
 						+ " from " + DatabaseHelper.ITEMS_TABLE
 						+ " where " + DatabaseHelper.ITEMS_TABLE_FEED_ID + " = ? order by "
 						+ DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE + " DESC;";
@@ -1506,6 +1533,7 @@ public class DatabaseAdapter
 				int feedIdColunn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_FEED_ID);
 				int publishDateColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_PUBLISH_DATE);
 				int remotePostIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_REMOTE_POST_ID);
+				int commentsUrlColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEMS_TABLE_COMMENTS_URL);
 	
 				if (queryCursor.moveToFirst())
 				{
@@ -1525,8 +1553,9 @@ public class DatabaseAdapter
 						int shared = queryCursor.getInt(sharedColumn);
 	
 						String link = queryCursor.getString(linkColumn);
-						String remotePostId = queryCursor.getString(remotePostIdColumn);
-	
+						String commentsUrl = queryCursor.getString(commentsUrlColumn);
+						int remotePostId = queryCursor.getInt(remotePostIdColumn);
+						
 						Item item = new Item(guid, title, publishDate, feed.getTitle(), description, feed.getDatabaseId());
 						item.setDatabaseId(id);
 						item.setAuthor(author);
@@ -1549,7 +1578,8 @@ public class DatabaseAdapter
 	
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.setCommentsUrl(commentsUrl);
+						item.dbsetRemotePostId(remotePostId);
 	
 						feed.addItem(item);
 					}
@@ -2062,18 +2092,22 @@ public class DatabaseAdapter
 	public void addOrUpdateItemComments(Item item, ArrayList<Comment> itemCommentList)
 	{
 		if (LOGGING)
-			Log.v(LOGTAG,"addOrUpdateItemMedia");
+			Log.v(LOGTAG,"addOrUpdateItemComments adding " + itemCommentList.size());
 		
 		for (Comment itemComment : itemCommentList)
 		{
 			addOrUpdateItemComment(item, itemComment);
+			
 			if (LOGGING)
-				Log.v(LOGTAG,"itemMedia added or updated: " + itemComment.getDatabaseId());
+				Log.v(LOGTAG,"item comment added or updated: " + itemComment.getDatabaseId());
 		}
 	}
 
 	public long addOrUpdateItemComment(Item item, Comment itemComment)
 	{
+		if (LOGGING)
+			Log.v(LOGTAG, "addOrUpdateItemComment");
+		
 		long returnValue = -1;
 		if (itemComment.getDatabaseId() == Comment.DEFAULT_DATABASE_ID)
 		{

@@ -22,10 +22,10 @@ public class Item extends FeedEntity implements Serializable
 	public static final long serialVersionUID = 133702L;
 
 	public static final String LOGTAG = "rss.item";
-	public static final boolean LOGGGING = false;
+	public static final boolean LOGGGING = true;
 
 	public static final int DEFAULT_DATABASE_ID = -1;
-	public static final String DEFAULT_REMOTE_POST_ID = "-1";
+	public static final int DEFAULT_REMOTE_POST_ID = -1;
 
 	// Item fields for us
 	private boolean _favorite = false;
@@ -33,7 +33,7 @@ public class Item extends FeedEntity implements Serializable
 	private int _viewCount = 0;
 	private long _databaseId = DEFAULT_DATABASE_ID;
 	private long _feedId;
-	private String _remotePostId = DEFAULT_REMOTE_POST_ID;  // <paik:id>365</paik:id>
+	private int _remotePostId = DEFAULT_REMOTE_POST_ID;  // <paik:id>365</paik:id>
 	
 	// Item elements part of RSS
 	private String _title;
@@ -53,6 +53,24 @@ public class Item extends FeedEntity implements Serializable
 	
 	private ArrayList<Comment> comments = new ArrayList<Comment>();
 	private String _commentsUrl;
+
+	// This all relates to comment fetching
+	public static int STATUS_NOT_SYNCED = 0;
+	public static int STATUS_LAST_SYNC_GOOD = 1;
+	public static int STATUS_LAST_SYNC_FAILED_404 = 2;
+	public static int STATUS_LAST_SYNC_FAILED_UNKNOWN = 3;
+	public static int STATUS_LAST_SYNC_FAILED_BAD_URL = 4;
+	public static int STATUS_SYNC_IN_PROGRESS = 5;
+	public static int STATUS_LAST_SYNC_PARSE_ERROR = 6;
+	private int _status = 0;
+
+	public int getStatus() {
+		return _status;
+	}
+	
+	public void setStatus(int _status) {
+		this._status = _status;
+	}
 
 	
 	static SimpleDateFormat[] dateFormats = { new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
@@ -127,14 +145,28 @@ public class Item extends FeedEntity implements Serializable
 		this._feedId = _feedId;
 	}
 	
-	public String getRemotePostId() {
+	public int getRemotePostId() {
 		return this._remotePostId;
 	}
 	
 	public void setRemotePostId(String _postId)
 	{
+		if (LOGGING) 
+			Log.v(LOGTAG,"Pre Setting remotePostId:*" + _postId + "*");
+		this._remotePostId = Integer.valueOf(_postId);
+
+		if (LOGGING) 
+			Log.v(LOGTAG,"Post Setting remotePostId:" + _remotePostId);
+	}
+
+	
+	public void dbsetRemotePostId(int _postId)
+	{
+		if (LOGGING) 
+			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
 		this._remotePostId = _postId;
 	}
+	
 
 	public long getDatabaseId()
 	{
@@ -380,6 +412,9 @@ public class Item extends FeedEntity implements Serializable
 	 */
 	public void setCommentsUrl(String commentsUrl)
 	{
+		if (LOGGING) 
+			Log.v(LOGTAG, "Setting Comments URL: " + commentsUrl);
+
 		this._commentsUrl = commentsUrl;
 	}
 
