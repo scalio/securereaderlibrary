@@ -176,7 +176,7 @@ public class SyncService extends Service {
     	
     	private void startCommentsFeedFetcher() {    		
     		if (LOGGING)
-    			Log.v(LOGTAG,"Create SyncServiceFeedFetcher");
+    			Log.v(LOGTAG,"Create SyncServiceCommentsFeedFetcher");
     		SyncServiceCommentsFeedFetcher commentsFeedFetcher = new SyncServiceCommentsFeedFetcher(SyncService.this,this);
     		
     		if (LOGGING)
@@ -217,7 +217,7 @@ public class SyncService extends Service {
     public void addFeedSyncTask(Feed feed, SyncServiceFeedFetcher.SyncServiceFeedFetchedCallback callback) {
     	for (int i = 0; i < syncList.size(); i++) {
     		Feed feedTask = syncList.get(i).feed;
-    		if (feedTask != null && feed.getDatabaseId() == feed.getDatabaseId()) {
+    		if (feedTask != null && feedTask.getDatabaseId() == feed.getDatabaseId()) {
     			if (overTime(syncList.get(i))) {
     				syncList.get(i).status = SyncTask.ERROR;
     	    		syncList.remove(syncList.get(i));
@@ -244,7 +244,7 @@ public class SyncService extends Service {
     		Log.v(LOGTAG,"addCommentSyncTask " + item.getCommentsUrl());
     	for (int i = 0; i < syncList.size(); i++) {
     		Item itemTask = syncList.get(i).item;
-    		if (itemTask != null && item.getDatabaseId() == item.getDatabaseId()) {
+    		if (itemTask != null && itemTask.getDatabaseId() == item.getDatabaseId()) {
     			if (overTime(syncList.get(i))) {
     				syncList.get(i).status = SyncTask.ERROR;
     	    		syncList.remove(syncList.get(i));
