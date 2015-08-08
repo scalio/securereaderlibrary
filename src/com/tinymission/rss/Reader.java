@@ -45,7 +45,7 @@ public class Reader
 	 * 
 	 */
 	public final static String[] CONTENT_TAGS = { "title", "link", "language", "pubDate", "lastBuildDate", "docs", "generator", "managingEditor", "webMaster",
-			"guid", "author", "category", "content:encoded", "description", "url", "paik:id" };
+			"guid", "author", "category", "content:encoded", "description", "url", "paik:id", "wfw:commentRss" };
 
 	/**
 	 * The tags that should be parsed into separate entities, not just
@@ -346,6 +346,12 @@ public class Reader
 					if (LOGGING)
 						Log.v(LOGTAG,"Got a remotePostId:" + content);
 					qName = "remotePostId";
+				} 
+				else if (qName.equalsIgnoreCase("wfw:commentRss")) 
+				{
+					if (LOGGING)
+						Log.v(LOGTAG,"Got a wfw:commentRss: " + content);
+					qName = "commentsUrl";
 				}
 				_entityStack.lastElement().setProperty(qName, content);
 			}

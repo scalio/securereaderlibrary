@@ -15,7 +15,7 @@ public class FeedEntity implements Serializable
 {
 	public static final long serialVersionUID = 133701L;
 	public static final String LOGTAG = "rss.FeedEntity";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	public FeedEntity(Attributes attributes)
 	{
@@ -94,6 +94,9 @@ public class FeedEntity implements Serializable
 					m.invoke(this, intVal);
 					if (LOGGING)
 						Log.v(logTag, "Assigned property " + name + " int value: " + Integer.toString(intVal));
+				} else {
+					if (LOGGING) 
+						Log.v(logTag, "Didn't find method with right params");
 				}
 				return;
 			}

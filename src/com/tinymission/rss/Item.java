@@ -152,19 +152,21 @@ public class Item extends FeedEntity implements Serializable
 	public void setRemotePostId(String _postId)
 	{
 		if (LOGGING) 
-			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
+			Log.v(LOGTAG,"Pre Setting remotePostId:*" + _postId + "*");
 		this._remotePostId = Integer.valueOf(_postId);
 
 		if (LOGGING) 
-			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
+			Log.v(LOGTAG,"Post Setting remotePostId:" + _remotePostId);
 	}
 
-	public void setRemotePostId(int _postId)
+	
+	public void dbsetRemotePostId(int _postId)
 	{
 		if (LOGGING) 
 			Log.v(LOGTAG,"Setting remotePostId:" + _postId);
 		this._remotePostId = _postId;
 	}
+	
 
 	public long getDatabaseId()
 	{
@@ -410,6 +412,9 @@ public class Item extends FeedEntity implements Serializable
 	 */
 	public void setCommentsUrl(String commentsUrl)
 	{
+		if (LOGGING) 
+			Log.v(LOGTAG, "Setting Comments URL: " + commentsUrl);
+
 		this._commentsUrl = commentsUrl;
 	}
 

@@ -650,7 +650,7 @@ public class DatabaseAdapter
 						item.setAuthor(author);
 						item.setCategory(category);
 						item.setContentEncoded(contentEncoded);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 						if (favorite == 1)
 						{
 							item.setFavorite(true);
@@ -981,7 +981,7 @@ public class DatabaseAdapter
 						item.setGuid(guid);
 						item.setLink(link);
 						
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 	
 						feed.addItem(item);
 					}
@@ -1081,7 +1081,7 @@ public class DatabaseAdapter
 						}
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 	
 						feed.addItem(item);
 					}
@@ -1189,7 +1189,7 @@ public class DatabaseAdapter
 						
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 						
 						feed.addItem(item);
 					}
@@ -1298,7 +1298,7 @@ public class DatabaseAdapter
 						
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 						
 						feed.addItem(item);
 					}
@@ -1424,7 +1424,7 @@ public class DatabaseAdapter
 					returnItem.setViewCount(viewCount);
 					returnItem.setGuid(guid);
 					returnItem.setLink(link);
-					returnItem.setRemotePostId(remotePostId);
+					returnItem.dbsetRemotePostId(remotePostId);
 
 					returnItem.setMediaContent(this.getItemMedia(returnItem));
 					returnItem.setCategories(getItemTags(returnItem));
@@ -1549,7 +1549,7 @@ public class DatabaseAdapter
 	
 						item.setGuid(guid);
 						item.setLink(link);
-						item.setRemotePostId(remotePostId);
+						item.dbsetRemotePostId(remotePostId);
 	
 						feed.addItem(item);
 					}
