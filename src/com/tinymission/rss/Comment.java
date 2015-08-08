@@ -45,7 +45,7 @@ http://ny5y5j76ljc2dcpr.onion/wordpress/?p=1#comment-11
 </item>
  * 
  */
-	private long _databaseId;
+	private long _databaseId = DEFAULT_DATABASE_ID;
 	private long _itemId;
 
 	private String _title;
@@ -92,6 +92,8 @@ http://ny5y5j76ljc2dcpr.onion/wordpress/?p=1#comment-11
 		if (_pubDate == null) {
 			setPubDate(new Date());
 		}
+		if (LOGGING) 
+			Log.v(LOGTAG,"New Comment from Network!");
 	}
 
 	public Comment(String guid, String title, String publicationTime, String description, long itemId)

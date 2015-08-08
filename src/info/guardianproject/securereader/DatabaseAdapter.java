@@ -26,7 +26,7 @@ import com.tinymission.rss.MediaContent;
 
 public class DatabaseAdapter
 {
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	public static final String LOGTAG = "DatabaseAdapter";
 	
 	private final DatabaseHelper databaseHelper;
@@ -2092,18 +2092,22 @@ public class DatabaseAdapter
 	public void addOrUpdateItemComments(Item item, ArrayList<Comment> itemCommentList)
 	{
 		if (LOGGING)
-			Log.v(LOGTAG,"addOrUpdateItemMedia");
+			Log.v(LOGTAG,"addOrUpdateItemComments adding " + itemCommentList.size());
 		
 		for (Comment itemComment : itemCommentList)
 		{
 			addOrUpdateItemComment(item, itemComment);
+			
 			if (LOGGING)
-				Log.v(LOGTAG,"itemMedia added or updated: " + itemComment.getDatabaseId());
+				Log.v(LOGTAG,"item comment added or updated: " + itemComment.getDatabaseId());
 		}
 	}
 
 	public long addOrUpdateItemComment(Item item, Comment itemComment)
 	{
+		if (LOGGING)
+			Log.v(LOGTAG, "addOrUpdateItemComment");
+		
 		long returnValue = -1;
 		if (itemComment.getDatabaseId() == Comment.DEFAULT_DATABASE_ID)
 		{

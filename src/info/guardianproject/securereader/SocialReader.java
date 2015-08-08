@@ -82,7 +82,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
@@ -2573,6 +2573,8 @@ public class SocialReader implements ICacheWordSubscriber
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
 			itemComments = databaseAdapter.getItemComments(item);
+			if (LOGGING)
+				Log.v(LOGTAG,"Got item comments: " + item.getTitle() + " " + itemComments.size());
 			return itemComments;
 		}
 		else
@@ -2614,9 +2616,15 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public void setItemComments(Item item, ArrayList<Comment> comments) {
+		if (LOGGING)
+			Log.v(LOGTAG, "setItemComments");
+		
 		if (databaseAdapter != null && databaseAdapter.databaseReady())
 		{
 			databaseAdapter.addOrUpdateItemComments(item, comments);
+			
+			if (LOGGING)
+				Log.v(LOGTAG, "Database has: " + getItemComments(item).size() + " comments for this item");
 		}
 		else
 		{

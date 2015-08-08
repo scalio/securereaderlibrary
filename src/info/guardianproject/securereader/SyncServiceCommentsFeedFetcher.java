@@ -58,7 +58,7 @@ public class SyncServiceCommentsFeedFetcher implements Runnable
 		SocialReader.getInstance(syncService.getApplicationContext()).setItemComments(syncTask.item, tempFeed.getComments());			
 		
 		if (LOGGING)
-			Log.v(LOGTAG,"syncTask.item should be complete");
+			Log.v(LOGTAG,"syncTask.item should be complete " + tempFeed.getCommentCount() + " comments found");
 		
 		// Go back to the main thread
 		Message m = Message.obtain();            
