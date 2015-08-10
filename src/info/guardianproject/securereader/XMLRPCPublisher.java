@@ -133,7 +133,7 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 							if (mObj != null)
 							{
 		
-								sbBody.append("\n\n<a href=\"" + mObj.getUrl() + "\">" + mObj.getUrl() + "</a>");
+								sbBody.append("\n\n<a href=\"" + mObj.getUrl() + "\">Link to media</a>");
 	
 								// This should
 								XmlRpcStruct enclosureStruct = new XmlRpcStruct();
