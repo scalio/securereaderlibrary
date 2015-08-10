@@ -1351,7 +1351,9 @@ public class SocialReader implements ICacheWordSubscriber
 		// Create talk item
 		talkItem = new Item();
 		talkItem.setFavorite(true); // So it doesn't delete
+		talkItem.setGuid(applicationContext.getResources().getString(R.string.talk_item_feed_url));
 		talkItem.setTitle("Example Favorite");
+		talkItem.setFeedId(-1);
 		talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
 		talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
 		talkItem.setCommentsUrl(applicationContext.getResources().getString(R.string.talk_item_feed_url));
