@@ -591,20 +591,25 @@ public class SocialReader implements ICacheWordSubscriber
 				String connectionTypeParam = "&nct=" + connectionType;
 				finalOpmlUrl += connectionTypeParam;
 						
-				String torTypeParam = "&p=";
-				//TODO - PROXY WORK
-//				if (settings.requireTor()) {
-//					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
-//						torTypeParam += "1";
-//					} else {
-//						// But this shouldn't actually work
-//						torTypeParam += "0";
-//					}
-//				} else 
+				String proxyTypeParam = "&p=";
+				if (settings.requireProxy() && settings.proxyType() == Settings.ProxyType.Tor) {
+					if (oc.isOrbotInstalled() && oc.isOrbotRunning()) {
+						proxyTypeParam += "1";
+					} else {
+						// But this shouldn't actually work
+						proxyTypeParam += "-1";
+					}
+				} 
+				else if (settings.requireProxy() && settings.proxyType() == Settings.ProxyType.Psiphon) 
 				{
-					torTypeParam += "0";
-				}				
-				finalOpmlUrl += torTypeParam;
+					proxyTypeParam += "2";
+					// else proxyTypeParam += "-2";
+				} 
+				else
+				{
+					proxyTypeParam += 0;
+				}
+				finalOpmlUrl += proxyTypeParam;
 				
 				String apiLevelParam = "&a=" + android.os.Build.VERSION.SDK_INT;
 				finalOpmlUrl += apiLevelParam;
