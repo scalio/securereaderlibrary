@@ -253,7 +253,7 @@ public class SyncService extends Service {
     			}
     			else {
 	        		if (LOGGING)
-	        			Log.v(LOGTAG,"Item already in queue, ignoring");
+	        			Log.v(LOGTAG,"Item already in queue, ignoring " + itemTask.getDatabaseId());
 	    			return;
     			}
     		}
