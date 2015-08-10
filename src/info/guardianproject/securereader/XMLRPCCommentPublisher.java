@@ -122,7 +122,7 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 						nickname = xmlRPCUsername;
 					}
 					
-					Integer comment_parent = Integer.valueOf(-1);
+					Integer comment_parent = null;
 					String content = comment.getDescription();
 					String author = nickname;
 					String author_url = "";
