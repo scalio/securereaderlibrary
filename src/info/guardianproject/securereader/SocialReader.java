@@ -994,14 +994,19 @@ public class SocialReader implements ICacheWordSubscriber
 					backgroundRequestFeedNetwork(feed, new SyncServiceFeedFetchedCallback() {
 						@Override
 						public void feedFetched(Feed _feed) {
-							if (LOGGING) 
-								Log.v(LOGTAG,"Does " + _feed.getFeedURL() + " = " + feedsWithComments[0]);
-							
-							if (Arrays.asList(feedsWithComments).contains(_feed.getFeedURL())) {
-								if (LOGGING)
-									Log.v(LOGTAG, "Checking Comments on " + _feed.getDatabaseId());
-								networkCheckCommentFeeds(_feed);
+							if (feedsWithComments != null)
+							{
+								if (LOGGING) 
+									Log.v(LOGTAG,"Does " + _feed.getFeedURL() + " = " + feedsWithComments[0]);
+								
+								if (Arrays.asList(feedsWithComments).contains(_feed.getFeedURL())) {
+									if (LOGGING)
+										Log.v(LOGTAG, "Checking Comments on " + _feed.getDatabaseId());
+									networkCheckCommentFeeds(_feed);
+								}
 							}
+							else if (LOGGING)
+								Log.e(LOGTAG,"feedsWithComments is null!!!");
 						}
 					});
 				} else if (isOnline() != ONLINE) {
