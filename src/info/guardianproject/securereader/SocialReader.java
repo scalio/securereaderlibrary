@@ -1021,7 +1021,11 @@ public class SocialReader implements ICacheWordSubscriber
 			
 			// Check Talk Feed
 			if (isOnline() == ONLINE && syncService != null && talkItem != null) {
+				if (LOGGING)
+					Log.v(LOGTAG,"Adding talkItem to syncService");
 				syncService.addCommentsSyncTask(talkItem);
+			} else if (LOGGING) {
+				Log.v(LOGTAG,"Unable to add talkItem to syncService");
 			}
 			
 		} else {
@@ -2761,9 +2765,17 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public Item getTalkItem() {
+		if (LOGGING) 
+			Log.v(LOGTAG,"getTalkItem");
+		
 		if (LOGGING && talkItem == null) {
 			Log.e(LOGTAG,"talkItem is NULL!!!!");
 		}
+		else if (LOGGING)
+		{
+			Log.v(LOGTAG,"talkItem has " + getItemComments(talkItem).size() + " comments");
+		}
+		
 		return talkItem;
 	}
 }
