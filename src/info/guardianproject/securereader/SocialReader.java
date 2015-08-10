@@ -186,14 +186,15 @@ public class SocialReader implements ICacheWordSubscriber
 		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
 		mediaCacheSizeLimitInBytes = mediaCacheSize * 1000 * 1000;
 		
+		feedsWithComments = applicationContext.getResources().getStringArray(R.array.feed_urls_with_comments);
+		
 		this.settings = new Settings(applicationContext);
 		
 		this.cacheWord = new CacheWordHandler(applicationContext, this);
 		cacheWord.connectToService();
 		
 		this.oc = new OrbotHelper(applicationContext);
-		
-		
+				
 		LocalBroadcastManager.getInstance(_context).registerReceiver(
 				new BroadcastReceiver() {
 			        @Override
@@ -1309,7 +1310,6 @@ public class SocialReader implements ICacheWordSubscriber
 			String[] builtInFeedNames = applicationContext.getResources().getStringArray(R.array.built_in_feed_names);
 			String[] builtInFeedUrls = applicationContext.getResources().getStringArray(R.array.built_in_feed_urls);
 			
-			feedsWithComments = applicationContext.getResources().getStringArray(R.array.feed_urls_with_comments);
 			
 			if (builtInFeedNames.length == builtInFeedUrls.length) {
 				for (int i = 0; i < builtInFeedNames.length; i++) {
@@ -1319,23 +1319,22 @@ public class SocialReader implements ICacheWordSubscriber
 				}
 			}
 			
-			// Create talk item
-			talkItem = new Item();
-			talkItem.setFavorite(true); // So it doesn't delete
-			talkItem.setTitle("Example Favorite");
-			talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
-			talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
-			talkItem.setCommentsUrl(applicationContext.getResources().getString(R.string.talk_item_feed_url));
-			this.databaseAdapter.addItem(talkItem);
-			if (LOGGING)
-				Log.v(LOGTAG,"talkItem has database ID " + talkItem.getDatabaseId());
-			
-			
 			loadOPMLFile();
 		} else {
 			if (LOGGING)
 				Log.v(LOGTAG,"Database not empty, not inserting default feeds");
 		}
+		
+		// Create talk item
+		talkItem = new Item();
+		talkItem.setFavorite(true); // So it doesn't delete
+		talkItem.setTitle("Example Favorite");
+		talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
+		talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
+		talkItem.setCommentsUrl(applicationContext.getResources().getString(R.string.talk_item_feed_url));
+		this.databaseAdapter.addOrUpdateItem(talkItem,itemLimit);
+		if (LOGGING)
+			Log.v(LOGTAG,"talkItem has database ID " + talkItem.getDatabaseId());		
 
 		if (LOGGING)
 			Log.v(LOGTAG,"databaseAdapter initialized");
@@ -2737,6 +2736,9 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 	
 	public Item getTalkItem() {
+		if (LOGGING && talkItem == null) {
+			Log.e(LOGTAG,"talkItem is NULL!!!!");
+		}
 		return talkItem;
 	}
 }
