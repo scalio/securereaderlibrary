@@ -1030,6 +1030,29 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
+	public boolean isFeedCommentable(Feed _feed) {
+		if (feedsWithComments != null)
+		{
+			if (_feed.getFeedURL() == null) {
+				databaseAdapter.fillFeedObject(_feed);
+			}
+					
+			if (Arrays.asList(feedsWithComments).contains(_feed.getFeedURL())) {
+				if (LOGGING)
+					Log.v(LOGTAG, "Checking Comments on " + _feed.getDatabaseId());
+				return true;
+			} else {
+				return false;
+			}			
+		}
+		else 
+		{
+			if (LOGGING)	
+				Log.e(LOGTAG,"feedsWithComments is null!!!");
+			return false;			
+		}
+	}
+	
 	public void clearMediaDownloadQueue() {
 		if (LOGGING) 
 			Log.v(LOGTAG, "clearMediaDownloadQueue");		
