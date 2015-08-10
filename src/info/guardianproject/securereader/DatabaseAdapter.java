@@ -2157,7 +2157,7 @@ public class DatabaseAdapter
 				} else {
 					// else, it is already in the database, let's update the database id
 	
-					int databaseIdColumn = queryCursor.getColumnIndex(DatabaseHelper.ITEM_MEDIA_TABLE_COLUMN_ID);
+					int databaseIdColumn = queryCursor.getColumnIndex(DatabaseHelper.COMMENTS_TABLE_COLUMN_ID);
 			
 					if (queryCursor.moveToFirst())
 					{
