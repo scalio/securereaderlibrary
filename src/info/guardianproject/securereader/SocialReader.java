@@ -87,7 +87,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
@@ -109,8 +109,9 @@ public class SocialReader implements ICacheWordSubscriber
 	public final static int TOR_PROXY_PORT = 9050; // default for SOCKS Orbot/Tor
 	
 	public final static String PSIPHON_PROXY_HOST = "127.0.0.1";
-	public final static String PSIPHON_PROXY_TYPE = "SOCKS";
+	public final static String PSIPHON_PROXY_TYPE = "HTTP";
 	public int PSIPHON_PROXY_PORT = -1;
+	
 	private boolean psiphonRunning = false;
 	
 	public final static String USERAGENT = "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19";
@@ -197,30 +198,35 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		this.cacheWord = new CacheWordHandler(applicationContext, this);
 		cacheWord.connectToService();
-						
+
+		BroadcastReceiver psiphonHelperReceiver = new BroadcastReceiver(){
+			 
+		    @Override
+		    public void onReceive(Context context, Intent intent) {
+		    	if (LOGGING)
+	        		Log.v(LOGTAG,"onReceive " + intent.getAction());
+	        	
+	        		if (intent.getExtras().containsKey(ProxyHelper.EXTRA_PACKAGE_NAME)
+	        				&& intent.getStringExtra(ProxyHelper.EXTRA_PACKAGE_NAME).equals(PsiphonHelper.PACKAGE_NAME)) {
+	        			gotPsiphonInfo(intent);
+	        		}
+	        	
+		    }
+		     
+		};
+		applicationContext.registerReceiver(psiphonHelperReceiver, new IntentFilter(ProxyHelper.ACTION_STATUS));
+		
 		LocalBroadcastManager.getInstance(_context).registerReceiver(
 				new BroadcastReceiver() {
 			        @Override
 			        public void onReceive(Context context, Intent intent) {
-			        	// See if it is the PsiphonHelper Intent
-			        	if (intent.getAction().equals(ProxyHelper.ACTION_STATUS))
-			        	{
-			        		if (intent.getExtras().containsKey(ProxyHelper.EXTRA_PACKAGE_NAME)
-			        				&& intent.getStringExtra(ProxyHelper.EXTRA_PACKAGE_NAME).equals(PsiphonHelper.PACKAGE_NAME)) {
-			        			// It is the PsiphonHelper Intent
-			        			gotPsiphonInfo(intent);
-			        		}
-			        	}
-			        	else if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
+			        	if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
 			            	// Locked because of timeout
 			            	if (initialized && cacheWord.getCachedSecrets() == null)
 			            		SocialReader.this.onCacheWordLocked();
 			            }
 			        }
 			    }, new IntentFilter(Constants.INTENT_NEW_SECRETS));
-		
-		checkPsiphonStatus();
-
 	}
 		
     private static SocialReader socialReader = null;
@@ -701,7 +707,10 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG, "SocialReader onResume");
         appStatus = SocialReader.APP_IN_FOREGROUND;
+        
+		checkPsiphonStatus();
         cacheWord.reattach();
+
 	}
 	
 	public void setCacheWordTimeout(int minutes)
@@ -715,24 +724,35 @@ public class SocialReader implements ICacheWordSubscriber
 	}
 
 	public void checkPsiphonStatus() {
-		if (settings.requireProxy() && settings.proxyType() == Settings.ProxyType.Psiphon) {
-			if (psiphonHelper.isInstalled(applicationContext)) {
-				psiphonHelper.requestStatus(applicationContext);
-			}
-		}		
+		if (LOGGING)
+			Log.v(LOGTAG,"checkPsiphonStatus");
+		if (psiphonHelper.isInstalled(applicationContext)) {
+			psiphonHelper.requestStatus(applicationContext);
+		}
 	}
 	
 	// When we get data from Psiphon Intent
 	public void gotPsiphonInfo(Intent psiphonHelperIntent) {
+		if (LOGGING)
+			Log.v(LOGTAG,"gotPsiphonInfo");
+		
 		if (psiphonHelperIntent.getExtras().containsKey(PsiphonHelper.EXTRA_STATUS))
 		{
 			if (psiphonHelperIntent.getStringExtra(PsiphonHelper.EXTRA_STATUS).equals(PsiphonHelper.STATUS_ON)) 
 			{
+				if (LOGGING)
+					Log.v(LOGTAG,"psiphonRunning = true");
+				
 				psiphonRunning = true;
 				
 				if (psiphonHelperIntent.getExtras().containsKey(PsiphonHelper.EXTRA_PROXY_PORT_SOCKS))
 				{
-					PSIPHON_PROXY_PORT = psiphonHelperIntent.getIntExtra(PsiphonHelper.EXTRA_PROXY_PORT_SOCKS,-1);
+					//PSIPHON_PROXY_PORT = psiphonHelperIntent.getIntExtra(PsiphonHelper.EXTRA_PROXY_PORT_SOCKS,-1);
+					PSIPHON_PROXY_PORT = psiphonHelperIntent.getIntExtra(PsiphonHelper.EXTRA_PROXY_PORT_HTTP,-1);
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"PSIPHON_PROXY_PORT = " + PSIPHON_PROXY_PORT);
+					
 				}
 			} else {
 				psiphonRunning = false;
@@ -819,8 +839,9 @@ public class SocialReader implements ICacheWordSubscriber
 						return NOT_ONLINE_NO_PROXY;
 					}
 				} else {
-					// This shouldn't happen
-					Log.e(LOGTAG,"Proxy is required but unknown proxy type");
+					// This happens during onboarding
+					if (LOGGING)
+						Log.e(LOGTAG,"Proxy is required but unknown proxy type");
 					return NOT_ONLINE_NO_PROXY;
 				}
 			} else {
@@ -925,7 +946,7 @@ public class SocialReader implements ICacheWordSubscriber
 			{
 				Intent startIntent = psiphonHelper.getStartIntent(applicationContext);
 				startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				_activity.startActivity(startIntent);
+				_activity.startActivityForResult(startIntent,-1);
 			}				
 		}		
 
