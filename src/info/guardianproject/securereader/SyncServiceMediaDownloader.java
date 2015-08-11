@@ -1,9 +1,6 @@
 package info.guardianproject.securereader;
 
-import info.guardianproject.securereader.StrongHttpsClient;
-
-import javax.net.ssl.HttpsURLConnection;
-
+import info.guardianproject.netcipher.client.StrongHttpsClient;
 import info.guardianproject.securereader.SyncService.SyncTask;
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileInputStream;
@@ -13,11 +10,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 import android.os.Handler;
 import android.os.Message;
@@ -25,13 +19,10 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpEntity;
-import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.HttpStatus;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.conn.params.ConnRoutePNames;
 
 import com.tinymission.rss.MediaContent;
 

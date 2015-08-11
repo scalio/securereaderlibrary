@@ -2,7 +2,7 @@ package info.guardianproject.securereader;
 
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileInputStream;
-import info.guardianproject.securereader.StrongHttpsClient;
+import info.guardianproject.netcipher.client.StrongHttpsClient;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
@@ -18,14 +18,10 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.conn.params.ConnRoutePNames;
 
 public class OPMLParser {
 

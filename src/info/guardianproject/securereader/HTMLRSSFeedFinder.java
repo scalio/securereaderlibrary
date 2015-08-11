@@ -2,8 +2,7 @@ package info.guardianproject.securereader;
 
 import info.guardianproject.iocipher.File;
 import info.guardianproject.iocipher.FileInputStream;
-//import info.guardianproject.onionkit.trust.StrongHttpsClient;
-import info.guardianproject.securereader.StrongHttpsClient;
+import info.guardianproject.netcipher.client.StrongHttpsClient;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;

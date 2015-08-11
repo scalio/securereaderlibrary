@@ -16,7 +16,7 @@
 
 package redstone.xmlrpc;
 
-import info.guardianproject.securereader.StrongHttpsClient;
+import info.guardianproject.netcipher.client.StrongHttpsClient;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -33,12 +33,10 @@ import org.xml.sax.SAXException;
 
 import android.content.Context;
 import android.util.Log;
-
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.methods.HttpPost;
-import ch.boye.httpclientandroidlib.conn.params.ConnRoutePNames;
 import ch.boye.httpclientandroidlib.entity.AbstractHttpEntity;
 import ch.boye.httpclientandroidlib.entity.StringEntity;
 import ch.boye.httpclientandroidlib.message.BasicHeader;

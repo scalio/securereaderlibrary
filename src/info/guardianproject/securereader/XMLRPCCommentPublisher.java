@@ -1,20 +1,13 @@
 package info.guardianproject.securereader;
 
-import info.guardianproject.iocipher.File;
-import info.guardianproject.onionkit.trust.StrongHttpsClient;
-
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 import net.bican.wordpress.Wordpress;
 import redstone.xmlrpc.XmlRpcClient;
-import redstone.xmlrpc.XmlRpcStruct;
 import android.os.AsyncTask;
 import android.util.Log;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 
 import com.tinymission.rss.Comment;
 
@@ -89,7 +82,7 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 					}
 					
 					// acxu.createUser
-					ArrayList arguments = new ArrayList();
+					ArrayList<String> arguments = new ArrayList<String>();
 					arguments.add(nickname);
 					XmlRpcClient xpc = new XmlRpcClient(new URL(socialReporter.xmlrpcEndpoint));
 					String result = (String) xpc.invoke("acxu.createUser", arguments);

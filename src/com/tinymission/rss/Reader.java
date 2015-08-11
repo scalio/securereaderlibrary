@@ -1,6 +1,6 @@
 package com.tinymission.rss;
 
-import info.guardianproject.securereader.StrongHttpsClient;
+import info.guardianproject.netcipher.client.StrongHttpsClient;
 import info.guardianproject.securereader.SocialReader;
 
 import java.io.IOException;
