@@ -27,7 +27,7 @@ import java.util.Date;
 public class SocialReporter
 {
 	public static final String LOGTAG = "SocialReporter";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	SocialReader socialReader;
 	Context applicationContext;
