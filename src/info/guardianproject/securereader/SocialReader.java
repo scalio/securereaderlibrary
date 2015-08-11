@@ -923,7 +923,9 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 			else if (!psiphonRunning)
 			{
-				psiphonHelper.requestStart(applicationContext);
+				Intent startIntent = psiphonHelper.getStartIntent(applicationContext);
+				startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				_activity.startActivity(startIntent);
 			}				
 		}		
 
