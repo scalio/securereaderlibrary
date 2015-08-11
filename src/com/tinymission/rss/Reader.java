@@ -158,6 +158,10 @@ public class Reader
 				if (socialReader.useProxy())
 				{
 				    httpClient.useProxy(true, socialReader.getProxyType(), socialReader.getProxyHost(), socialReader.getProxyPort());
+					//httpClient.useProxy(true, "HTTP", "127.0.0.1", 8080);
+
+				    if (LOGGING)
+				    	Log.v(LOGTAG,"Using Proxy: " + socialReader.getProxyType() + socialReader.getProxyHost() + socialReader.getProxyPort());
 				}
 	
 				if (feed.getFeedURL() != null && !(feed.getFeedURL().isEmpty()))
@@ -165,13 +169,20 @@ public class Reader
 					HttpGet httpGet = new HttpGet(feed.getFeedURL());
 					httpGet.setHeader("User-Agent", SocialReader.USERAGENT);
 
+					if (LOGGING)
+						Log.v(LOGTAG,"Hitting: " + feed.getFeedURL());
+					
 					HttpResponse response = httpClient.execute(httpGet);
+					
+					if (LOGGING)
+						Log.v(LOGTAG,"Response: " + response.toString());
 	
 					if (response.getStatusLine().getStatusCode() == 200) {
 						if (LOGGING)
 							Log.v(LOGTAG,"Response Code is good");
 						
 						InputStream is = response.getEntity().getContent();
+						
 						xr.parse(new InputSource(is));
 						
 						is.close();
