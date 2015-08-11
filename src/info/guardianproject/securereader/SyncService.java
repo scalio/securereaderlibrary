@@ -15,7 +15,7 @@ import android.util.Log;
 public class SyncService extends Service {
 
 	public static final String LOGTAG = "SyncService";
-	public static final boolean LOGGING = true;
+	public static final boolean LOGGING = false;
 	
 	// ArrayList of SyncTask objects, basically a queue of work to be done
 	ArrayList<SyncTask> syncList = new ArrayList<SyncTask>();

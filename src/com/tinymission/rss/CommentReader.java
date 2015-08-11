@@ -34,7 +34,7 @@ public class CommentReader
 {
 
 	public final static String LOGTAG = "TinyRSS Comment Reader";
-	public final static boolean LOGGING = true;
+	public final static boolean LOGGING = false;
 
 	private Feed feed = new Feed(); // for the parsing
 	

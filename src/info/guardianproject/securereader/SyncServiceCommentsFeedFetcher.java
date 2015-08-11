@@ -19,7 +19,7 @@ import com.tinymission.rss.Reader;
  */
 public class SyncServiceCommentsFeedFetcher implements Runnable
 {
-	public final static boolean LOGGING = true;
+	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "SyncServiceCommentsFeedFetcher";
 
 	SyncService syncService;
