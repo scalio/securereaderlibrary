@@ -179,6 +179,7 @@ public class SocialReader implements ICacheWordSubscriber
 	private SocialReader(Context _context) {
 		
 		this.applicationContext = _context;
+		psiphonHelper = new PsiphonHelper();
 		
 		feedRefreshAge = applicationContext.getResources().getInteger(R.integer.feed_refresh_age);
 		expirationCheckFrequency = applicationContext.getResources().getInteger(R.integer.expiration_check_frequency);
