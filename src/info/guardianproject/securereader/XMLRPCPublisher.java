@@ -22,11 +22,16 @@ import com.tinymission.rss.MediaContent;
  * Class for fetching the feed content in the background.
  * 
  */
-public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
+public class XMLRPCPublisher extends AsyncTask<Item, Integer, Integer>
 {
 	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "XMLRPC PUBLISHER";
 
+	public static final int FAILURE_REASON_NO_PRIVACY_PROXY = -1;
+	public static final int FAILURE_REASON_NO_CONNECTION = -2;
+	public static final int FAILURE_USERNAME_PASSWORD = -3;
+	public static final int FAILURE_UNKNOWN = -4;
+	
 	SocialReporter socialReporter;
 
 	XMLRPCPublisherCallback itemPublishedCallback;
@@ -38,7 +43,8 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 
 	public interface XMLRPCPublisherCallback
 	{
-		public void itemPublished(Item _item);
+		public void itemPublished(int itemId);
+		public void publishingFailed(int reason);
 	}
 
 	public XMLRPCPublisher(SocialReporter _socialReporter)
@@ -48,13 +54,15 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 	}
 
 	@Override
-	protected Item doInBackground(Item... params)
+	protected Integer doInBackground(Item... params)
 	{
 		Item item = new Item();
 		if (params.length == 0)
 		{
 			if (LOGGING)
 				Log.v(LOGTAG, "doInBackground params length is 0");
+			
+			return FAILURE_UNKNOWN;
 		}
 		else
 		{
@@ -66,6 +74,10 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 				
 				if (socialReporter.useProxy())
 				{
+					if (!socialReporter.socialReader.useProxy()) {
+						// Gotta enable that proxy
+						return FAILURE_REASON_NO_PRIVACY_PROXY;
+					}
 					XmlRpcClient.setProxy(true, socialReporter.socialReader.getProxyType(), socialReporter.socialReader.getProxyHost(), socialReporter.socialReader.getProxyPort());
 				}
 				else
@@ -148,36 +160,44 @@ public class XMLRPCPublisher extends AsyncTask<Item, Integer, Item>
 					String postId = wordpress.newPost(page, publish);
 					if (LOGGING)
 						Log.v(LOGTAG, "Posted: " + postId);
+					
+					return Integer.valueOf(postId);
+					
 				} else {
 					if (LOGGING)
 						Log.e(LOGTAG,"Can't publish, no username/password");
+					
+					return FAILURE_USERNAME_PASSWORD; 
 				}
 
-				// return postId;
 			}
 			catch (MalformedURLException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+					
+				return FAILURE_REASON_NO_CONNECTION;
 			}
-			/*
-			 * catch (XmlRpcFault e) { // TODO Auto-generated catch block
-			 * e.printStackTrace(); }
-			 */
 			catch (Exception e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+				
+				return FAILURE_UNKNOWN;
 			}
 		}
-		return item;
 	}
 
 	@Override
-	protected void onPostExecute(Item item)
+	protected void onPostExecute(Integer status)
 	{
 		if (itemPublishedCallback != null)
 		{
-			itemPublishedCallback.itemPublished(item);
+			if (status >= 0) {
+				itemPublishedCallback.itemPublished(status);
+			} else {
+				itemPublishedCallback.publishingFailed(status);
+			}
 		}
 	}
 }

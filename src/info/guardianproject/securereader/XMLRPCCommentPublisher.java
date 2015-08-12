@@ -15,10 +15,15 @@ import com.tinymission.rss.Comment;
  * Class for fetching the feed content in the background.
  * 
  */
-public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
+public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Integer>
 {
 	public final static boolean LOGGING = false;
 	public final static String LOGTAG = "XMLRPC PUBLISHER";
+	
+	public static final int FAILURE_REASON_NO_PRIVACY_PROXY = -1;
+	public static final int FAILURE_REASON_NO_CONNECTION = -2;
+	public static final int FAILURE_USERNAME_PASSWORD = -3;
+	public static final int FAILURE_UNKNOWN = -4;
 
 	SocialReporter socialReporter;
 
@@ -30,12 +35,8 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 	}
 
 	public interface XMLRPCCommentPublisherCallback
-	{
-		public static final int FAILURE_REASON_NO_PRIVACY_PROXY = 1;
-		public static final int FAILURE_REASON_NO_CONNECTION = 2;
-		
-		
-		public void commentPublished(Comment _comment);
+	{		
+		public void commentPublished(int commentId);
 		public void commentPublishFailure(int reason);
 	}
 
@@ -46,13 +47,15 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 	}
 
 	@Override
-	protected Comment doInBackground(Comment... params)
+	protected Integer doInBackground(Comment... params)
 	{
 		Comment comment = new Comment();
 		if (params.length == 0)
 		{
 			if (LOGGING)
 				Log.v(LOGTAG, "doInBackground params length is 0, no comment to publish ");
+			
+			return FAILURE_UNKNOWN;
 		}
 		else
 		{
@@ -64,6 +67,11 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 
 				if (socialReporter.useProxy())
 				{
+					if (!socialReporter.socialReader.useProxy()) {
+						// Proxy isn't enabled, fail
+						return FAILURE_REASON_NO_PRIVACY_PROXY;
+					}
+					
 					XmlRpcClient.setProxy(true, socialReporter.socialReader.getProxyType(), socialReporter.socialReader.getProxyHost(), socialReporter.socialReader.getProxyPort());
 				}
 				else
@@ -122,33 +130,45 @@ public class XMLRPCCommentPublisher extends AsyncTask<Comment, Integer, Comment>
 					
 					if (LOGGING)
 						Log.v(LOGTAG, "Posted: " + commentId);
+				
+					return commentId;
+
 				} else {
 					if (LOGGING)
 						Log.e(LOGTAG,"Can't publish, no username/password");
+					
+					return FAILURE_USERNAME_PASSWORD;
 				}
-
-			
 			}
 			catch (MalformedURLException e)
 			{
 				if (LOGGING)
 					e.printStackTrace();
+				
+				return FAILURE_REASON_NO_CONNECTION;
 			}
 			catch (Exception e)
 			{
 				if (LOGGING)
 					e.printStackTrace();
+				
+				return FAILURE_UNKNOWN;
 			}
 		}
-		return comment;
 	}
 
 	@Override
-	protected void onPostExecute(Comment comment)
+	protected void onPostExecute(Integer status)
 	{
+		
 		if (commentPublishedCallback != null)
 		{
-			commentPublishedCallback.commentPublished(comment);
+			if (status.intValue() >= 0) {
+				commentPublishedCallback.commentPublished(status.intValue());
+			}
+			else {
+				commentPublishedCallback.commentPublishFailure(status.intValue());
+			}
 		}
 	}
 }

@@ -29,6 +29,8 @@ public class SocialReporter
 	public static final String LOGTAG = "SocialReporter";
 	public static final boolean LOGGING = false;
 	
+	public static final boolean REQUIRE_PROXY = true;
+	
 	SocialReader socialReader;
 	Context applicationContext;
 	Wordpress wordpress;
@@ -46,7 +48,11 @@ public class SocialReporter
 
 	public boolean useProxy() 
 	{
-		return socialReader.useProxy();
+		if (REQUIRE_PROXY) { 
+			return true;
+		} else {
+			return socialReader.useProxy();
+		}
 	}
 
 	public ArrayList<Item> getPosts()
