@@ -3,15 +3,15 @@ package info.guardianproject.securereader;
 import java.util.Locale;
 
 import ch.boye.httpclientandroidlib.util.TextUtils;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 public class Settings
 {
 	public static final String LOGTAG = "Settings";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	protected final SharedPreferences mPrefs;
 	private final boolean mIsFirstRun;
@@ -157,17 +157,20 @@ public class Settings
 	 */
 	public int passphraseTimeout()
 	{
-		// 1 day by default
-		return mPrefs.getInt(KEY_PASSPHRASE_TIMEOUT, 1440);
+		// 1 day by default 60 * 60 * 24 = 86400
+		return mPrefs.getInt(KEY_PASSPHRASE_TIMEOUT, 86400);
 	}
 
 	/**
 	 * @return Sets timeout before lock screen is shown
 	 * 
 	 */
-	public void setPassphraseTimeout(int minutes)
+	public void setPassphraseTimeout(int seconds)
 	{
-		mPrefs.edit().putInt(KEY_PASSPHRASE_TIMEOUT, minutes).commit();
+		if (LOGGING)
+			Log.v(LOGTAG,"setPassphraseTimeout: " + seconds);
+		
+		mPrefs.edit().putInt(KEY_PASSPHRASE_TIMEOUT, seconds).commit();
 	}
 
 	/**
