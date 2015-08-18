@@ -703,6 +703,7 @@ public class SocialReader implements ICacheWordSubscriber
 		if (LOGGING)
 			Log.v(LOGTAG, "SocialReader onPause");
 		appStatus = SocialReader.APP_IN_BACKGROUND;
+		
 		cacheWord.detach();
 		cacheWordAttached = false;
 		//cacheWord.disconnectFromService();
@@ -720,13 +721,13 @@ public class SocialReader implements ICacheWordSubscriber
 			cacheWord.reattach();
 	}
 	
-	public void setCacheWordTimeout(int minutes)
+	public void setCacheWordTimeout(int seconds)
 	{
 		if (LOGGING)
-			Log.v(LOGTAG,"setCacheWordTimeout " + minutes*60);
+			Log.v(LOGTAG,"setCacheWordTimeout " + seconds);
 		
 		try {
-			cacheWord.setTimeout(minutes*60);
+			cacheWord.setTimeout(seconds);
 		} catch (IllegalStateException e) {
 			if (LOGGING)
 				Log.e(LOGTAG, e.getMessage());	
