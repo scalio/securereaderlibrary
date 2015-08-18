@@ -198,7 +198,7 @@ public class SocialReader implements ICacheWordSubscriber
 		
 		this.cacheWord = new CacheWordHandler(applicationContext, this);
 		cacheWord.connectToService();
-
+		
 		BroadcastReceiver psiphonHelperReceiver = new BroadcastReceiver(){
 			 
 		    @Override
@@ -220,6 +220,8 @@ public class SocialReader implements ICacheWordSubscriber
 				new BroadcastReceiver() {
 			        @Override
 			        public void onReceive(Context context, Intent intent) {
+			        	if (LOGGING)
+			        		Log.v(LOGTAG,"****INTENT_NEW_SECRETS*****");
 			        	if (intent.getAction().equals(Constants.INTENT_NEW_SECRETS)) {
 			            	// Locked because of timeout
 			            	if (initialized && cacheWord.getCachedSecrets() == null)
@@ -694,12 +696,16 @@ public class SocialReader implements ICacheWordSubscriber
 			}
 	}
 
+	boolean cacheWordAttached = true;
+	
 	// When the foreground app is paused
 	public void onPause() {
 		if (LOGGING)
 			Log.v(LOGTAG, "SocialReader onPause");
 		appStatus = SocialReader.APP_IN_BACKGROUND;
 		cacheWord.detach();
+		cacheWordAttached = false;
+		//cacheWord.disconnectFromService();
 	}
 
 	// When the foreground app is unpaused
@@ -709,12 +715,16 @@ public class SocialReader implements ICacheWordSubscriber
         appStatus = SocialReader.APP_IN_FOREGROUND;
         
 		checkPsiphonStatus();
-        cacheWord.reattach();
-
+        
+		if (cacheWordAttached == false)
+			cacheWord.reattach();
 	}
 	
 	public void setCacheWordTimeout(int minutes)
 	{
+		if (LOGGING)
+			Log.v(LOGTAG,"setCacheWordTimeout " + minutes*60);
+		
 		try {
 			cacheWord.setTimeout(minutes*60);
 		} catch (IllegalStateException e) {
