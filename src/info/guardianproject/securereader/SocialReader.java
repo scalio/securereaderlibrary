@@ -87,7 +87,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public static final boolean TESTING = false;
 	
 	public static final String LOGTAG = "SocialReader";
-	public static final boolean LOGGING = false;
+	public static final boolean LOGGING = true;
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
@@ -2233,26 +2233,45 @@ public class SocialReader implements ICacheWordSubscriber
 	private void dataWipe()
 	{
 		if (LOGGING)
-			Log.v(LOGTAG, "deleteDatabase");
+			Log.v(LOGTAG, "dataWipe");
 		//http://code.google.com/p/android/issues/detail?id=13727
+		
+		if (syncService != null)
+		{
+			//syncService.stopSelf();
+			applicationContext.stopService(new Intent(applicationContext, SyncService.class));
+			initialized = false;
+		}
 
 		if (databaseAdapter != null && databaseAdapter.databaseReady()) {
+			if (LOGGING)
+				Log.v(LOGTAG, "databaseAdapter.deleteAll(), databaseAdapter.close() databaseAdapter = null;");
+
 			databaseAdapter.deleteAll();
 			databaseAdapter.close();
+			databaseAdapter = null;
 		}
 
 		if (vfs != null && vfs.isMounted()) {
+			if (LOGGING)
+				Log.v(LOGTAG, "vfs.unmount(); vfs = null;");
+			
 			vfs.unmount();
 			vfs = null;
 		}
 		
+		if (LOGGING)
+			Log.v(LOGTAG, "applicationContext.deleteDatabase(DatabaseHelper.DATABASE_NAME);");
+
 		applicationContext.deleteDatabase(DatabaseHelper.DATABASE_NAME);
 
 		if (LOGGING)
-			Log.v(LOGTAG, "Delete data");
+			Log.v(LOGTAG, "deleteFileSystem()");
 		deleteFileSystem();
 		
 		// Reset Prefs to initial state
+		if (LOGGING)
+			Log.v(LOGTAG, "settings.resetSettings();");
 		settings.resetSettings();
 		
 		// Change Password
@@ -2265,6 +2284,9 @@ public class SocialReader implements ICacheWordSubscriber
 			e.printStackTrace();
 		}
 		*/
+
+		if (LOGGING)
+			Log.v(LOGTAG, "cacheWord.lock(); cacheWord.deinitialize();");
 		
 		cacheWord.lock();
 		cacheWord.deinitialize();
