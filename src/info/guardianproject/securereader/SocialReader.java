@@ -704,8 +704,13 @@ public class SocialReader implements ICacheWordSubscriber
 			Log.v(LOGTAG, "SocialReader onPause");
 		appStatus = SocialReader.APP_IN_BACKGROUND;
 		
+		if (settings.passphraseTimeout() == 1) {
+			cacheWord.lock();
+		}
+		
 		cacheWord.detach();
 		cacheWordAttached = false;
+		
 		//cacheWord.disconnectFromService();
 	}
 
@@ -772,10 +777,29 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 	
+	public boolean isTorOnline() {
+		if (OrbotHelper.isOrbotInstalled(applicationContext) && OrbotHelper.isOrbotRunning(applicationContext))
+		{
+			return true;
+		} 
+		else 
+		{
+			return false;
+		}
+	}
+	
+	public boolean isPsiphonOnline() {
+		if (psiphonHelper.isInstalled(applicationContext) && psiphonRunning) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	public boolean isProxyOnline() 
 	{
 		if (useProxy() && settings.proxyType() == ProxyType.Tor 
-				&& OrbotHelper.isOrbotInstalled(applicationContext) && OrbotHelper.isOrbotRunning(applicationContext)) 
+				&& isTorOnline()) 
 		{
 			if (LOGGING) 
 				Log.v(LOGTAG, "Tor is running");
@@ -783,7 +807,7 @@ public class SocialReader implements ICacheWordSubscriber
 			return true;
 		} 
 		else if (useProxy() && settings.proxyType() == ProxyType.Psiphon 
-				&& psiphonHelper.isInstalled(applicationContext) && psiphonRunning)
+				&& isPsiphonOnline())
 		{
 			
 			if (LOGGING)
@@ -830,32 +854,15 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 
 		if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
-			if (settings.requireProxy()) {
-				if (settings.proxyType() == ProxyType.Tor) {
-					if (OrbotHelper.isOrbotInstalled(applicationContext) && OrbotHelper.isOrbotRunning(applicationContext)) {
-						// Network is connected
-						// Tor is running we are good
-						return ONLINE;
-					} else {
-						// Tor not running or not installed
-						return NOT_ONLINE_NO_PROXY;
-					}
-				} else if (settings.proxyType() == ProxyType.Psiphon) {
-					if (psiphonHelper.isInstalled(applicationContext) && psiphonRunning) {
-						// Network is connected
-						// Psiphon is running we are good
-						return ONLINE;
-					} else {
-						// Psiphon not running or not installed
-						return NOT_ONLINE_NO_PROXY;
-					}
-				} else {
-					// This happens during onboarding
-					if (LOGGING)
-						Log.e(LOGTAG,"Proxy is required but unknown proxy type");
-					return NOT_ONLINE_NO_PROXY;
-				}
-			} else {
+			if (settings.requireProxy() && isProxyOnline()) {
+				return ONLINE;
+			}
+			else if (settings.requireProxy())
+			{
+				// Either the proxy isn't connected or they haven't selected one yet which happens during onboarding
+				return NOT_ONLINE_NO_PROXY;
+			}
+			else {
 				// Network is connected and we don't use a proxy
 				return ONLINE;
 			}
@@ -883,7 +890,6 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 	}
 
-	// SOCKS
 	public String getProxyType() {
 		if (settings.proxyType() == ProxyType.Psiphon) {
 			return PSIPHON_PROXY_TYPE;
