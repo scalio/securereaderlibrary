@@ -23,3 +23,6 @@ local.properties
 .settings
 
 build.xml
+
+# Apple Junk
+.DS_Store
