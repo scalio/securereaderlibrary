@@ -113,8 +113,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 
 		return returnValue;
 	}
@@ -198,8 +205,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 
 		return returnValue;
 	}
@@ -221,8 +235,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 		return returnValue;
 	}
 
@@ -252,8 +273,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 
 		return returnValue;
 
@@ -289,8 +317,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 
 		return returnValue;
 	}
@@ -308,8 +343,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 
 		return returnValue;
 	}
@@ -398,7 +440,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -408,7 +456,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -459,7 +510,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -469,7 +526,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -562,7 +622,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 
 		return feed;
@@ -688,7 +754,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -698,7 +770,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return feed;		
@@ -814,8 +889,15 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 		return feeds;
 	}
 
@@ -843,7 +925,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 
 		return returnValue;
@@ -904,7 +992,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 
 		return returnValue;
@@ -1006,7 +1100,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1016,7 +1116,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return feed;		
@@ -1110,7 +1213,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1120,7 +1229,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}		
 
@@ -1223,7 +1335,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1233,7 +1351,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return feed;		
@@ -1337,7 +1458,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1347,7 +1474,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return feed;
@@ -1462,7 +1592,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1472,7 +1608,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return returnItem;
@@ -1596,7 +1735,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1606,7 +1751,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 
@@ -1660,7 +1808,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		return returnValue;
 	}
@@ -1728,11 +1882,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		catch(IllegalStateException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		finally
 		{
@@ -1742,7 +1898,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 
@@ -1852,7 +2011,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -1862,7 +2027,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING) 
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -1966,7 +2134,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -1976,7 +2150,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -2058,6 +2235,12 @@ public class DatabaseAdapter
 						if (LOGGING)
 							e.printStackTrace();
 					}
+					catch(IllegalStateException e)
+					{
+						if (LOGGING)
+							e.printStackTrace();
+					}
+
 				} else {
 					// else, it is already in the database, let's update the database id
 	
@@ -2154,6 +2337,12 @@ public class DatabaseAdapter
 						if (LOGGING)
 							e.printStackTrace();
 					}
+					catch(IllegalStateException e)
+					{
+						if (LOGGING)
+							e.printStackTrace();
+					}
+
 				} else {
 					// else, it is already in the database, let's update the database id
 	
@@ -2213,8 +2402,15 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
-			}		
+				if (LOGGING)
+					e.printStackTrace();
+			}	
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
+			}
+
 		}
 		return returnValue;
 	}	
@@ -2323,7 +2519,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -2333,7 +2535,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -2380,8 +2585,14 @@ public class DatabaseAdapter
 				queryCursor.close();	
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} 		
+			if (LOGGING)
+				e.printStackTrace();
+		} 	
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
 		finally
 		{
 			if (queryCursor != null)
@@ -2390,7 +2601,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 
@@ -2435,8 +2649,15 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
-			}		
+				if (LOGGING)
+					e.printStackTrace();
+			}	
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
+			}
+
 		}
 		return returnValue;
 	}	
@@ -2551,7 +2772,12 @@ public class DatabaseAdapter
 		} catch (SQLException e) {
 			if (LOGGING) 
 				e.printStackTrace();
-		} 		
+		} 	
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
 		finally
 		{
 			if (queryCursor != null)
@@ -2560,7 +2786,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return items;		
@@ -2641,7 +2870,12 @@ public class DatabaseAdapter
 		} catch (SQLException e) {
 			if (LOGGING) 
 				e.printStackTrace();
-		} 		
+		} 
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
 		finally
 		{
 			if (queryCursor != null)
@@ -2650,7 +2884,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return items;		
@@ -2722,7 +2959,12 @@ public class DatabaseAdapter
 			} catch (SQLException e) {
 				if (LOGGING) 
 					e.printStackTrace();
-			} 		
+			} 
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
+			}
 			finally
 			{
 				if (queryCursor != null)
@@ -2731,7 +2973,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -2777,8 +3022,14 @@ public class DatabaseAdapter
 				queryCursor.close();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} 		
+			if (LOGGING)
+				e.printStackTrace();
+		} 
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
 		finally
 		{
 			if (queryCursor != null)
@@ -2787,7 +3038,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return items;
@@ -2827,8 +3081,14 @@ public class DatabaseAdapter
 				queryCursor.close();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} 		
+			if (LOGGING)
+				e.printStackTrace();
+		} 
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
 		finally
 		{
 			if (queryCursor != null)
@@ -2837,7 +3097,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return items;
@@ -2878,8 +3141,14 @@ public class DatabaseAdapter
 				queryCursor.close();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} 		
+			if (LOGGING)
+				e.printStackTrace();
+		} 	
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
 		finally
 		{
 			if (queryCursor != null)
@@ -2888,7 +3157,10 @@ public class DatabaseAdapter
 				{
 					queryCursor.close();					
 				}
-				catch(Exception e) {}
+				catch(Exception e) {
+					if (LOGGING)
+						e.printStackTrace();
+				}
 			}
 		}
 		return itemTags;
@@ -2911,8 +3183,14 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}		
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
+			}
 		}
 	}
 	
@@ -2924,7 +3202,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 		}
 	}
@@ -2949,7 +3233,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING) 
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 		}
 	}
@@ -2963,8 +3253,15 @@ public class DatabaseAdapter
 			try {
 				long returnValue = db.delete(DatabaseHelper.COMMENTS_TABLE, DatabaseHelper.COMMENTS_TABLE_ITEM_ID + "=?", new String[] { String.valueOf(itemId) });
 			} catch (SQLException e) {
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
 			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
+			}
+
 		}
 	}
 	
@@ -2994,7 +3291,13 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING) 
+				e.printStackTrace();
+		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
 		}
 		return numDeleted;
 	}
@@ -3048,7 +3351,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -3058,7 +3367,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -3162,7 +3474,13 @@ public class DatabaseAdapter
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				if (LOGGING)
+					e.printStackTrace();
+			}
+			catch(IllegalStateException e)
+			{
+				if (LOGGING)
+					e.printStackTrace();
 			}
 			finally
 			{
@@ -3172,7 +3490,10 @@ public class DatabaseAdapter
 					{
 						queryCursor.close();					
 					}
-					catch(Exception e) {}
+					catch(Exception e) {
+						if (LOGGING)
+							e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -3199,7 +3520,14 @@ public class DatabaseAdapter
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			if (LOGGING)
+				e.printStackTrace();
 		}
+		catch(IllegalStateException e)
+		{
+			if (LOGGING)
+				e.printStackTrace();
+		}
+
 	}
 }
