@@ -452,6 +452,8 @@ public class Settings
 			return UiLanguage.Arabic;
 		else if (defaultLanguage.equals("fa"))
 			return UiLanguage.Farsi;
+		else if (defaultLanguage.equals("fa"))
+			return UiLanguage.Farsi;
 		else if (defaultLanguage.equals("bo"))
 			return UiLanguage.Tibetan;
 		else if (defaultLanguage.equals("es"))
