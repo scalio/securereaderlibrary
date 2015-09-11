@@ -7,6 +7,7 @@
     <string name="opml_url">https://securereader.guardianproject.info/opml/opml.php</string>
 	
     <bool name="repeatedly_load_network_opml">false</bool>
+    <bool name="report_metrics">false</bool>
     
 	<!--  Use fulltext feeds with opml service -->
 	<bool name="fulltextfeeds">true</bool>

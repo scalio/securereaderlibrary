@@ -91,7 +91,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
-	public static final boolean REPORT_METRICS = true;
+	//public static final boolean REPORT_METRICS = true;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -146,6 +146,7 @@ public class SocialReader implements ICacheWordSubscriber
 	public final int expirationCheckFrequency;
 	public final int opmlCheckFrequency;
 	public final boolean repeatedlyLoadNetworkOPML;
+	public final boolean reportMetrics;
 	public final String opmlUrl;
 	public String[] feedsWithComments;
 	
@@ -187,6 +188,7 @@ public class SocialReader implements ICacheWordSubscriber
 		opmlCheckFrequency = applicationContext.getResources().getInteger(R.integer.opml_check_frequency);
 		opmlUrl = applicationContext.getResources().getString(R.string.opml_url);
 		repeatedlyLoadNetworkOPML = applicationContext.getResources().getBoolean(R.bool.repeatedly_load_network_opml);
+		reportMetrics = applicationContext.getResources().getBoolean(R.bool.report_metrics);
 		
 		itemLimit = applicationContext.getResources().getInteger(R.integer.item_limit);
 		mediaCacheSize = applicationContext.getResources().getInteger(R.integer.media_cache_size);
@@ -587,7 +589,7 @@ public class SocialReader implements ICacheWordSubscriber
 				finalOpmlUrl += "&fulltext=true";
 			}
 			
-			if (REPORT_METRICS) {
+			if (reportMetrics) {
 				if (!settings.networkOpmlLoaded()) {
 					finalOpmlUrl += "&first=true";
 				}
