@@ -91,7 +91,7 @@ public class SocialReader implements ICacheWordSubscriber
 	
 	//public static final boolean REPEATEDLY_LOAD_NETWORK_OPML = true;
 	
-	public static final boolean REPORT_METRICS = false;
+	public static final boolean REPORT_METRICS = true;
 	
 	public static final String CONTENT_SHARING_MIME_TYPE = "application/x-bigbuffalo-bundle";
 	public static final String CONTENT_SHARING_EXTENSION = "bbb";
@@ -582,16 +582,16 @@ public class SocialReader implements ICacheWordSubscriber
 			} else if (lang == UiLanguage.Turkish) {
 				finalOpmlUrl = finalOpmlUrl + "tr";
 			}
-			
-			if (!settings.networkOpmlLoaded()) {
-				finalOpmlUrl += "&first=true";
-			}
-			
+					
 			if (applicationContext.getResources().getBoolean(R.bool.fulltextfeeds)) {
 				finalOpmlUrl += "&fulltext=true";
 			}
 			
 			if (REPORT_METRICS) {
+				if (!settings.networkOpmlLoaded()) {
+					finalOpmlUrl += "&first=true";
+				}
+				
 				ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 				NetworkInfo networkInfo;
 
