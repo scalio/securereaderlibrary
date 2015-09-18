@@ -30,7 +30,7 @@
     </string-array>
 
 	<integer name="talk_item_remote_id">-1</integer>
-	<string name="talk_item_feed_url">https://talk.to.me</string>
+	<string name="talk_item_feed_url"></string>
 	<string name="talk_item_xmlrpc_url">https://someserver.something/xmlrpc.php</string>
 	
 	<!-- FEED_REFRESH_AGE = 300000; // 5 minutes -->
