@@ -67,6 +67,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.StatFs;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.tinymission.rss.Feed;
@@ -1446,18 +1447,22 @@ public class SocialReader implements ICacheWordSubscriber
 		}
 		
 		// Create talk item
-		talkItem = new Item();
-		talkItem.setFavorite(true); // So it doesn't delete
-		talkItem.setGuid(applicationContext.getResources().getString(R.string.talk_item_feed_url));
-		talkItem.setTitle("Example Favorite");
-		talkItem.setFeedId(-1);
-		talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
-		talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
-		talkItem.setCommentsUrl(applicationContext.getResources().getString(R.string.talk_item_feed_url));
-		this.databaseAdapter.addOrUpdateItem(talkItem,itemLimit);
-		if (LOGGING)
-			Log.v(LOGTAG,"talkItem has database ID " + talkItem.getDatabaseId());		
-
+		String talkItemUrl = applicationContext.getResources().getString(R.string.talk_item_feed_url);
+		if (!TextUtils.isEmpty(talkItemUrl))
+		{
+			talkItem = new Item();
+			talkItem.setFavorite(true); // So it doesn't delete
+			talkItem.setGuid(talkItemUrl);
+			talkItem.setTitle("Example Favorite");
+			talkItem.setFeedId(-1);
+			talkItem.setDescription("This is an examople favorite.  Anything you mark as a favorite will show up in this section and won't be automatically deleted");
+			talkItem.dbsetRemotePostId(applicationContext.getResources().getInteger(R.integer.talk_item_remote_id));			
+			talkItem.setCommentsUrl(talkItemUrl);
+			this.databaseAdapter.addOrUpdateItem(talkItem,itemLimit);
+			if (LOGGING)
+				Log.v(LOGTAG,"talkItem has database ID " + talkItem.getDatabaseId());		
+		}
+		
 		if (LOGGING)
 			Log.v(LOGTAG,"databaseAdapter initialized");
 	}
