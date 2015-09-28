@@ -1545,38 +1545,45 @@ public class SocialReader implements ICacheWordSubscriber
 					Log.v(LOGTAG,"sdcard mounted");
 				
 				filesDir = applicationContext.getExternalFilesDir(null);
-				if (!filesDir.exists())
-				{
+				if (filesDir != null) {
+					done = true;
+					if (!filesDir.exists())
+					{
+						if (LOGGING) 
+							Log.v(LOGTAG, "filesDir doesn't exist, making it");
+						
+						filesDir.mkdirs();
+						
+						if (LOGGING && !filesDir.exists())
+							Log.v(LOGTAG, "still doesn't exist, error!");		
+						
+						testExternalStorage(filesDir);
+					}
+					else 
+					{
+						if (LOGGING) 
+							Log.v(LOGTAG, "filesDir exists");
+	
+					}
+					
 					if (LOGGING) 
-						Log.v(LOGTAG, "filesDir doesn't exist, making it");
-					
-					filesDir.mkdirs();
-					
-					if (LOGGING && !filesDir.exists())
-						Log.v(LOGTAG, "still doesn't exist, error!");		
-					
-					testExternalStorage(filesDir);
+						Log.v(LOGTAG,"filesDir:" + filesDir.getAbsolutePath());
+				} else {
+					if (LOGGING)
+						Log.v(LOGTAG,"filesDir is still null");
 				}
-				else 
-				{
-					if (LOGGING) 
-						Log.v(LOGTAG, "filesDir exists");
-
-				}
-				
-				if (LOGGING) 
-					Log.v(LOGTAG,"filesDir:" + filesDir.getAbsolutePath());
-
-			}
-			else
-			{
-				if (LOGGING) 
-					Log.v(LOGTAG,"on internal storage");
-				
-				filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
 			}
 		}
-	
+		
+		// If we still aren't done
+		if (!done)
+		{
+			if (LOGGING) 
+				Log.v(LOGTAG,"on internal storage");
+			
+			filesDir = applicationContext.getDir(FILES_DIR_NAME, Context.MODE_PRIVATE);
+		}
+		
 		return filesDir;
 	}
 	
