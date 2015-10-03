@@ -30,7 +30,14 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile files('libs/cachewordlib-v0.1.jar')
+    compile files('libs/commons-codec.jar')
+    compile files('libs/gp-bcc-lib.jar')
+    compile files('libs/httpclientandroidlib-1.2.1.jar')
+    compile files('libs/IOCipher-v0.3-debug.jar')
+    compile files('libs/jsoup-1.7.2.jar')
+    compile files('libs/sqlcipher.jar')
+    compile files('libs/sqlcipher-javadoc.jar')
 
     compile 'com.google.guava:guava:18.0'
 
